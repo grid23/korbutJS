@@ -6,6 +6,6 @@ module.exports.EventTarget = klass(function($static){
         constructor: function(){}
       , addEventListener: function(){}
       , removeEventListener: function(){}
-      , korbutpatchEvent: function(){}
+      , dispatchEvent: function(){}
     }
 })

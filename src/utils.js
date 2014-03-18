@@ -1,11 +1,13 @@
-var regexps = require("./regexps")
-  , STRICT_MODE = function(){
+var STRICT_MODE = function(){
         return this === void 0
     }()
 
+module.exports.rcaptureargs = /(?=^|\s*)function(?:[^\(]*)\(([^\)]*)/
+module.exports.rnative = /\s*\[native code\]\s*/i
+
 module.exports.native = function(fn){
     try {
-        return !!fn.toString().match(regexps.native)
+        return !!fn.toString().match(module.exports.rnative)
     } catch(e) {
         return null
     }
@@ -106,7 +108,7 @@ module.exports.invoke = function(){
     function extractArguments(fn, args, i, l){
         args = function(){
             try {
-                return fn.toString().match(regexps.capture_args)[1].split(",")
+                return fn.toString().match(module.exports.rcaptureargs)[1].split(",")
             } catch(e) {
                 return []
             }
