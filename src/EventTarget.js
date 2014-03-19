@@ -1,6 +1,8 @@
+"use strict"
+
 var klass = require("./class").class
 
-module.exports.EventTarget = klass(function($static){
+module.exports.EventTarget = klass(function(Super, statics){
 
     return {
         constructor: function(){}

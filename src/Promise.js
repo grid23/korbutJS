@@ -1,11 +1,13 @@
+"use strict"
+
 var klass = require("./class").class
 
-module.exports.Promise = klass(function($static){
-    $static.resolve = function(){}
-    $static.reject = function(){}
+module.exports.Promise = klass(function(Super, statics){
+    statics.resolve = function(){}
+    statics.reject = function(){}
 
-    $static.all = function(){}
-    $static.race = function(){}
+    statics.all = function(){}
+    statics.race = function(){}
 
     return {
         constructor: function(){}

@@ -1,3 +1,5 @@
+"use strict"
+
 void function(korbutJS, define){
 
     korbutJS.utils = require("./utils")

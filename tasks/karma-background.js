@@ -5,7 +5,7 @@ void function(karma, path){
       , frameworks: ['mocha']
       , files: [
           './bower_components/chai/chai.js',
-          './korbutt/korbut.js',
+          './dist/korbut.js',
           './specs/**/*.js'
         ]
       , exclude: []

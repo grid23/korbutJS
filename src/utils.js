@@ -1,3 +1,5 @@
+"use strict"
+
 var STRICT_MODE = function(){
         return this === void 0
     }()

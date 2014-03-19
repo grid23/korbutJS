@@ -6,7 +6,11 @@ void function(fs, path, q, fconcat, fbuild, fversion, fpackage, fbower, parchive
     fbower = path.join(__dirname, "../bower.json")
     parchive = path.join(__dirname, "../archive")
 
-    header = "/* foo! */\n\n"
+    header = "/* Copyright ©2014 Benjamin Moulin <hello@grid23.net>\n"
+           + "   This work is free. You can redistribute it and/or modify it under the \n"
+           + "   terms of the Do What The Fuck You Want To Public License, Version 2, \n"
+           + "   as published by Sam Hocevar. See the COPYING file for more details. \n"
+           + "*/\n\n"
 
     module.exports.save = function(){ return release(0) }
     module.exports.revision = function(){ return release(1) }

@@ -1,6 +1,6 @@
-describe("utils", function(){
+describe("korbutJS.utils", function(){
 
-    describe("native()", function(){
+    describe("#native()", function(){
         it("should return `true` if a passed function is [native code], `false otherwise`. If it can't process passed argument, it returns `null`", function(){
             chai.expect( korbutJS.utils.native( Function.prototype.call ) ).to.be.true
             chai.expect( korbutJS.utils.native( korbutJS.utils.native ) ).to.be.false
@@ -8,7 +8,7 @@ describe("utils", function(){
         })
     })
 
-    describe("typeof()", function(){
+    describe("#typeof()", function(){
         it("should return the lowercase version of the second part of Object.prototype.toString called on passed argument", function(){
             chai.expect( korbutJS.utils.typeof( {} ) ).to.equal("object")
             chai.expect( korbutJS.utils.typeof( new Object ) ).to.equal("object")
@@ -31,8 +31,8 @@ describe("utils", function(){
         })
     })
 
-    describe("object()", function(){
-        it("should return true if passed argument has `Object` has a constructor, `false` otherwise", function(){
+    describe("#object()", function(){
+        it("should return true if passed argument has `Object` as `constructor`, `false` otherwise", function(){
             chai.expect( korbutJS.utils.object( {} ) ).to.be.true
             chai.expect( korbutJS.utils.object( Object.create({}) ) ).to.be.true
             chai.expect( korbutJS.utils.object( { constructor: function(){} } ) ).to.be.false
@@ -40,7 +40,7 @@ describe("utils", function(){
         })
     })
 
-    describe("invocable()", function(){
+    describe("#invocable()", function(){
         it("should return `true` if passed argument is either a function or has a `handleInvoke` property that is a function, `false`otherwise", function(){
             chai.expect( korbutJS.utils.invocable( function(){} ) ).to.be.true
             chai.expect( korbutJS.utils.invocable( { handleInvoke: function(){} } ) ).to.be.true
@@ -49,7 +49,7 @@ describe("utils", function(){
         })
     })
 
-    describe("eventable()", function(){
+    describe("#eventable()", function(){
         it("should return `true` if passed argument is invocable or has a property `handleEvent` that is invocable, `false` otherwhise", function(){
             chai.expect( korbutJS.utils.eventable(function(){}) ).to.be.true
             chai.expect( korbutJS.utils.eventable( { handleInvoke: function(){} } ) ).to.be.true
@@ -60,7 +60,7 @@ describe("utils", function(){
         })
     })
 
-    describe("routable()", function(){
+    describe("#routable()", function(){
         it("should return `true` if passed argument is invocable or has a property `handleRoute` that is invocable, `false` otherwhise", function(){
             chai.expect( korbutJS.utils.routable(function(){}) ).to.be.true
             chai.expect( korbutJS.utils.routable( { handleInvoke: function(){} } ) ).to.be.true
@@ -71,7 +71,7 @@ describe("utils", function(){
         })
     })
 
-    describe("thenable()", function(){
+    describe("#thenable()", function(){
         it("should return `true` if passed argument is invocable or has either or both a `handleResolve` and/or `handleReject` property that is invocable, `false` otherwhise", function(){
             chai.expect( korbutJS.utils.thenable(function(){}) ).to.be.true
             chai.expect( korbutJS.utils.thenable( { handleInvoke: function(){} } ) ).to.be.true
@@ -84,7 +84,7 @@ describe("utils", function(){
         })
     })
 
-    describe("spread()", function(){
+    describe("#spread()", function(){
         it("should behave like slice on any pseudo-array or array passed as argument", function(){
             chai.expect( korbutJS.utils.spread([0, 1, 2], 2) ).to.deep.equal([2])
             chai.expect ( korbutJS.utils.spread( { 0:4, 1:5, 2:6, length:3 } ) ).to.deep.equal([4, 5, 6])
@@ -94,7 +94,7 @@ describe("utils", function(){
         })
     })
 
-    describe("enumerate()", function(){
+    describe("#enumerate()", function(){
         it("should act like Object.keys on an object", function(){
             chai.expect( korbutJS.utils.enumerate([0, 1, 2]) ).to.deep.equal( Object.keys([0, 1, 2]) )
             chai.expect( korbutJS.utils.enumerate({ foo: "bar", bar: "foo" }) ).to.deep.equal( Object.keys({foo:"bar", bar: "foo"}) )
@@ -106,7 +106,7 @@ describe("utils", function(){
         })
     })
 
-    describe("invoke()", function(){
+    describe("#invoke()", function(){
         it("should act like the fastest of Function.prototype.call or Function.prototype.apply depending on the situation, on a function, or on an invocable object", function(){
             // TODO: find more examples
             chai.expect( korbutJS.utils.invoke( function(a, b, c){ return [a, b, c]}, [0, 1, 2] ) ).to.deep.equal([0, 1, 2])
