@@ -1,117 +1,79 @@
-"use strict"
+void function(){ "use strict"
+    var rnative = /\s*\[native code\]\s*/i
 
-var _ = require("./utils")
+    module.exports.class = function(){
+        var args = Array.prototype.slice.call(arguments)
+          , statics = Object.create(null), k
+          , Class
+          , prototype = Object.create({})
 
-module.exports.class = function(args, Super, statics, Class, prototype){
-    args = _.spread(arguments)
-    Super = args.length == 2 ? args[0] : null
-    statics = {}, k
-    prototype = function(){
-        if ( typeof args[args.length-1] == "function" )
-          args[args.length-1] = _.invoke(args[args.length-1], { $Super: Super, $static: statics, 0: Super, 1: statics, length: 2 })
+        args[args.length-1] = function getDescriptors(descriptors, keys, i, l){
+            if ( typeof descriptors == "function" )
+              return getDescriptors( descriptors.call(null, statics) )
 
-        if ( !_.native(args[args.length-1].constructor) ) {
-          Class = args[args.length-1].constructor
-          delete args[args.length-1].constructor
-        }
+            descriptors.constructor = descriptors.constructor || function(){}
+            Class = typeof descriptors.constructor == "function" && !descriptors.constructor.toString().match(rnative) ? descriptors.constructor
+                  : typeof descriptors.constructor.value == "function" && !descriptors.constructor.value.toString().match(rnative) ? descriptors.constructor.value
+                  : function(){}
+            delete descriptors.constructor
 
-        return _.invoke(mixin, args)
-    }()
+            try {
+                return { prototype: Object.create(null, descriptors) }
+            } catch(e) {
+                keys = Object.keys(descriptors)
+                while ( keys.length )
+                  void function(key){
+                      descriptors[key] = descriptors[key].constructor == Object
+                                         && ( descriptors[key].hasOwnProperty("value")
+                                              || descriptors[key].hasOwnProperty("get")
+                                              || descriptors[key].hasOwnProperty("set") )
+                                       ? descriptors[key]
+                                       : { configurable: true, enumerable: true, writable: true,
+                                           value: descriptors[key] }
+                  }( keys.shift() )
 
-    Class = Class || function(){}
-    Class.prototype = prototype
-    Class.prototype.constructor = Class
-
-    for ( k in statics ) if ( statics.hasOwnProperty(k) )
-      Class[k] = statics[k]
-
-    Class.Super = Super
-
-    Class.create = function(args){
-        args = arguments
-
-        function F(){ return _.invoke(Class, args, this) }
-        F.prototype = Class.prototype
-
-        return new F
-    }
-
-    Class.extend = function(){
-        return _.invoke(module.exports.class, [Class].concat(slice(arguments)))
-    }
-
-    Class.isImplementedBy = function(k, i, l, prototype){
-        i = 0
-        l = arguments.length
-
-        for ( ; i < l; i++ ) {
-            prototype = typeof arguments[i] == "function" ? arguments[i].prototype
-                      : arguments[i] ? arguments[i] : {}
-
-          for ( k in Class.prototype )
-            if ( k != "constructor" && prototype[k] !== Class.prototype[k] )
-              return false
-        }
-
-        return true
-    }
-
-    Class.implementsOn = function(k, i, l, prototype){
-        i = 0
-        l = arguments.length
-
-        for ( ; i < l; i++ ) {
-            prototype = typeof arguments[i] == "function" ? arguments[i].prototype
-                      : arguments[i] ? arguments[i] : {}
-
-            for ( k in Class.prototype ) if ( k !== "constructor" )
-              prototype[k] = Class.prototype[k]
-        }
-
-    }
-
-    return Class
-}
-
-module.exports.singleton = function(F, G){
-    F = _.invoke(module.exports.class, arguments)
-    G = module.exports.class(F, function(Super, statics, k){
-        statics.instance = null
-
-        for ( k in F ) if ( F.hasOwnProperty(k) )
-          statics[k] = F[k]
-
-        return {
-            constructor: function(g){
-                g = this
-
-                if ( G.instance )
-                  return  G.instance
-                G.instance = g
-
-                return _.invoke(Super, arguments, g)
+                return { prototype: Object.create(null, descriptors) }
             }
-        }
-    })
+        }( args[args.length-1] )
 
-  return G
+        while ( args.length )
+          void function(Super, propertyNames){
+              try {
+                  propertyNames = Object.getOwnPropertyNames(Super.prototype)
+              } catch(e){
+                  propertyNames = []
+              }
 
-}
+              while ( propertyNames.length )
+                void function(property, descriptor){
+                    Object.defineProperty(prototype, property, descriptor)
+                }( propertyNames[0], Object.getOwnPropertyDescriptor(Super.prototype, propertyNames.shift()) )
+          }( args.shift() )
+        Object.defineProperty(prototype, "constructor", { configurable: true, value: Class })
 
-function mixin(args, k, i, l, prototype, superPrototype){
-    args = _.spread(arguments)
-    i = 0, l = args.length
-    prototype = {}
+        Class.prototype = prototype
 
-    for ( ; i < l; i++ ) {
-      superPrototype = typeof args[i] == "function" ? args[i].prototype
-                     : args[i] ? args[i] : {}
+        for ( k in statics )
+          Class[k] = statics[k]
 
-        for ( k in superPrototype )
-          if ( prototype[k] !== superPrototype[k] && superPrototype[k] !== Object.prototype[k] )
-            prototype[k] = superPrototype[k]
+        return Class
     }
 
-    delete prototype.constructor
-    return prototype
-}
+    module.exports.singleton = function(){
+        var F = module.exports.class.apply(null, arguments)
+          , G = module.exports.class.call(null, F, function(statics, k){
+                for ( k in F )
+                  statics[k] = F[k]
+
+                return {
+                    constructor: function(){
+                        if ( G.instance )
+                          return G.instance
+                        G.instance = this
+
+                        return F.apply(this, arguments)
+                    }
+                }
+            })
+    }
+}()

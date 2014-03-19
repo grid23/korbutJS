@@ -1,18 +1,9 @@
-"use strict"
+void function(ns){ "use strict"
 
-void function(korbutJS, define){
+    ns.class = require("./class").class
+    ns.singleton = require("./class").singleton
 
-    korbutJS.utils = require("./utils")
-    korbutJS.class = require("./class").class
-    korbutJS.singleton = require("./class").singleton
+    ns.Iterator = require("./Iterator").Iterator
 
-    //korbutJS.Event = require("./Event")
-    //korbutJS.EventTarget = require("./EventTarget")
-
-    if ( typeof define == "function" && define.amd )
-      define(function(require, module, exports){
-          module.exports = korbutJS
-      })
-    else
-      window.korbutJS = korbutJS
-}( { version: "x.y.z-t" }, window.define )
+    window.k = ns
+}( { version: "korbutJS-ES5-x.y.z-t" } )

@@ -1,13 +1,5 @@
-"use strict"
+void function(klass){
+    "use strict"
 
-var klass = require("./class").class
-
-module.exports.EventTarget = klass(function(Super, statics){
-
-    return {
-        constructor: function(){}
-      , addEventListener: function(){}
-      , removeEventListener: function(){}
-      , dispatchEvent: function(){}
-    }
-})
+    module.exports =
+}( require("./class").class )

@@ -5,288 +5,152 @@
 */
 
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-"use strict"
+void function(klass){
+    "use strict"
 
-var _ = require("./utils")
+    module.exports.Iterator = klass(function(statics){
+        statics.enumerate = function(){
+            var o = arguments[0] || Object.create(null)
+              , rv, i, l, lead, trail
 
-module.exports.class = function(args, Super, statics, Class, prototype){
-    args = _.spread(arguments)
-    Super = args.length == 2 ? args[0] : null
-    statics = {}, k
-    prototype = function(){
-        if ( typeof args[args.length-1] == "function" )
-          args[args.length-1] = _.invoke(args[args.length-1], { $Super: Super, $static: statics, 0: Super, 1: statics, length: 2 })
+            try {
+                return Object.keys(o)
+            } catch(e) {
+                rv = []
 
-        if ( !_.native(args[args.length-1].constructor) ) {
-          Class = args[args.length-1].constructor
-          delete args[args.length-1].constructor
+                if ( Object.prototype.toString.call(o) == "[object String]" )
+                  for ( i = 0, l = o.length; i < l; i++ ) {
+                      lead = o.charCodeAt(i)
+                      trail = o.charCodeAt(i<l-1?i+1:"")
+
+                      rv.push( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF ? o[i]+o[++i] : o[i] )
+                  }
+
+                return rv
+            }
         }
-
-        return _.invoke(mixin, args)
-    }()
-
-    Class = Class || function(){}
-    Class.prototype = prototype
-    Class.prototype.constructor = Class
-
-    for ( k in statics ) if ( statics.hasOwnProperty(k) )
-      Class[k] = statics[k]
-
-    Class.Super = Super
-
-    Class.create = function(args){
-        args = arguments
-
-        function F(){ return _.invoke(Class, args, this) }
-        F.prototype = Class.prototype
-
-        return new F
-    }
-
-    Class.extend = function(){
-        return _.invoke(module.exports.class, [Class].concat(slice(arguments)))
-    }
-
-    Class.isImplementedBy = function(k, i, l, prototype){
-        i = 0
-        l = arguments.length
-
-        for ( ; i < l; i++ ) {
-            prototype = typeof arguments[i] == "function" ? arguments[i].prototype
-                      : arguments[i] ? arguments[i] : {}
-
-          for ( k in Class.prototype )
-            if ( k != "constructor" && prototype[k] !== Class.prototype[k] )
-              return false
-        }
-
-        return true
-    }
-
-    Class.implementsOn = function(k, i, l, prototype){
-        i = 0
-        l = arguments.length
-
-        for ( ; i < l; i++ ) {
-            prototype = typeof arguments[i] == "function" ? arguments[i].prototype
-                      : arguments[i] ? arguments[i] : {}
-
-            for ( k in Class.prototype ) if ( k !== "constructor" )
-              prototype[k] = Class.prototype[k]
-        }
-
-    }
-
-    return Class
-}
-
-module.exports.singleton = function(F, G){
-    F = _.invoke(module.exports.class, arguments)
-    G = module.exports.class(F, function(Super, statics, k){
-        statics.instance = null
-
-        for ( k in F ) if ( F.hasOwnProperty(k) )
-          statics[k] = F[k]
 
         return {
-            constructor: function(g){
-                g = this
+            constructor: function(){
+                module.exports.Iterator.prototype.initIterator.apply(this, arguments)
+            }
+          , initIterator: {
+                value: function(){
+                    var opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
+                      , keys = statics.enumerate(arguments[0])
+                      , i = 0, l = keys.length
 
-                if ( G.instance )
-                  return  G.instance
-                G.instance = g
+                    this._pointer = -1
+                    this._range = []
 
-                return _.invoke(Super, arguments, g)
+                    for ( ; i < l; i++ )
+                      this._range[i] = opt_keys ? [ keys[i] ] : [ keys[i], arguments[0][keys[i]] ]
+                }
+            }
+          , next: { enumerable: true,
+                value: function(){
+                    var idx = ++this._pointer
+
+                    if ( idx >= (this._range = this._range || []).length )
+                      return { index: null, value: null, done: true }
+                    return { index: idx, value: this._range[idx][this._range[idx].length-1], done: false }
+                }
             }
         }
     })
 
-  return G
+}( require("./class").class )
 
-}
+},{"./class":2}],2:[function(require,module,exports){
+void function(){ "use strict"
+    var rnative = /\s*\[native code\]\s*/i
 
-function mixin(args, k, i, l, prototype, superPrototype){
-    args = _.spread(arguments)
-    i = 0, l = args.length
-    prototype = {}
+    module.exports.class = function(){
+        var args = Array.prototype.slice.call(arguments)
+          , statics = Object.create(null), k
+          , Class
+          , prototype = Object.create({})
 
-    for ( ; i < l; i++ ) {
-      superPrototype = typeof args[i] == "function" ? args[i].prototype
-                     : args[i] ? args[i] : {}
+        args[args.length-1] = function getDescriptors(descriptors, keys, i, l){
+            if ( typeof descriptors == "function" )
+              return getDescriptors( descriptors.call(null, statics) )
 
-        for ( k in superPrototype )
-          if ( prototype[k] !== superPrototype[k] && superPrototype[k] !== Object.prototype[k] )
-            prototype[k] = superPrototype[k]
-    }
+            descriptors.constructor = descriptors.constructor || function(){}
+            Class = typeof descriptors.constructor == "function" && !descriptors.constructor.toString().match(rnative) ? descriptors.constructor
+                  : typeof descriptors.constructor.value == "function" && !descriptors.constructor.value.toString().match(rnative) ? descriptors.constructor.value
+                  : function(){}
+            delete descriptors.constructor
 
-    delete prototype.constructor
-    return prototype
-}
-
-},{"./utils":3}],2:[function(require,module,exports){
-"use strict"
-
-void function(korbutJS, define){
-
-    korbutJS.utils = require("./utils")
-    korbutJS.class = require("./class").class
-    korbutJS.singleton = require("./class").singleton
-
-    //korbutJS.Event = require("./Event")
-    //korbutJS.EventTarget = require("./EventTarget")
-
-    if ( typeof define == "function" && define.amd )
-      define(function(require, module, exports){
-          module.exports = korbutJS
-      })
-    else
-      window.korbutJS = korbutJS
-}( { version: "0.0.0-1395214046098" }, window.define )
-
-},{"./class":1,"./utils":3}],3:[function(require,module,exports){
-"use strict"
-
-var STRICT_MODE = function(){
-        return this === void 0
-    }()
-
-module.exports.rcaptureargs = /(?=^|\s*)function(?:[^\(]*)\(([^\)]*)/
-module.exports.rnative = /\s*\[native code\]\s*/i
-
-module.exports.native = function(fn){
-    try {
-        return !!fn.toString().match(module.exports.rnative)
-    } catch(e) {
-        return null
-    }
-}
-
-module.exports.typeof = function(toString){
-    return function(o){
-        return toString.call(o).slice(8, -1).toLowerCase()
-    }
-}( Object.prototype.toString )
-
-module.exports.object = function(o){
-    return !!o && o.constructor === Object
-}
-
-module.exports.invocable = function(o){
-    return !!o && ( typeof o == "function" || typeof o.handleInvoke == "function" )
-}
-
-module.exports.eventable = function(o){
-    return !!o && (module.exports.invocable(o) || module.exports.invocable(o.handleEvent))
-}
-
-module.exports.routable = function(o){
-    return !!o && (module.exports.invocable(o) || module.exports.invocable(o.handleRoute))
-}
-
-module.exports.thenable = function(o){
-    return !!o && (module.exports.invocable(o) || module.exports.invocable(o.handleResolve) || module.exports.invocable(o.handleReject))
-}
-
-module.exports.spread = function(slice){
-    return function(o, idx, rv, i, l){
-        try {
-            return slice.call(o, +idx)
-        } catch(e){ }
-
-        rv = []
-        o = !!o && o.length ? o : []
-
-        for ( i = 0, l = o.length; i < l; i++ )
-          rv.push(o[i])
-
-        rv.splice(idx, Math.max(0, rv.length-idx))
-
-        return rv
-    }
-}( Array.prototype.slice )
-
-module.exports.enumerate = function(o, k, i, l, rv, lead, trail){
-    try {
-        return Object.keys(o)
-    } catch(e) {}
-
-    rv = []
-    o = !!o ? (!!o.callee ? module.exports.spread(o) : o) : {}
-
-    if ( module.exports.typeof(o) == "string" )
-      for ( i = 0, l = o.length; i < l; i++ ) {
-          lead = o.charCodeAt(i)
-          trail = o.charCodeAt(i<l-1?i+1:"")
-
-          if ( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF )
-            rv.push(o.charAt(i)+o.charAt(++i))
-          else
-            rv.push(o.charAt(i))
-      }
-    else
-      for ( k in o ) if ( rv.hasOwnProperty.call(o, k) )
-        rv.push(k)
-
-    return rv
-}
-
-module.exports.invoke = function(){
-    return function(fn, args, ctx){
-        fn = arguments[0] && typeof arguments[0].handleInvoke == "function" ? ( ctx = arguments[0], ctx.handleInvoke )
-           : typeof arguments[0] == "function" ? arguments[0]
-           : function(args){ throw new TypeError("") }(arguments) //TODO
-
-        args = Array.isArray(arguments[1]) ? arguments[1]
-             : arguments[1] && ( (!STRICT_MODE&&!!arguments[1].callee)||module.exports.typeof(arguments[1]) == "[object Arguments]" ) ? arguments[1]
-             : module.exports.object(arguments[1]) ? buildMagicArguments(fn, arguments[1])
-             : []
-
-        ctx = ctx || arguments[2]
-
-        switch ( args.length ){
-            case 0: return fn.call(ctx)
-            case 1: return fn.call(ctx, args[0])
-            case 2: return fn.call(ctx, args[0], args[1])
-            case 3: return fn.call(ctx, args[0], args[1], args[2])
-        }
-
-        return fn.apply(ctx, args)
-    }
-
-    function extractArguments(fn, args, i, l){
-        args = function(){
             try {
-                return fn.toString().match(module.exports.rcaptureargs)[1].split(",")
+                return { prototype: Object.create(null, descriptors) }
             } catch(e) {
-                return []
+                keys = Object.keys(descriptors)
+                while ( keys.length )
+                  void function(key){
+                      descriptors[key] = descriptors[key].constructor == Object
+                                         && ( descriptors[key].hasOwnProperty("value")
+                                              || descriptors[key].hasOwnProperty("get")
+                                              || descriptors[key].hasOwnProperty("set") )
+                                       ? descriptors[key]
+                                       : { configurable: true, enumerable: true, writable: true,
+                                           value: descriptors[key] }
+                  }( keys.shift() )
+
+                return { prototype: Object.create(null, descriptors) }
             }
-        }()
-        i = 0
-        l = args.length
+        }( args[args.length-1] )
 
-        for ( ; i < l; i++ )
-          args[i] = String.prototype.trim.call(args[i])
+        while ( args.length )
+          void function(Super, propertyNames){
+              try {
+                  propertyNames = Object.getOwnPropertyNames(Super.prototype)
+              } catch(e){
+                  propertyNames = []
+              }
 
-        return args
+              while ( propertyNames.length )
+                void function(property, descriptor){
+                    Object.defineProperty(prototype, property, descriptor)
+                }( propertyNames[0], Object.getOwnPropertyDescriptor(Super.prototype, propertyNames.shift()) )
+          }( args.shift() )
+        Object.defineProperty(prototype, "constructor", { configurable: true, value: Class })
+
+        Class.prototype = prototype
+
+        for ( k in statics )
+          Class[k] = statics[k]
+
+        return Class
     }
 
-    function buildMagicArguments(fn, args, waited, i, j, l, rv){
-        waited = extractArguments(fn)
-        i = 0
-        j = 0
-        rv = []
+    module.exports.singleton = function(){
+        var F = module.exports.class.apply(null, arguments)
+          , G = module.exports.class.call(null, F, function(statics, k){
+                for ( k in F )
+                  statics[k] = F[k]
 
-        for ( l = waited.length||0; i < l; i++ )
-          if ( args.hasOwnProperty(waited[i]) )
-            rv[i] = args[waited[i]]
-          else
-            rv[i] = args[j++]
+                return {
+                    constructor: function(){
+                        if ( G.instance )
+                          return G.instance
+                        G.instance = this
 
-        for ( l = args.length; j < l; j++)
-          rv.push(args[j])
-
-        return rv
+                        return F.apply(this, arguments)
+                    }
+                }
+            })
     }
 }()
 
-},{}]},{},[2])
+},{}],3:[function(require,module,exports){
+void function(ns){ "use strict"
+
+    ns.class = require("./class").class
+    ns.singleton = require("./class").singleton
+
+    ns.Iterator = require("./Iterator").Iterator
+
+    window.k = ns
+}( { version: "korbutJS-ES5-0.0.0-1395240026522" } )
+
+},{"./Iterator":1,"./class":2}]},{},[3])
