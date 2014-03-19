@@ -1,7 +1,7 @@
 describe("korbutJS.utils", function(){
 
     describe("#native()", function(){
-        it("should return `true` if a passed function is [native code], `false otherwise`. If it can't process passed argument, it returns `null`", function(){
+        it("should return `true` if a passed function is `[native code]`, `false` otherwise. If it can't process passed argument, it returns `null`", function(){
             chai.expect( korbutJS.utils.native( Function.prototype.call ) ).to.be.true
             chai.expect( korbutJS.utils.native( korbutJS.utils.native ) ).to.be.false
             chai.expect( korbutJS.utils.native() ).to.be.null
@@ -9,7 +9,7 @@ describe("korbutJS.utils", function(){
     })
 
     describe("#typeof()", function(){
-        it("should return the lowercase version of the second part of Object.prototype.toString called on passed argument", function(){
+        it("should return the lowercase version of the second part of *Object.prototype.toString()* called on passed argument", function(){
             chai.expect( korbutJS.utils.typeof( {} ) ).to.equal("object")
             chai.expect( korbutJS.utils.typeof( new Object ) ).to.equal("object")
 
@@ -32,7 +32,7 @@ describe("korbutJS.utils", function(){
     })
 
     describe("#object()", function(){
-        it("should return true if passed argument has `Object` as `constructor`, `false` otherwise", function(){
+        it("should return `true` if passed argument has `Object` as *constructor*, `false` otherwise", function(){
             chai.expect( korbutJS.utils.object( {} ) ).to.be.true
             chai.expect( korbutJS.utils.object( Object.create({}) ) ).to.be.true
             chai.expect( korbutJS.utils.object( { constructor: function(){} } ) ).to.be.false
