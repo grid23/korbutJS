@@ -2,7 +2,7 @@ void function(klass){
     "use strict"
 
     module.exports.Iterator = klass(function(statics){
-        statics.enumerate = function(){
+        statics.iterate = function(){
             var o = arguments[0] || Object.create(null)
               , rv, i, l, lead, trail
 
@@ -30,11 +30,13 @@ void function(klass){
           , initIterator: {
                 value: function(){
                     var opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
-                      , keys = statics.enumerate(arguments[0])
+                      , keys = statics.iterate(arguments[0])
                       , i = 0, l = keys.length
 
-                    this._pointer = -1
-                    this._range = []
+                    Object.defineProperties(this, {
+                        _pointer: { writable: true, value: -1 }
+                      , _range: { value: [] }
+                    })
 
                     for ( ; i < l; i++ )
                       this._range[i] = opt_keys ? [ keys[i] ] : [ keys[i], arguments[0][keys[i]] ]
