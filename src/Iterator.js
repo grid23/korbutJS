@@ -2,36 +2,42 @@ void function(klass){
     "use strict"
 
     module.exports.Iterator = klass(function(statics){
-        statics.iterate = function(){
-            var o = arguments[0] || Object.create(null)
-              , rv, i, l, lead, trail
 
-            try {
-                return Object.keys(o)
-            } catch(e) {
-                rv = []
+        Object.defineProperties(statics, {
+            iterate: { enumerable: true,
+                value: function(o, rv, i, l, lead, trail){
+                    o = o || Object.create(null)
 
-                if ( Object.prototype.toString.call(o) == "[object String]" )
-                  for ( i = 0, l = o.length; i < l; i++ ) {
-                      lead = o.charCodeAt(i)
-                      trail = o.charCodeAt(i<l-1?i+1:"")
+                    try {
+                        return Object.keys(o)
+                    } catch(e) {
+                        rv = []
 
-                      rv.push( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF ? o[i]+o[++i] : o[i] )
-                  }
+                        if ( Object.prototype.toString.call(o) == "[object String]" )
+                          for ( i = 0, l = o.length; i < l; i++ ) {
+                              lead = o.charCodeAt(i)
+                              trail = o.charCodeAt(i<l-1?i+1:"")
 
-                return rv
+                              rv.push( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF ? o[i]+o[++i] : o[i] )
+                          }
+
+                        return rv
+                    }
+                }
+
             }
-        }
+        })
 
         return {
             constructor: function(){
                 module.exports.Iterator.prototype.initIterator.apply(this, arguments)
             }
           , initIterator: {
-                value: function(){
-                    var opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
-                      , keys = statics.iterate(arguments[0])
-                      , i = 0, l = keys.length
+                value: function(o, opt_keys, keys, i, l){
+                    opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
+                    keys = statics.iterate(o)
+                    i = 0
+                    l = keys.length
 
                     Object.defineProperties(this, {
                         _pointer: { writable: true, value: -1 }
@@ -43,8 +49,8 @@ void function(klass){
                 }
             }
           , next: { enumerable: true,
-                value: function(){
-                    var idx = ++this._pointer
+                value: function(idx){
+                    idx = ++this._pointer
 
                     if ( idx >= (this._range = this._range || []).length )
                       return { index: null, value: null, done: true }

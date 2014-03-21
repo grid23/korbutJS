@@ -2,16 +2,19 @@ void function(_, klass, Event){
     "use strict"
 
     module.exports.EventTarget = klass(function(statics){
-        function isEventListener(o){
-            return o && typeof o == "function" || typeof o.handleEvent == "function"
-        }
+
+        Object.defineProperties(statics, {
+            "isEventListener": {
+                value: function(o){
+                    return o && (typeof o == "function" || typeof o.handleEvent == "function")
+                }
+            }
+        })
 
         return {
             addEventListener: { enumerable: true,
-                value: function(){
-                    this._events = this._events || Object.defineProperty(this, "_events", { value: Object.create(null) })._events
-
-                    var type, handler, handlers
+                value: function(type, handler, handlers){
+                    !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
                     if ( arguments.length == 1 && arguments[0].constructor === Object )
                       return function(self, events, k){
@@ -19,8 +22,8 @@ void function(_, klass, Event){
                             self.addEventListener(k, events[k])
                       }( this, arguments[0] )
 
-                    type = _.typeof(arguments[0]) == "string" ? arguments[0] : null
-                    handler = isEventListener(arguments[1]) ? arguments[1] : null
+                    type = _.typeof(type) == "string" ? type : null
+                    handler = statics.isEventListener(handler) ? handler : null
                     handlers = this._events[type]
 
                     if ( !type || !handler )
@@ -30,17 +33,15 @@ void function(_, klass, Event){
                       handlers.push(handler)
                     else if ( !handlers || handlers === Object.prototype[type] )
                       this._events[type] = handler
-                    else if ( isEventListener(handlers) )
+                    else if ( statics.isEventListener(handlers) )
                       this._events[type] = [handlers, handler]
 
                     return 1
                 }
             }
           , removeEventListener: { enumerable: true,
-                value: function(){
-                    this._events = this._events || Object.defineProperty(this, "_events", { value: [] })._events
-
-                    var type, handler, handlers
+                value: function(type, handler, handlers){
+                    !this._events && Object.defineProperty(this, "_events", { value: [] })._events
 
                     if ( arguments.length == 1 && arguments[0].constructor === Object )
                       return function(self, events, k){
@@ -48,13 +49,12 @@ void function(_, klass, Event){
                             self.removeEventListener(k, events[k])
                       }( this, arguments[0] )
 
-                    type = _.typeof(arguments[0]) == "string" ? arguments[0] : null
-                    handler = isEventListener(arguments[1]) || arguments[1] == "*" ? arguments[1] : null
+                    type = _.typeof(type) == "string" ? type : null
+                    handler = statics.isEventListener(type) || type == "*" ? type : null
                     handlers = this._events[type]
 
                     if ( !type || !handler || !handlers )
                       return 0
-
 
                     if ( handlers === handler ) {
                         delete this._events[type]
@@ -85,8 +85,8 @@ void function(_, klass, Event){
                 }
             }
           , getEventlisteners: { enumerable: true,
-                value: function(){
-                    var handlers = (this._events||Object.create(null))[arguments[0]]
+                value: function(type, handlers){
+                    handlers = (this._events||{})[type||""]
 
                     return Array.isArray(handlers) ? [].concat(handlers)
                          : handlers ? [handlers] : []
@@ -94,27 +94,27 @@ void function(_, klass, Event){
             }
 
           , dispatchEvent: { enumerable: true,
-                value: function(){
-                    var event = Event.isImplementedBy(arguments[0]) ? arguments[0] : Event.create.apply(null, arguments)
-                      , handlers = (this._events||{})[event.type]
-                      , count = 0
+                value: function(event, handlers, count){
+                    event = Event.isImplementedBy(event) ? event : Event.create.apply(null, arguments)
+                    handlers = (this._events||{})[event.type]
+                    count = 0
 
                     if ( event.type == "error" && !handlers )
-                      throw ( event.detail.object || event.detail[0] || new Error(event.detail.message) )
+                      throw Event.isImplementedBy(event.detail) ? event.detail : new Error
 
                     if ( handlers )
-                      if ( _.typeof(handlers) == "function" )
+                      if ( typeof handlers == "function" )
                         handlers.call(null, event), count++
-                      else if ( _.typeof(handlers.handleEvent) == "function" )
-                        handlers.call(handlers, event), count++
                       else if ( Array.isArray(handlers) )
                         void function(handlers){
                             while ( handlers.length )
-                              if ( _.typeof(handlers[i]) == "function" )
+                              if ( typeof handlers[i] == "function" )
                                 handlers[i].call(null, event), count++
-                              else if ( _.typeof(handlers.handleEvent) == "function" )
+                              else if ( typeof handlers.handleEvent == "function" )
                                 handlers[i].call(handlers, event), count++
                         }( [].concat(handlers) )
+                      else if ( typeof handlers.handleEvent == "function" )
+                        handlers.call(handlers, event), count++
 
                     return count
                 }

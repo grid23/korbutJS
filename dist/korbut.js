@@ -11,25 +11,24 @@ void function(_, klass){
     module.exports.Event = klass(function(statics){
 
         return {
-            constructor: function(){
-                module.exports.Event.prototype.initEvent.apply(this, arguments)
+            constructor: function(type, detail){
+                type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
+                detail = function(detail){
+                    return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
+                         : detail.length == 1 && detail[0].constructor === Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
+                         : detail.length == 1 ? detail[0]
+                         : detail
+                }( _.spread(arguments, 1) )
+
+                Object.defineProperties(this, {
+                    "_type": { configurable: true, value: type }
+                  , "_detail": { configurable: true, value: detail }
+                  , "_timestamp": { configurable: true, value: +(new Date) }
+                })
             }
           , initEvent: {
                 value: function(){
-                    var args = _.spread(arguments)
-                      , data = args[args.length-1] && args[args.length-1].constructor === Object ? args.pop() : {}
-                      , detail = this.detail !== void 0 && data.detail !== void 0 && data.detail !== null ? data.detail : null
-                      , type = !this.type && _.typeof(args[0]) == "string" ? args.shift()
-                             : !this.type ? "error"
-                             : null
-
-                    if ( !this.type )
-                      Object.defineProperty(this, "_type", { value: type })
-
-                    if ( this.detail !== void 0 )
-                      Object.defineProperty(this, "_detail", { value: detail })
-
-                    Object.defineProperty(this, "_timestamp", { value: +(new Date) })
+                    return this.constructor.apply(this, arguments)
                 }
             }
 
@@ -53,21 +52,24 @@ void function(_, klass){
 
 }( require("./utils"), require("./class").class )
 
-},{"./class":4,"./utils":6}],2:[function(require,module,exports){
+},{"./class":5,"./utils":7}],2:[function(require,module,exports){
 void function(_, klass, Event){
     "use strict"
 
     module.exports.EventTarget = klass(function(statics){
-        function isEventListener(o){
-            return o && typeof o == "function" || typeof o.handleEvent == "function"
-        }
+
+        Object.defineProperties(statics, {
+            "isEventListener": {
+                value: function(o){
+                    return o && (typeof o == "function" || typeof o.handleEvent == "function")
+                }
+            }
+        })
 
         return {
             addEventListener: { enumerable: true,
-                value: function(){
-                    this._events = this._events || Object.defineProperty(this, "_events", { value: Object.create(null) })._events
-
-                    var type, handler, handlers
+                value: function(type, handler, handlers){
+                    !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
                     if ( arguments.length == 1 && arguments[0].constructor === Object )
                       return function(self, events, k){
@@ -75,8 +77,8 @@ void function(_, klass, Event){
                             self.addEventListener(k, events[k])
                       }( this, arguments[0] )
 
-                    type = _.typeof(arguments[0]) == "string" ? arguments[0] : null
-                    handler = isEventListener(arguments[1]) ? arguments[1] : null
+                    type = _.typeof(type) == "string" ? type : null
+                    handler = statics.isEventListener(handler) ? handler : null
                     handlers = this._events[type]
 
                     if ( !type || !handler )
@@ -86,17 +88,15 @@ void function(_, klass, Event){
                       handlers.push(handler)
                     else if ( !handlers || handlers === Object.prototype[type] )
                       this._events[type] = handler
-                    else if ( isEventListener(handlers) )
+                    else if ( statics.isEventListener(handlers) )
                       this._events[type] = [handlers, handler]
 
                     return 1
                 }
             }
           , removeEventListener: { enumerable: true,
-                value: function(){
-                    this._events = this._events || Object.defineProperty(this, "_events", { value: [] })._events
-
-                    var type, handler, handlers
+                value: function(type, handler, handlers){
+                    !this._events && Object.defineProperty(this, "_events", { value: [] })._events
 
                     if ( arguments.length == 1 && arguments[0].constructor === Object )
                       return function(self, events, k){
@@ -104,13 +104,12 @@ void function(_, klass, Event){
                             self.removeEventListener(k, events[k])
                       }( this, arguments[0] )
 
-                    type = _.typeof(arguments[0]) == "string" ? arguments[0] : null
-                    handler = isEventListener(arguments[1]) || arguments[1] == "*" ? arguments[1] : null
+                    type = _.typeof(type) == "string" ? type : null
+                    handler = statics.isEventListener(type) || type == "*" ? type : null
                     handlers = this._events[type]
 
                     if ( !type || !handler || !handlers )
                       return 0
-
 
                     if ( handlers === handler ) {
                         delete this._events[type]
@@ -141,8 +140,8 @@ void function(_, klass, Event){
                 }
             }
           , getEventlisteners: { enumerable: true,
-                value: function(){
-                    var handlers = (this._events||Object.create(null))[arguments[0]]
+                value: function(type, handlers){
+                    handlers = (this._events||{})[type||""]
 
                     return Array.isArray(handlers) ? [].concat(handlers)
                          : handlers ? [handlers] : []
@@ -150,27 +149,27 @@ void function(_, klass, Event){
             }
 
           , dispatchEvent: { enumerable: true,
-                value: function(){
-                    var event = Event.isImplementedBy(arguments[0]) ? arguments[0] : Event.create.apply(null, arguments)
-                      , handlers = (this._events||{})[event.type]
-                      , count = 0
+                value: function(event, handlers, count){
+                    event = Event.isImplementedBy(event) ? event : Event.create.apply(null, arguments)
+                    handlers = (this._events||{})[event.type]
+                    count = 0
 
                     if ( event.type == "error" && !handlers )
-                      throw ( event.detail.object || event.detail[0] || new Error(event.detail.message) )
+                      throw Event.isImplementedBy(event.detail) ? event.detail : new Error
 
                     if ( handlers )
-                      if ( _.typeof(handlers) == "function" )
+                      if ( typeof handlers == "function" )
                         handlers.call(null, event), count++
-                      else if ( _.typeof(handlers.handleEvent) == "function" )
-                        handlers.call(handlers, event), count++
                       else if ( Array.isArray(handlers) )
                         void function(handlers){
                             while ( handlers.length )
-                              if ( _.typeof(handlers[i]) == "function" )
+                              if ( typeof handlers[i] == "function" )
                                 handlers[i].call(null, event), count++
-                              else if ( _.typeof(handlers.handleEvent) == "function" )
+                              else if ( typeof handlers.handleEvent == "function" )
                                 handlers[i].call(handlers, event), count++
                         }( [].concat(handlers) )
+                      else if ( typeof handlers.handleEvent == "function" )
+                        handlers.call(handlers, event), count++
 
                     return count
                 }
@@ -180,41 +179,47 @@ void function(_, klass, Event){
 
 }( require("./utils"), require("./class").class, require("./Event").Event )
 
-},{"./Event":1,"./class":4,"./utils":6}],3:[function(require,module,exports){
+},{"./Event":1,"./class":5,"./utils":7}],3:[function(require,module,exports){
 void function(klass){
     "use strict"
 
     module.exports.Iterator = klass(function(statics){
-        statics.iterate = function(){
-            var o = arguments[0] || Object.create(null)
-              , rv, i, l, lead, trail
 
-            try {
-                return Object.keys(o)
-            } catch(e) {
-                rv = []
+        Object.defineProperties(statics, {
+            iterate: { enumerable: true,
+                value: function(o, rv, i, l, lead, trail){
+                    o = o || Object.create(null)
 
-                if ( Object.prototype.toString.call(o) == "[object String]" )
-                  for ( i = 0, l = o.length; i < l; i++ ) {
-                      lead = o.charCodeAt(i)
-                      trail = o.charCodeAt(i<l-1?i+1:"")
+                    try {
+                        return Object.keys(o)
+                    } catch(e) {
+                        rv = []
 
-                      rv.push( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF ? o[i]+o[++i] : o[i] )
-                  }
+                        if ( Object.prototype.toString.call(o) == "[object String]" )
+                          for ( i = 0, l = o.length; i < l; i++ ) {
+                              lead = o.charCodeAt(i)
+                              trail = o.charCodeAt(i<l-1?i+1:"")
 
-                return rv
+                              rv.push( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF ? o[i]+o[++i] : o[i] )
+                          }
+
+                        return rv
+                    }
+                }
+
             }
-        }
+        })
 
         return {
             constructor: function(){
                 module.exports.Iterator.prototype.initIterator.apply(this, arguments)
             }
           , initIterator: {
-                value: function(){
-                    var opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
-                      , keys = statics.iterate(arguments[0])
-                      , i = 0, l = keys.length
+                value: function(o, opt_keys, keys, i, l){
+                    opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
+                    keys = statics.iterate(o)
+                    i = 0
+                    l = keys.length
 
                     Object.defineProperties(this, {
                         _pointer: { writable: true, value: -1 }
@@ -226,8 +231,8 @@ void function(klass){
                 }
             }
           , next: { enumerable: true,
-                value: function(){
-                    var idx = ++this._pointer
+                value: function(idx){
+                    idx = ++this._pointer
 
                     if ( idx >= (this._range = this._range || []).length )
                       return { index: null, value: null, done: true }
@@ -239,14 +244,105 @@ void function(klass){
 
 }( require("./class").class )
 
-},{"./class":4}],4:[function(require,module,exports){
+},{"./class":5}],4:[function(require,module,exports){
+void function(_, klass){ "use strict"
+
+    module.exports.Promise = klass(function(statics){
+        Object.defineProperties(statics, {
+            PENDING: { enumerable: true, value: 1 }
+          , REJECTED: { enumerable: true, value: 2 }
+          , RESOLVED: { enumerable: true, value: 4 }
+
+          , all: { enumerable: true,
+                value: function(){}
+            }
+          , cast: { enumerable: true,
+                value: function(){}
+            }
+          , race: { enumerable: true,
+                value: function(){}
+            }
+          , reject: { enumerable: true,
+                value: function(reason){
+                    return new Promise(function(resolve, reject){
+                        reject(reason)
+                    })
+                }
+            }
+          , resolve: { enumerable: true,
+                value: function(value){
+                    return new Promise(function(resolve){
+                        resolve(value)
+                    })
+                }
+            }
+        })
+
+        return {
+            constructor: function(resolver){
+                if ( typeof resolver !== "function" )
+                  throw new Error //TODO
+
+                void function(self){
+                    function resolve(){
+
+                    }
+
+                    function reject(){
+
+                    }
+
+                    resolver.call(null, resolve, reject)
+                }( this )
+            }
+          , then: { enumerable: true,
+                value: function(onresolve, onreject){
+                    onresolve = typeof onresolve == "function" ? onresolve : null
+                    onreject = typeof onreject == "function" ? onreject : (this._defaultRejectHandler || null)
+
+                }
+            }
+          , catch: { enumerable: true,
+                value: function(onreject){
+                    typeof onreject == "function" && Object.define(this, "_defaultRejectHandler", { configurable: true, value: onreject })
+                }
+            }
+
+          , _promiseState: { configurable: true, writable: true,
+                value: statics.PENDING
+            }
+          , state: { enumerable: true,
+                get: function(){
+                    return this._promiseState
+                }
+            }
+          , PENDING: { enumerable: true,
+                get: function(){
+                    return statics.PENDING
+                }
+            }
+          , REJECTED: { enumerable: true,
+                get: function(){
+                    return statics.REJECTED
+                }
+            }
+          , RESOLVED: { enumerable: true,
+                get: function(){
+                    return statics.RESOLVED
+                }
+            }
+        }
+    })
+
+}( require("./utils"), require("./class").class)
+
+},{"./class":5,"./utils":7}],5:[function(require,module,exports){
 void function(_){ "use strict"
 
-    module.exports.class = function(){
-        var args = _.spread(arguments)
-          , statics = Object.create(null), k
-          , Class
-          , prototype = Object.create({})
+    module.exports.class = function(args, statics, Class, prototype, k){
+        args = _.spread(arguments)
+        statics = Object.create(null), k
+        prototype = Object.create({})
 
         args[args.length-1] = function getDescriptors(descriptors, keys, i, l){
             if ( _.typeof(descriptors) == "function" )
@@ -294,70 +390,89 @@ void function(_){ "use strict"
 
         Class.prototype = prototype
 
-        for ( k in statics )
-          Class[k] = statics[k]
-
-        Class.create = function(){
-            var ars = _.spread(arguments)
-            function F(){
-                return Class.apply(this, args)
-            }
-            F.prototype = Class.prototype
-
-            return new F
-        }
-
-        Class.extend = function(){
-            return module.exports.class.apply(null, [Class].concat(_.spread(arguments)))
-        }
-
-        Class.isImplementedBy = function(){
-            var prototype = _.typeof(arguments[0]) == "function" ? arguments[0].prototype : Object.create(null)
-              , k
-
-            if ( !o )
-              return false
-
-            if ( o instanceof Class )
-              return true
-
-            for ( k in Class.prototype )
-              if ( k != "contstructor" && Object.getOwnPropertyDescriptor(prototype, k).value != Object.getOwnPropertyDescriptor(Class.prototype, k).value )
-                return false
-            return true
-        }
-
-        Class.implementsOn = function(){
-            var prototype = !_.typeof(arguments[0]) == "function" ? arguments[0].prototype : {}
-              , properties = Object.getOwnPropertyNames(Class.prototype)
-
+        void function(properties){
             while ( properties.length )
-              Object.defineProperty(prototype, properties[0], Object.getOwnPropertyDescriptor(Class.prototype, properties.shift()))
-        }
+              Object.defineProperty(Class, properties[0], Object.getOwnPropertyDescriptor(statics, properties.shift()))
+        }( Object.getOwnPropertyNames(statics) )
+
+        !Class.hasOwnProperty("create") && Object.defineProperty(Class, "create", {
+            enumerable: true,
+            value: function(args){
+                args = _.spread(arguments)
+
+                function F(){
+                    return Class.apply(this, args)
+                }
+                F.prototype = Class.prototype
+
+                return new F
+            }
+        })
+
+        !Class.hasOwnProperty("extend") && Object.defineProperty(Class, "extend", {
+            enumerable: true,
+            value: function(){
+                return module.exports.class.apply(null, [Class].concat(_.spread(arguments)))
+            }
+        })
+
+        !Class.hasOwnProperty("isImplementedBy") && Object.defineProperty(Class, "isImplementedBy", {
+            enumerable: true,
+            value: function(o, prototype, k){
+                prototype = _.typeof(o) == "function" ? o.prototype : Object.create(null)
+
+                if ( !o )
+                  return false
+
+                if ( o instanceof Class )
+                  return true
+
+                for ( k in Class.prototype )
+                  if ( k != "constructor" && function(o, c){
+                      if ( o && c && o == c)
+                        return false
+                      return true
+                  }( Object.getOwnPropertyDescriptor(prototype, k), Object.getOwnPropertyDescriptor(Class.prototype, k) ) ) return false
+                return true
+            }
+        })
+
+        !Class.hasOwnProperty("extend") && Object.defineProperty(Class, "implementsOn", {
+            enumerable: true,
+            value: function(o, prototype, properties){
+                prototype = !_.typeof(o) == "function" ? o.prototype : {}
+                properties = Object.getOwnPropertyNames(Class.prototype)
+
+                while ( properties.length )
+                  Object.defineProperty(prototype, properties[0], Object.getOwnPropertyDescriptor(Class.prototype, properties.shift()))
+
+                Class.apply(this, _.spread(arguments, 1))
+            }
+        })
 
         return Class
     }
 
-    module.exports.singleton = function(){
-        var F = module.exports.class.apply(null, arguments)
-          , G = module.exports.class.call(null, F, function(statics, k){
-                for ( k in F )
-                  statics[k] = F[k]
+    module.exports.singleton = function(F, G){
+        F = module.exports.class.apply(null, arguments)
+        G = module.exports.class.call(null, F, function(statics, k){
+            for ( k in F )
+              statics[k] = F[k]
 
-                return {
-                    constructor: function(){
-                        if ( G.instance )
-                          return G.instance
-                        G.instance = this
+            return {
+                constructor: function(){
+                    if ( G.instance )
+                      return G.instance
+                    G.instance = this
 
-                        return F.apply(this, arguments)
-                    }
+                    return F.apply(this, arguments)
                 }
-            })
+            }
+        })
     }
 }( require("./utils") )
 
-},{"./utils":6}],5:[function(require,module,exports){
+},{"./utils":7}],6:[function(require,module,exports){
 void function(ns){ "use strict"
 
     ns.class = require("./class").class
@@ -366,11 +481,12 @@ void function(ns){ "use strict"
     ns.Iterator = require("./Iterator").Iterator
     ns.EventTarget = require("./EventTarget").EventTarget
     ns.Event = require("./Event").Event
+    ns.Promise = require("./Promise").Promise
 
     window.k = ns
-}( { version: "korbutJS-ES5-0.0.0-1395332472090" } )
+}( { version: "korbutJS-ES5-0.0.0-1395411247612" } )
 
-},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./class":4}],6:[function(require,module,exports){
+},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./class":5}],7:[function(require,module,exports){
 void function(){ "use strict"
 
     module.exports.native = function(rnative){
@@ -390,14 +506,13 @@ void function(){ "use strict"
     }( Array.prototype.slice )
 
     module.exports.typeof = function(toString){
-        return function(o){
-            var ntypeof = typeof o
+        return function(o, ntypeof){
+            ntypeof = typeof o
 
-            return typeof o != "object" ? toString.call(o).slice(8, -1).toLowerCase()
-                 : ntypeof
+            return ntypeof == "object" ? toString.call(o).slice(8, -1).toLowerCase() : ntypeof
         }
     }( Object.prototype.toString )
 
 }()
 
-},{}]},{},[5])
+},{}]},{},[6])

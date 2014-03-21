@@ -4,25 +4,24 @@ void function(_, klass){
     module.exports.Event = klass(function(statics){
 
         return {
-            constructor: function(){
-                module.exports.Event.prototype.initEvent.apply(this, arguments)
+            constructor: function(type, detail){
+                type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
+                detail = function(detail){
+                    return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
+                         : detail.length == 1 && detail[0].constructor === Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
+                         : detail.length == 1 ? detail[0]
+                         : detail
+                }( _.spread(arguments, 1) )
+
+                Object.defineProperties(this, {
+                    "_type": { configurable: true, value: type }
+                  , "_detail": { configurable: true, value: detail }
+                  , "_timestamp": { configurable: true, value: +(new Date) }
+                })
             }
           , initEvent: {
                 value: function(){
-                    var args = _.spread(arguments)
-                      , data = args[args.length-1] && args[args.length-1].constructor === Object ? args.pop() : {}
-                      , detail = this.detail !== void 0 && data.detail !== void 0 && data.detail !== null ? data.detail : null
-                      , type = !this.type && _.typeof(args[0]) == "string" ? args.shift()
-                             : !this.type ? "error"
-                             : null
-
-                    if ( !this.type )
-                      Object.defineProperty(this, "_type", { value: type })
-
-                    if ( this.detail !== void 0 )
-                      Object.defineProperty(this, "_detail", { value: detail })
-
-                    Object.defineProperty(this, "_timestamp", { value: +(new Date) })
+                    return this.constructor.apply(this, arguments)
                 }
             }
 

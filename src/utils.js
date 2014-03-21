@@ -17,11 +17,10 @@ void function(){ "use strict"
     }( Array.prototype.slice )
 
     module.exports.typeof = function(toString){
-        return function(o){
-            var ntypeof = typeof o
+        return function(o, ntypeof){
+            ntypeof = typeof o
 
-            return typeof o != "object" ? toString.call(o).slice(8, -1).toLowerCase()
-                 : ntypeof
+            return ntypeof == "object" ? toString.call(o).slice(8, -1).toLowerCase() : ntypeof
         }
     }( Object.prototype.toString )
 
