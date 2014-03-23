@@ -29,24 +29,19 @@ void function(klass){
         })
 
         return {
-            constructor: function(){
-                module.exports.Iterator.prototype.initIterator.apply(this, arguments)
-            }
-          , initIterator: {
-                value: function(o, opt_keys, keys, i, l){
-                    opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
-                    keys = statics.iterate(o)
-                    i = 0
-                    l = keys.length
+            constructor: function(o, opt_keys, keys, i, l){
+                opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
+                keys = statics.iterate(o)
+                i = 0
+                l = keys.length
 
-                    Object.defineProperties(this, {
-                        _pointer: { writable: true, value: -1 }
-                      , _range: { value: [] }
-                    })
+                Object.defineProperties(this, {
+                    _pointer: { writable: true, value: -1 }
+                  , _range: { value: [] }
+                })
 
-                    for ( ; i < l; i++ )
-                      this._range[i] = opt_keys ? [ keys[i] ] : [ keys[i], arguments[0][keys[i]] ]
-                }
+                for ( ; i < l; i++ )
+                  this._range[i] = opt_keys ? [ keys[i] ] : [ keys[i], arguments[0][keys[i]] ]
             }
           , next: { enumerable: true,
                 value: function(idx){

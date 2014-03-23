@@ -2,7 +2,7 @@ void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
         args = _.spread(arguments)
-        statics = Object.create(null), k
+        statics = Object.create(null)
         prototype = Object.create({})
 
         args[args.length-1] = function getDescriptors(descriptors, keys, i, l){

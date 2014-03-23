@@ -139,12 +139,9 @@ void function(_, klass, Event){
                       }( this, [].concat(handlers) )
                 }
             }
-          , getEventlisteners: { enumerable: true,
-                value: function(type, handlers){
-                    handlers = (this._events||{})[type||""]
-
-                    return Array.isArray(handlers) ? [].concat(handlers)
-                         : handlers ? [handlers] : []
+          , events: { enumerable: true,
+                get: function(){
+                    return Object.create(this._events||{})
                 }
             }
 
@@ -211,24 +208,19 @@ void function(klass){
         })
 
         return {
-            constructor: function(){
-                module.exports.Iterator.prototype.initIterator.apply(this, arguments)
-            }
-          , initIterator: {
-                value: function(o, opt_keys, keys, i, l){
-                    opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
-                    keys = statics.iterate(o)
-                    i = 0
-                    l = keys.length
+            constructor: function(o, opt_keys, keys, i, l){
+                opt_keys = !!arguments[1] || Object.prototype.toString.call(arguments[0]) == "[object String]"
+                keys = statics.iterate(o)
+                i = 0
+                l = keys.length
 
-                    Object.defineProperties(this, {
-                        _pointer: { writable: true, value: -1 }
-                      , _range: { value: [] }
-                    })
+                Object.defineProperties(this, {
+                    _pointer: { writable: true, value: -1 }
+                  , _range: { value: [] }
+                })
 
-                    for ( ; i < l; i++ )
-                      this._range[i] = opt_keys ? [ keys[i] ] : [ keys[i], arguments[0][keys[i]] ]
-                }
+                for ( ; i < l; i++ )
+                  this._range[i] = opt_keys ? [ keys[i] ] : [ keys[i], arguments[0][keys[i]] ]
             }
           , next: { enumerable: true,
                 value: function(idx){
@@ -247,13 +239,9 @@ void function(klass){
 },{"./class":5}],4:[function(require,module,exports){
 void function(_, klass){ "use strict"
 
-    module.exports.Promise = klass(function(statics){
+    module.exports.Promise = klass(function(statics, TRUST_KEY){
         Object.defineProperties(statics, {
-            PENDING: { enumerable: true, value: 1 }
-          , REJECTED: { enumerable: true, value: 2 }
-          , RESOLVED: { enumerable: true, value: 4 }
-
-          , all: { enumerable: true,
+            all: { enumerable: true,
                 value: function(){}
             }
           , cast: { enumerable: true,
@@ -278,70 +266,130 @@ void function(_, klass){ "use strict"
             }
         })
 
+        TRUST_KEY = +(new Date)
+
         return {
-            constructor: function(resolver){
+            constructor: function(resolver, internal){
                 if ( typeof resolver !== "function" )
                   throw new Error //TODO
 
-                void function(self){
-                    function resolve(){
+                resolver(resolve.bind(this), reject.bind(this))
 
-                    }
+                function resolve(v, handlers){
+                    resolve = reject = function(){}
 
-                    function reject(){
+                    Object.defineProperties(this, {
+                        "RESOLVED": { value: TRUST_KEY }
+                      , "YIELD": { get: function(){ return v } }
+                    })
 
-                    }
+                    handlers = Array.isArray(this._onresolve) ? [].concat(this._onresolve) : []
+                      while ( handlers.length )
+                        handlers.shift().call(null, v)
+                }
 
-                    resolver.call(null, resolve, reject)
-                }( this )
+                function reject(r, handlers){
+                    resolve = reject = function(){}
+                    Object.defineProperties(this, {
+                        "REJECTED": { value: TRUST_KEY }
+                      , "YIELD": { get: function(){ return r } }
+                    })
+
+
+                    handlers = Array.isArray(this._onreject) ? [].concat(this._onreject) : []
+                      while ( handlers.length )
+                        handlers.shift().call(null, r)
+                }
             }
           , then: { enumerable: true,
                 value: function(onresolve, onreject){
-                    onresolve = typeof onresolve == "function" ? onresolve : null
-                    onreject = typeof onreject == "function" ? onreject : (this._defaultRejectHandler || null)
+                    return function(self, hasResolved, hasRejected){
+                          if ( !hasResolved && !hasRejected ) {
+                            return new Promise(function(resolve, reject){
+                                !Array.isArray(self._onresolve) && Object.defineProperty(self, "_onresolve", { value: [] })
+                                !Array.isArray(self._onreject) && Object.defineProperty(self, "_onreject", { value: [] })
 
+                                self._onresolve.push(function(v, rv){
+                                    try {
+                                        rv = onresolve(v)
+                                    } catch(e) {
+                                        reject(e)
+                                        return
+                                    }
+
+                                    if ( rv && typeof rv.then == "function" )
+                                      rv.then(function(v){ resolve(v) }, function(r){ reject(r) })
+                                    else resolve(rv)
+                                })
+
+                                self._onreject.push(function(r, rv){
+                                    try {
+                                        rv = onreject(r)
+                                    } catch(e) {
+                                        reject(e)
+                                        return
+                                    }
+
+                                    if ( rv && typeof rv.then == "function" )
+                                      rv.then(function(v){ resolve(v) }, function(r){ reject(r) })
+                                    else resolve(rv)
+                                })
+                            })
+                          }
+
+                          else if ( hasResolved )
+                            return new Promise(function(resolve, reject, rv){
+                                try {
+                                    rv = typeof onresolve == "function" ? onresolve(self.YIELD) : null
+                                } catch(e) {
+                                    reject(e)
+                                    return
+                                }
+
+                                if ( rv && typeof rv.then == "function" )
+                                  rv.then(function(v){ resolve(v) }, function(r){ reject(r) })
+                                else resolve(rv)
+                            })
+
+                          else if ( hasRejected )
+                            return new Promise(function(resolve, reject, rv){
+                                try {
+                                    rv = typeof onreject == "function" ? onreject(self.YIELD) : null
+                                } catch(e) {
+                                    reject(e)
+                                    return
+                                }
+
+                                if ( rv && typeof rv.then == "function" )
+                                  rv.then(function(v){ resolve(v) }, function(r){ reject(r) })
+                                else resolve(rv)
+                            })
+                    }(this, this.RESOLVED == TRUST_KEY, this.REJECTED == TRUST_KEY)
                 }
             }
           , catch: { enumerable: true,
                 value: function(onreject){
-                    typeof onreject == "function" && Object.define(this, "_defaultRejectHandler", { configurable: true, value: onreject })
-                }
-            }
-
-          , _promiseState: { configurable: true, writable: true,
-                value: statics.PENDING
-            }
-          , state: { enumerable: true,
-                get: function(){
-                    return this._promiseState
-                }
-            }
-          , PENDING: { enumerable: true,
-                get: function(){
-                    return statics.PENDING
-                }
-            }
-          , REJECTED: { enumerable: true,
-                get: function(){
-                    return statics.REJECTED
-                }
-            }
-          , RESOLVED: { enumerable: true,
-                get: function(){
-                    return statics.RESOLVED
+                    return function(self){
+                        return new Promise(function(resolve, reject){
+                            self.then(resolve, function(r){
+                                reject(r)
+                                return onreject(r)
+                            })
+                        })
+                    }( this )
                 }
             }
         }
     })
 
-}( require("./utils"), require("./class").class)
+}( require("./utils"), require("./class").class )
 
 },{"./class":5,"./utils":7}],5:[function(require,module,exports){
 void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
         args = _.spread(arguments)
-        statics = Object.create(null), k
+        statics = Object.create(null)
         prototype = Object.create({})
 
         args[args.length-1] = function getDescriptors(descriptors, keys, i, l){
@@ -484,7 +532,7 @@ void function(ns){ "use strict"
     ns.Promise = require("./Promise").Promise
 
     window.k = ns
-}( { version: "korbutJS-ES5-0.0.0-1395411247612" } )
+}( { version: "korbutJS-ES5-0.0.0-1395533249850" } )
 
 },{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./class":5}],7:[function(require,module,exports){
 void function(){ "use strict"

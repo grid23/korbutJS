@@ -84,12 +84,9 @@ void function(_, klass, Event){
                       }( this, [].concat(handlers) )
                 }
             }
-          , getEventlisteners: { enumerable: true,
-                value: function(type, handlers){
-                    handlers = (this._events||{})[type||""]
-
-                    return Array.isArray(handlers) ? [].concat(handlers)
-                         : handlers ? [handlers] : []
+          , events: { enumerable: true,
+                get: function(){
+                    return Object.create(this._events||{})
                 }
             }
 
