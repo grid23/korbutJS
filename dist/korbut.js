@@ -252,14 +252,14 @@ void function(_, klass){ "use strict"
             }
           , reject: { enumerable: true,
                 value: function(reason){
-                    return new Promise(function(resolve, reject){
+                    return new module.exports.Promise(function(resolve, reject){
                         reject(reason)
                     })
                 }
             }
           , resolve: { enumerable: true,
                 value: function(value){
-                    return new Promise(function(resolve){
+                    return new module.exports.Promise(function(resolve){
                         resolve(value)
                     })
                 }
@@ -305,7 +305,7 @@ void function(_, klass){ "use strict"
                 value: function(onresolve, onreject){
                     return function(self, hasResolved, hasRejected){
                           if ( !hasResolved && !hasRejected ) {
-                            return new Promise(function(resolve, reject){
+                            return new module.exports.Promise(function(resolve, reject){
                                 !Array.isArray(self._onresolve) && Object.defineProperty(self, "_onresolve", { value: [] })
                                 !Array.isArray(self._onreject) && Object.defineProperty(self, "_onreject", { value: [] })
 
@@ -338,7 +338,7 @@ void function(_, klass){ "use strict"
                           }
 
                           else if ( hasResolved )
-                            return new Promise(function(resolve, reject, rv){
+                            return new module.exports.Promise(function(resolve, reject, rv){
                                 try {
                                     rv = typeof onresolve == "function" ? onresolve(self.YIELD) : null
                                 } catch(e) {
@@ -352,7 +352,7 @@ void function(_, klass){ "use strict"
                             })
 
                           else if ( hasRejected )
-                            return new Promise(function(resolve, reject, rv){
+                            return new module.exports.Promise(function(resolve, reject, rv){
                                 try {
                                     rv = typeof onreject == "function" ? onreject(self.YIELD) : null
                                 } catch(e) {
@@ -370,7 +370,7 @@ void function(_, klass){ "use strict"
           , catch: { enumerable: true,
                 value: function(onreject){
                     return function(self){
-                        return new Promise(function(resolve, reject){
+                        return new module.exports.Promise(function(resolve, reject){
                             self.then(resolve, function(r){
                                 reject(r)
                                 return onreject(r)
@@ -532,7 +532,7 @@ void function(ns){ "use strict"
     ns.Promise = require("./Promise").Promise
 
     window.k = ns
-}( { version: "korbutJS-ES5-0.0.0-1395533249850" } )
+}( { version: "korbutJS-ES5-0.0.0-1395644688040" } )
 
 },{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./class":5}],7:[function(require,module,exports){
 void function(){ "use strict"
