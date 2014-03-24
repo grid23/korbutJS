@@ -1,6 +1,6 @@
 void function(_, klass){ "use strict"
 
-    module.exports.Promise = klass(function(statics, TRUST_KEY){
+    module.exports.Promise = klass(function(statics){
         Object.defineProperties(statics, {
             all: { enumerable: true,
                 value: function(){}
@@ -27,22 +27,26 @@ void function(_, klass){ "use strict"
             }
         })
 
-        TRUST_KEY = +(new Date)
-
         return {
-            constructor: function(resolver, internal){
+            constructor: function(resolver, resolution){
                 if ( typeof resolver !== "function" )
                   throw new Error //TODO
+
+                resolution = { key: "pending", value: null }
+                Object.defineProperty(this, "_state", {
+                    get: function(){
+                        return resolution
+                    }
+                })
 
                 resolver(resolve.bind(this), reject.bind(this))
 
                 function resolve(v, handlers){
                     resolve = reject = function(){}
 
-                    Object.defineProperties(this, {
-                        "RESOLVED": { value: TRUST_KEY }
-                      , "YIELD": { get: function(){ return v } }
-                    })
+                    resolution.key = "resolved"
+                    resolution.value = v
+                    Object.freeze(resolution)
 
                     handlers = Array.isArray(this._onresolve) ? [].concat(this._onresolve) : []
                       while ( handlers.length )
@@ -51,11 +55,10 @@ void function(_, klass){ "use strict"
 
                 function reject(r, handlers){
                     resolve = reject = function(){}
-                    Object.defineProperties(this, {
-                        "REJECTED": { value: TRUST_KEY }
-                      , "YIELD": { get: function(){ return r } }
-                    })
 
+                    resolution.key = "rejected"
+                    resolution.value = r
+                    Object.freeze(resolution)
 
                     handlers = Array.isArray(this._onreject) ? [].concat(this._onreject) : []
                       while ( handlers.length )
@@ -101,7 +104,7 @@ void function(_, klass){ "use strict"
                           else if ( hasResolved )
                             return new module.exports.Promise(function(resolve, reject, rv){
                                 try {
-                                    rv = typeof onresolve == "function" ? onresolve(self.YIELD) : null
+                                    rv = typeof onresolve == "function" ? onresolve(self._state.value) : null
                                 } catch(e) {
                                     reject(e)
                                     return
@@ -115,7 +118,7 @@ void function(_, klass){ "use strict"
                           else if ( hasRejected )
                             return new module.exports.Promise(function(resolve, reject, rv){
                                 try {
-                                    rv = typeof onreject == "function" ? onreject(self.YIELD) : null
+                                    rv = typeof onreject == "function" ? onreject(self._state.value) : null
                                 } catch(e) {
                                     reject(e)
                                     return
@@ -125,7 +128,7 @@ void function(_, klass){ "use strict"
                                   rv.then(function(v){ resolve(v) }, function(r){ reject(r) })
                                 else resolve(rv)
                             })
-                    }(this, this.RESOLVED == TRUST_KEY, this.REJECTED == TRUST_KEY)
+                    }(this, this._state.key == "resolved", this._state.key == "rejected" )
                 }
             }
           , catch: { enumerable: true,
@@ -138,6 +141,11 @@ void function(_, klass){ "use strict"
                             })
                         })
                     }( this )
+                }
+            }
+          , state: { enumerable: true,
+                get: function(){
+                    return (this._state||{}).key
                 }
             }
         }
