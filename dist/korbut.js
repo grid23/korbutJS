@@ -5,10 +5,12 @@
 */
 
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-void function(_, klass){
-    "use strict"
+void function(){ "use strict"
 
-    module.exports.Event = klass(function(statics){
+    var _ = require("./utils")
+      , klass = require("./class").class
+
+    module = klass(function(statics){
 
         return {
             constructor: function(type, detail){
@@ -50,11 +52,14 @@ void function(_, klass){
         }
     })
 
-}( require("./utils"), require("./class").class )
+}()
 
-},{"./class":5,"./utils":7}],2:[function(require,module,exports){
-void function(_, klass, Event){
-    "use strict"
+},{"./class":7,"./utils":9}],2:[function(require,module,exports){
+void function(){ "use strict"
+
+    var _ = require("./utils")
+      , klass = require("./class").class
+      , Event = require("./Event").Event
 
     module.exports.EventTarget = klass(function(statics){
 
@@ -71,10 +76,14 @@ void function(_, klass, Event){
                 value: function(type, handler, handlers){
                     !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0].constructor === Object )
-                      return function(self, events, k){
+                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                      return function(self, events, count, k){
+                          count = 0
+
                           for ( k in events ) if ( events.hasOwnProperty(k) )
-                            self.addEventListener(k, events[k])
+                            count += self.addEventListener(k, events[k])
+
+                          return count
                       }( this, arguments[0] )
 
                     type = _.typeof(type) == "string" ? type : null
@@ -96,12 +105,16 @@ void function(_, klass, Event){
             }
           , removeEventListener: { enumerable: true,
                 value: function(type, handler, handlers){
-                    !this._events && Object.defineProperty(this, "_events", { value: [] })._events
+                    !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0].constructor === Object )
-                      return function(self, events, k){
+                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                      return function(self, events, count, k){
+                          count = 0
+
                           for ( k in events ) if ( events.hasOwnProperty(k) )
-                            self.removeEventListener(k, events[k])
+                            count += self.removeEventListener(k, events[k])
+
+                          return count
                       }( this, arguments[0] )
 
                     type = _.typeof(type) == "string" ? type : null
@@ -139,9 +152,34 @@ void function(_, klass, Event){
                       }( this, [].concat(handlers) )
                 }
             }
-          , events: { enumerable: true,
-                get: function(){
-                    return Object.create(this._events||{})
+          , listeners: { enumerable: true,
+                value: function(events, cb){
+                    events = _.spread(arguments)
+                    cb = typeof events[events.length-1] == "function" ? events.pop() : null
+
+                    void function(self, i, l){
+                        for ( ; i < l; i++ )
+                          events[i] = function(event){
+                              if (  _.typeof(event) != "string" )
+                                return void 0
+
+                              return Object.create(null, {
+                                  add: { enumerable: true,
+                                      value: function(h){
+                                          self.addEventListener(event, h)
+                                      }
+                                  }
+                                , remove: { enumerable: true,
+                                      value: function(h){
+                                        self.removeEventListener(event, h)
+                                      }
+                                  }
+                              })
+                          }(events[i])
+                    }( this, 0, events.length )
+
+                    if ( cb )
+                      cb.apply(null, events)
                 }
             }
 
@@ -174,11 +212,12 @@ void function(_, klass, Event){
         }
     })
 
-}( require("./utils"), require("./class").class, require("./Event").Event )
+}()
 
-},{"./Event":1,"./class":5,"./utils":7}],3:[function(require,module,exports){
-void function(klass){
-    "use strict"
+},{"./Event":1,"./class":7,"./utils":9}],3:[function(require,module,exports){
+void function(){ "use strict"
+
+    var klass = require("./class").class
 
     module.exports.Iterator = klass(function(statics){
 
@@ -226,18 +265,21 @@ void function(klass){
                 value: function(idx){
                     idx = ++this._pointer
 
-                    if ( idx >= (this._range = this._range || []).length )
+                    if ( idx >= (this._range || []).length )
                       return { index: null, value: null, done: true }
-                    return { index: idx, value: this._range[idx][this._range[idx].length-1], done: false }
+                    return { index: idx, key: this._range[idx][0], value: this._range[idx][this._range[idx].length-1], done: false }
                 }
             }
         }
     })
 
-}( require("./class").class )
+}()
 
-},{"./class":5}],4:[function(require,module,exports){
-void function(_, klass){ "use strict"
+},{"./class":7}],4:[function(require,module,exports){
+void function(){ "use strict"
+
+    var _ = require("./utils")
+      , klass = require("./class").class
 
     module.exports.Promise = klass(function(statics){
         Object.defineProperties(statics, {
@@ -390,9 +432,306 @@ void function(_, klass){ "use strict"
         }
     })
 
-}( require("./utils"), require("./class").class )
+}()
 
-},{"./class":5,"./utils":7}],5:[function(require,module,exports){
+},{"./class":7,"./utils":9}],5:[function(require,module,exports){
+void function(){ "use strict"
+
+    var _ = require("./utils")
+      , klass = require("./class").class
+
+    module.exports.Route = klass(function(statics){
+
+        return {
+            constructor: function(path, detail){
+                path = _.typeof(path) == "string" ? path : function(){ throw new Error("Route.path") }() //TODO
+                detail = function(detail){
+                    return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
+                         : detail.length == 1 && detail[0].constructor === Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
+                         : detail.length == 1 ? detail[0]
+                         : detail
+                }( _.spread(arguments, 1) )
+
+                Object.defineProperties(this, {
+                    "_path": { configurable: true, value: path }
+                  , "_detail": { configurable: true, value: detail }
+                  , "_timestamp": { configurable: true, value: +(new Date) }
+                  , "_matches": { configurable: true, value: {} }
+                })
+            }
+
+          , path: { enumerable: true,
+                get: function(){
+                    return this._path
+                }
+            }
+          , timestamp: { enumerable: true,
+                get: function(){
+                    return this._timestamp || 0
+                }
+            }
+          , detail: { enumerable: true,
+                get: function(){
+                    return this._detail
+                }
+            }
+          , matches: { enumerable: true,
+                get: function(){
+                    return this._matches
+                }
+            }
+        }
+    })
+
+}()
+
+},{"./class":7,"./utils":9}],6:[function(require,module,exports){
+void function(){ "use strict"
+
+    var _ = require("./utils")
+      , klass = require("./class").class
+      , Iterator = require("./Iterator").Iterator
+      , Route = require("./Route").Route
+
+    module.exports.Router = klass(function(statics){
+        Object.defineProperties(statics, {
+            dispatcher: { enumerable: true,
+                value: function(cache){
+                    function getRule(str, regexp, assignments, split){
+                        if ( !cache[str] )
+                          if ( str.indexOf(":") == -1 )
+                            cache[str] = new RegExp(str)
+                          else {
+                            assignments = []
+                            regexp = []
+                            split = str.split("/")
+
+                            while ( split.length )
+                              void function(part){
+                                  if ( part[0] === ":" )
+                                    assignments.push(part.slice(1)),
+                                    regexp.push("([^\\\/]*)")
+                                  else
+                                    regexp.push(part)
+                              }( split.shift() )
+
+                            cache[str] = new RegExp(regexp.join("\\\/"))
+                            cache[str].assignments = assignments
+                          }
+
+                        return cache[str]
+                    }
+
+                    return function(route, path, rule, match){
+                        rule = getRule(route.path)
+                        match = path.match(rule)
+
+                        if ( !match )
+                          return false
+
+                        if ( match.length == 1 )
+                          return true
+
+                        return function(i, l){
+                            for ( ; i < l; i++ )
+                              route._matches[rule.assignments[i]] = match[i+1]
+                        }(0, rule.assignments.length)
+                    }
+                }( Object.create(null) )
+            }
+          , "isRouteHandler": {
+                value: function(o){
+                    return o && (typeof o == "function" || typeof o.handleRoute == "function")
+                }
+            }
+        })
+
+        return {
+            constructor: function(dispatcher){
+                if ( typeof dispatcher == "function" )
+                  Object.defineProperty(this, "_dispatcher", { configurable: true, value: dispatcher })
+            }
+          , addRouteHandler: { enumerable: true,
+                value: function(route, handler, handlers){
+                    !this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
+
+                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                      return function(self, routes, count, k){
+                          count = 0
+
+                          for ( k in routes ) if ( routes.hasOwnProperty(k) )
+                            count += this.addRouteHandler(k, routes[k])
+
+                          return count
+                      }(this, arguments[0])
+
+                    route = _.typeof(route) == "string" ? route : null
+                    handler = statics.isRouteHandler(handler) ? handler : null
+                    handlers = this._routes[route]
+
+                    if ( !route || !handler )
+                      return 0
+                    if ( Array.isArray(handlers) )
+                      handlers.push(handler)
+                    else if ( !handlers || handlers === Object.prototype[route] )
+                      this._routes[route] = handler
+                    else if ( statics.isRouteHandler(handlers) )
+                      this._routes[route] = [handlers, handler]
+
+                    return 1
+                }
+            }
+          , removeRouteHandler: { enumerable: true,
+                value: function(route, handler){
+                    !this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
+
+                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                      return function(self, routes, count, k){
+                          count = 0
+
+                          for ( k in routes ) if ( routes.hasOwnProperty(k) )
+                            count += this.removeRouteHandler(k, routes[k])
+
+                          return count
+                      }(this, arguments[0])
+
+                    route = _.typeof(route) == "string" ? route : null
+                    handler = statics.isRouteHandler(route) || route == "*" ? route : null
+                    handlers = this.routes[route]
+
+                    if ( !route || !handler || !handlers )
+                      return 0
+
+                    if ( handlers === handler ) {
+                        delete this._routes[route]
+                        return 1
+                    }
+
+                    if ( Array.isArray(handlers) )
+                      return function(self, copy, idx, count){
+                          if ( handler === "*" ) {
+                              count = handlers.length
+                              delete self._routes[route]
+
+                              return count
+                          }
+
+                          count = 0
+
+                          while ( idx = copy.indexOf(handler) > -1 )
+                            copy.splice(idx, 1), count++
+
+                          self._routes[route] = copy
+
+                          if ( self._routes[route].length == 0 )
+                            delete self._routes[route]
+
+                          return count
+                      }( this, [].concat(handlers) )
+                }
+            }
+          , dispatchRoute: { enumerable: true,
+                value: function(route, iterator){
+                    route = Route.isImplementedBy(route) ? route : Route.create.apply(null, arguments)
+                    iterator = function(routes, copy, keys){
+                        keys = Object.keys(routes).sort()
+
+                        while ( keys.length )
+                          copy[keys[0]] = routes[keys.shift()]
+
+                        return new Iterator(copy)
+                    }( this._routes || Object.create(null), Object.create(null) )
+
+                    return function(self, hits, hit, rv){
+                        hits = 0
+
+                        function handle(iteration){
+                            if ( statics.isRouteHandler(iteration.value) ) {
+                              if ( iteration.key !== "*" )
+                                hits++
+
+                              rv = iteration.value.call(null, route, next, hits)
+                              return _.typeof(rv) !== "undefined" ? rv : hits
+                            } else if ( Array.isArray(iteration.value) )
+                                return function(handlers, _next){
+                                    function _next(handler){
+                                        if ( !handlers.length )
+                                          return next()
+
+                                        handler = handlers.shift()
+
+                                        if ( iteration.key !== "*" )
+                                          hits++
+
+                                        rv = handler.call(null, route, handlers.length?_next:next, hits)
+                                        return _.typeof(rv) !== "undefined" ? rv : hits
+                                    }
+
+                                    return _next()
+                                }( [].concat(iteration.value) )
+                        }
+
+                        function next(iteration){
+                            iteration = iterator.next()
+
+                            if ( iteration.done == true )
+                              return hits
+
+                            hit = iteration.key === "*" ? true
+                                : self.dispatcher.call(this, route, iteration.key)
+
+                            if ( !hit )
+                              return next()
+                            return handle(iteration)
+                        }
+
+                        return next()
+                    }(this)
+                }
+            }
+          , handlers: { enumerable: true,
+                value: function(routes, cb){
+                    routes = _.spread(arguments)
+                    cb = typeof routes[routes.length-1] == "function" ? routes.pop() : null
+
+                    void function(self, i, l){
+                        for ( ; i < l; i++ )
+                          routes[i] = function(route){
+                              if ( _.typeof(route) != "string" )
+                                return void 0
+
+                              return Object.create(null, {
+                                  add: { enumerable: true,
+                                      value: function(h){
+                                          return self.addRouteHandler(route, h)
+                                      }
+                                  }
+                                , remove: { enumerable: true,
+                                      value: function(h){
+                                          return self.removeRouteHandler(route, h)
+                                      }
+                                  }
+                              })
+                          }( routes[i] )
+                    }(this, 0, routes.length)
+
+                    if ( cb )
+                      cb.apply(routes)
+                }
+            }
+
+          , dispatcher: { enumerable: true,
+                get: function(){
+                    return this._dispatcher || statics.dispatcher
+                }
+            }
+
+        }
+    })
+
+}()
+
+},{"./Iterator":3,"./Route":5,"./class":7,"./utils":9}],7:[function(require,module,exports){
 void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
@@ -528,21 +867,26 @@ void function(_){ "use strict"
     }
 }( require("./utils") )
 
-},{"./utils":7}],6:[function(require,module,exports){
+},{"./utils":9}],8:[function(require,module,exports){
 void function(ns){ "use strict"
 
     ns.class = require("./class").class
     ns.singleton = require("./class").singleton
 
     ns.Iterator = require("./Iterator").Iterator
+
     ns.EventTarget = require("./EventTarget").EventTarget
     ns.Event = require("./Event").Event
+
     ns.Promise = require("./Promise").Promise
 
-    window.k = ns
-}( { version: "korbutJS-ES5-0.0.0-1395647554816" } )
+    ns.Router = require("./Router").Router
+    ns.Route = require("./Route").Route
 
-},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./class":5}],7:[function(require,module,exports){
+    window.k = ns
+}( { version: "korbutJS-ES5-0.0.0-1395671643297" } )
+
+},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./Route":5,"./Router":6,"./class":7}],9:[function(require,module,exports){
 void function(){ "use strict"
 
     module.exports.native = function(rnative){
@@ -571,4 +915,4 @@ void function(){ "use strict"
 
 }()
 
-},{}]},{},[6])
+},{}]},{},[8])

@@ -3,11 +3,11 @@ void function(){ "use strict"
     var _ = require("./utils")
       , klass = require("./class").class
 
-    module = klass(function(statics){
+    module.exports.Route = klass(function(statics){
 
         return {
-            constructor: function(type, detail){
-                type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
+            constructor: function(path, detail){
+                path = _.typeof(path) == "string" ? path : function(){ throw new Error("Route.path") }() //TODO
                 detail = function(detail){
                     return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
                          : detail.length == 1 && detail[0].constructor === Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
@@ -16,20 +16,16 @@ void function(){ "use strict"
                 }( _.spread(arguments, 1) )
 
                 Object.defineProperties(this, {
-                    "_type": { configurable: true, value: type }
+                    "_path": { configurable: true, value: path }
                   , "_detail": { configurable: true, value: detail }
                   , "_timestamp": { configurable: true, value: +(new Date) }
+                  , "_matches": { configurable: true, value: {} }
                 })
             }
-          , initEvent: {
-                value: function(){
-                    return this.constructor.apply(this, arguments)
-                }
-            }
 
-          , type: { enumerable: true,
+          , path: { enumerable: true,
                 get: function(){
-                    return this._type
+                    return this._path
                 }
             }
           , timestamp: { enumerable: true,
@@ -40,6 +36,11 @@ void function(){ "use strict"
           , detail: { enumerable: true,
                 get: function(){
                     return this._detail
+                }
+            }
+          , matches: { enumerable: true,
+                get: function(){
+                    return this._matches
                 }
             }
         }

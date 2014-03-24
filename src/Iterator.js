@@ -1,5 +1,6 @@
-void function(klass){
-    "use strict"
+void function(){ "use strict"
+
+    var klass = require("./class").class
 
     module.exports.Iterator = klass(function(statics){
 
@@ -47,12 +48,12 @@ void function(klass){
                 value: function(idx){
                     idx = ++this._pointer
 
-                    if ( idx >= (this._range = this._range || []).length )
+                    if ( idx >= (this._range || []).length )
                       return { index: null, value: null, done: true }
-                    return { index: idx, value: this._range[idx][this._range[idx].length-1], done: false }
+                    return { index: idx, key: this._range[idx][0], value: this._range[idx][this._range[idx].length-1], done: false }
                 }
             }
         }
     })
 
-}( require("./class").class )
+}()

@@ -1,5 +1,8 @@
-void function(_, klass, Event){
-    "use strict"
+void function(){ "use strict"
+
+    var _ = require("./utils")
+      , klass = require("./class").class
+      , Event = require("./Event").Event
 
     module.exports.EventTarget = klass(function(statics){
 
@@ -16,10 +19,14 @@ void function(_, klass, Event){
                 value: function(type, handler, handlers){
                     !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0].constructor === Object )
-                      return function(self, events, k){
+                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                      return function(self, events, count, k){
+                          count = 0
+
                           for ( k in events ) if ( events.hasOwnProperty(k) )
-                            self.addEventListener(k, events[k])
+                            count += self.addEventListener(k, events[k])
+
+                          return count
                       }( this, arguments[0] )
 
                     type = _.typeof(type) == "string" ? type : null
@@ -41,12 +48,16 @@ void function(_, klass, Event){
             }
           , removeEventListener: { enumerable: true,
                 value: function(type, handler, handlers){
-                    !this._events && Object.defineProperty(this, "_events", { value: [] })._events
+                    !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0].constructor === Object )
-                      return function(self, events, k){
+                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                      return function(self, events, count, k){
+                          count = 0
+
                           for ( k in events ) if ( events.hasOwnProperty(k) )
-                            self.removeEventListener(k, events[k])
+                            count += self.removeEventListener(k, events[k])
+
+                          return count
                       }( this, arguments[0] )
 
                     type = _.typeof(type) == "string" ? type : null
@@ -84,9 +95,34 @@ void function(_, klass, Event){
                       }( this, [].concat(handlers) )
                 }
             }
-          , events: { enumerable: true,
-                get: function(){
-                    return Object.create(this._events||{})
+          , listeners: { enumerable: true,
+                value: function(events, cb){
+                    events = _.spread(arguments)
+                    cb = typeof events[events.length-1] == "function" ? events.pop() : null
+
+                    void function(self, i, l){
+                        for ( ; i < l; i++ )
+                          events[i] = function(event){
+                              if (  _.typeof(event) != "string" )
+                                return void 0
+
+                              return Object.create(null, {
+                                  add: { enumerable: true,
+                                      value: function(h){
+                                          self.addEventListener(event, h)
+                                      }
+                                  }
+                                , remove: { enumerable: true,
+                                      value: function(h){
+                                        self.removeEventListener(event, h)
+                                      }
+                                  }
+                              })
+                          }(events[i])
+                    }( this, 0, events.length )
+
+                    if ( cb )
+                      cb.apply(null, events)
                 }
             }
 
@@ -119,4 +155,4 @@ void function(_, klass, Event){
         }
     })
 
-}( require("./utils"), require("./class").class, require("./Event").Event )
+}()

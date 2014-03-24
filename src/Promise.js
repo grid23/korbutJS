@@ -1,4 +1,7 @@
-void function(_, klass){ "use strict"
+void function(){ "use strict"
+
+    var _ = require("./utils")
+      , klass = require("./class").class
 
     module.exports.Promise = klass(function(statics){
         Object.defineProperties(statics, {
@@ -151,4 +154,4 @@ void function(_, klass){ "use strict"
         }
     })
 
-}( require("./utils"), require("./class").class )
+}()
