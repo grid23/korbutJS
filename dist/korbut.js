@@ -54,7 +54,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":7,"./utils":9}],2:[function(require,module,exports){
+},{"./class":9,"./utils":11}],2:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -214,7 +214,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Event":1,"./class":7,"./utils":9}],3:[function(require,module,exports){
+},{"./Event":1,"./class":9,"./utils":11}],3:[function(require,module,exports){
 void function(){ "use strict"
 
     var klass = require("./class").class
@@ -262,12 +262,26 @@ void function(){ "use strict"
                   this._range[i] = opt_keys ? [ keys[i] ] : [ keys[i], arguments[0][keys[i]] ]
             }
           , next: { enumerable: true,
-                value: function(idx){
+                value: function(cb, idx){
+                    cb = typeof cb == "function" ? cb : null
                     idx = ++this._pointer
 
-                    if ( idx >= (this._range || []).length )
-                      return { index: null, value: null, done: true }
-                    return { index: idx, key: this._range[idx][0], value: this._range[idx][this._range[idx].length-1], done: false }
+                    Object.defineProperty(this, "_current", { configurable: true,
+                        value: ( idx >= (this._range || []).length ) ? { index: null, key: null, value: null, done: true }
+                             : { index: idx, key: this._range[idx][0], value: this._range[idx][this._range[idx].length-1], done: false }
+                    })
+
+                    if ( cb )
+                      cb(this.current.done, this.current.key, this.current.value)
+
+                    return this.current
+                }
+            }
+          , current: { enumerable: true,
+                get: function(){
+                    if ( this._current )
+                      return this._current
+                    throw new Error("iterator, not started") //TODO
                 }
             }
         }
@@ -275,7 +289,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":7}],4:[function(require,module,exports){
+},{"./class":9}],4:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -434,7 +448,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":7,"./utils":9}],5:[function(require,module,exports){
+},{"./class":9,"./utils":11}],5:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -485,7 +499,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":7,"./utils":9}],6:[function(require,module,exports){
+},{"./class":9,"./utils":11}],6:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -671,18 +685,18 @@ void function(){ "use strict"
                                 }( [].concat(iteration.value) )
                         }
 
-                        function next(iteration){
-                            iteration = iterator.next()
+                        function next(){
+                            iterator.next()
 
-                            if ( iteration.done == true )
+                            if ( iterator.current.done == true )
                               return hits
 
-                            hit = iteration.key === "*" ? true
-                                : self.dispatcher.call(this, route, iteration.key)
+                            hit = iterator.current.key === "*" ? true
+                                : self.dispatcher.call(this, route, iterator.current.key)
 
                             if ( !hit )
                               return next()
-                            return handle(iteration)
+                            return handle(iterator.current)
                         }
 
                         return next()
@@ -731,7 +745,137 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":3,"./Route":5,"./class":7,"./utils":9}],7:[function(require,module,exports){
+},{"./Iterator":3,"./Route":5,"./class":9,"./utils":11}],7:[function(require,module,exports){
+void function(){ "use strict"
+
+    var _ = require("./utils")
+      , klass = require("./class").class
+      , Iterator = require("./Iterator").Iterator
+
+    module.exports.Serializer = klass(function(statics){
+        var DELIMITER = "="
+          , SEPARATOR = "&"
+          , rspacetoplus = /%20/g
+          , rplustospace = /\+/g
+
+        Object.defineProperties(statics, {
+            serialize: { enumerable: true,
+                value: function(o, s, iterator, del, sep){
+                    s = []
+                    iterator = new Iterator(o)
+                    del = this.delimiter || DELIMITER
+                    sep = this.separator || SEPARATOR
+
+                    while( !iterator.next().done )
+                      s.push( escape(iterator.current.key) + del + encodeURIComponent(iterator.current.value) )
+
+                    return s.join(sep).replace(rspacetoplus, "+")
+                }
+            }
+          , objectify: { enumerable: true,
+                value: function(s, o, iterator, del, sep){
+                    o = {}
+                    del = this.delimiter || DELIMITER
+                    sep = this.separator || SEPARATOR
+                    iterator = new Iterator(s.search(sep) != -1 ? s.split(sep) : s.length ? [str] : [])
+
+                    while ( !iterator.next().done )
+                      void function(pair, idx, k, v){
+                          idx = pair.indexOf(del)
+                          k = pair.split(del, 1)
+                          v = pair.slice(idx+1)
+
+                          o[k] = v
+                      }( unescape(iterator.current.value.replace(rplustospace, "%20")) )
+
+                    return o
+                }
+            }
+        })
+
+        return {
+            constructor: function(dict){
+                dict = dict && dict.constructor === Object ? dict : {}
+
+                _.typeof(dict.delimiter) == "string" && Object.defineProperty(this, "_delimiter", { value: dict.delimiter })
+                _.typeof(dict.separator) == "string" && Object.defineProperty(this, "_separator", { value: dict.separator })
+            }
+          , serializer: { enumerable: true,
+                value: function(o){
+                    return statics.serialize.call(this, o)
+                }
+            }
+          , objectify: { enumerable: true,
+                value: function(s){
+                    return statics.objectify.call(this, s)
+                }
+            }
+        }
+    })
+
+}()
+
+},{"./Iterator":3,"./class":9,"./utils":11}],8:[function(require,module,exports){
+void function(){ "use strict"
+
+    var _ = require("./utils")
+      , klass = require("./class").class
+
+    module.exports.UID = klass(function(statics){
+        var CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+          , MAP = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+          , RADIX = 16
+          , REGEXP = /[xy]/g
+
+        Object.defineProperties(statics, {
+            uid: { enumerable: true,
+                value: function(map, radix, date, regexp){
+                      map = _.typeof(this.map) == "string" ? this.map : MAP
+                      radix = _.typeof(this.radix) == "number" ? this.radix : RADIX
+                      regexp = _.typeof(this.regexp) == "regexp" ? this.regexp : REGEXP
+                      date = Date.now()
+
+
+                    return map.replace(regexp, function(c, r){
+                        r = (date + Math.random()*radix)%radix |0
+
+                        if ( c === "y")
+                          r = (r & 0x3)|0x8
+
+                        return CHARS[r]
+                    })
+                }
+            }
+        })
+
+        return {
+            constructor: function(dict){
+                dict = dict && dict.constructor === Object ? dict : {}
+
+                _.typeof(dict.map) == "string" && Object.defineProperty(this, "_map", { value: dict.map })
+                _.typeof(dict.radix) == "number" && Object.defineProperty(this, "_map", { value: dict.number })
+            }
+          , generate: { enumerable: true,
+                value: function(){
+                    return statics.uid.call(this)
+                }
+            }
+          , map: { enumerable: true,
+                get: function(){
+                    return this._map || MAP
+                }
+            }
+          , radix: { enumerable: true,
+                get: function(){
+                    return this._radix || RADIX
+                }
+            }
+        }
+    })
+
+}()
+
+},{"./class":9,"./utils":11}],9:[function(require,module,exports){
 void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
@@ -867,7 +1011,7 @@ void function(_){ "use strict"
     }
 }( require("./utils") )
 
-},{"./utils":9}],8:[function(require,module,exports){
+},{"./utils":11}],10:[function(require,module,exports){
 void function(ns){ "use strict"
 
     ns.class = require("./class").class
@@ -883,10 +1027,13 @@ void function(ns){ "use strict"
     ns.Router = require("./Router").Router
     ns.Route = require("./Route").Route
 
-    window.k = ns
-}( { version: "korbutJS-ES5-0.0.0-1395671643297" } )
+    ns.UID = require("./UID").UID
+    ns.Serializer = require("./Serializer").Serializer
 
-},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./Route":5,"./Router":6,"./class":7}],9:[function(require,module,exports){
+    window.k = ns
+}( { version: "korbutJS-ES5-0.0.0-1395851537711" } )
+
+},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./Route":5,"./Router":6,"./Serializer":7,"./UID":8,"./class":9}],11:[function(require,module,exports){
 void function(){ "use strict"
 
     module.exports.native = function(rnative){
@@ -915,4 +1062,4 @@ void function(){ "use strict"
 
 }()
 
-},{}]},{},[8])
+},{}]},{},[10])

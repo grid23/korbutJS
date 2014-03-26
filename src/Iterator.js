@@ -45,12 +45,26 @@ void function(){ "use strict"
                   this._range[i] = opt_keys ? [ keys[i] ] : [ keys[i], arguments[0][keys[i]] ]
             }
           , next: { enumerable: true,
-                value: function(idx){
+                value: function(cb, idx){
+                    cb = typeof cb == "function" ? cb : null
                     idx = ++this._pointer
 
-                    if ( idx >= (this._range || []).length )
-                      return { index: null, value: null, done: true }
-                    return { index: idx, key: this._range[idx][0], value: this._range[idx][this._range[idx].length-1], done: false }
+                    Object.defineProperty(this, "_current", { configurable: true,
+                        value: ( idx >= (this._range || []).length ) ? { index: null, key: null, value: null, done: true }
+                             : { index: idx, key: this._range[idx][0], value: this._range[idx][this._range[idx].length-1], done: false }
+                    })
+
+                    if ( cb )
+                      cb(this.current.done, this.current.key, this.current.value)
+
+                    return this.current
+                }
+            }
+          , current: { enumerable: true,
+                get: function(){
+                    if ( this._current )
+                      return this._current
+                    throw new Error("iterator, not started") //TODO
                 }
             }
         }

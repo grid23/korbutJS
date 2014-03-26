@@ -13,5 +13,8 @@ void function(ns){ "use strict"
     ns.Router = require("./Router").Router
     ns.Route = require("./Route").Route
 
+    ns.UID = require("./UID").UID
+    ns.Serializer = require("./Serializer").Serializer
+
     window.k = ns
 }( { version: "korbutJS-ES5-x.y.z-t" } )

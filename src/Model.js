@@ -3,12 +3,39 @@ void function(){ "use strict"
       , klass = require("./class").class
       , EventTarget = require("./EventTarget").EventTarget
       , Event = require("./Event").Event
+      , Iterator = require("./Iterator").Iterator
+      , UID = require("./UID").UID
+      , Serializer = require("./Serializer").Serializer
 
-    module = klass(EventTarget, function(statics){
+    module.exports.Model = klass(EventTarget, function(statics){
+        function fromObject(model, o, root, iterator){
+            root = !!root ? root+".":""
+            iterator = new Iterator(o)
+
+
+            while ( !iterator.next().done )
+              model.setItem(root+iterator.current.key, iterator.current.value)
+        }
+
+        function fromString(model, items, o){
+            try {
+                o = JSON.parse(items)
+            } catch(e){
+                try {
+                    o = model.serializer.objectify(items)
+                } catch(e){
+                    o = {}
+                }
+            }
+
+            return fromObject(model, o)
+        }
 
         return {
-            constructor: function(){
-
+            constructor: function(items){
+                this._uid = UID.uid()
+                this.defaults ? this.setItem(this.defaults)
+                items && items.constructor === Object && this.setItem(items)
             }
           , setItem: { enumeable: true,
                 value: function(){
@@ -59,6 +86,22 @@ void function(){ "use strict"
 
                     if ( cb )
                       cb.apply(null, items)
+                }
+            }
+
+          , uid: { enumerable: true,
+                get: function(){
+                    return this._uid
+                }
+            }
+          , defaults: { enumerable: true,
+                get: function(){
+                    return this._defaults
+                }
+            }
+          , Serializer: { enumerable: true,
+                get: function(){
+                    return this._Serializer || Serializer
                 }
             }
         }

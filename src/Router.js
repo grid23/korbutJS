@@ -183,18 +183,18 @@ void function(){ "use strict"
                                 }( [].concat(iteration.value) )
                         }
 
-                        function next(iteration){
-                            iteration = iterator.next()
+                        function next(){
+                            iterator.next()
 
-                            if ( iteration.done == true )
+                            if ( iterator.current.done == true )
                               return hits
 
-                            hit = iteration.key === "*" ? true
-                                : self.dispatcher.call(this, route, iteration.key)
+                            hit = iterator.current.key === "*" ? true
+                                : self.dispatcher.call(this, route, iterator.current.key)
 
                             if ( !hit )
                               return next()
-                            return handle(iteration)
+                            return handle(iterator.current)
                         }
 
                         return next()
