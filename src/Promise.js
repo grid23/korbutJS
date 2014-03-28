@@ -36,10 +36,8 @@ void function(){ "use strict"
                   throw new Error //TODO
 
                 resolution = { key: "pending", value: null }
-                Object.defineProperty(this, "_state", {
-                    get: function(){
-                        return resolution
-                    }
+                Object.defineProperty(this, "_state", { configurable: true,
+                    get: function(){ return resolution }
                 })
 
                 resolver(resolve.bind(this), reject.bind(this))

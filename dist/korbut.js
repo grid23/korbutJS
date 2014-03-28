@@ -54,7 +54,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":9,"./utils":11}],2:[function(require,module,exports){
+},{"./class":9,"./utils":12}],2:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -214,7 +214,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Event":1,"./class":9,"./utils":11}],3:[function(require,module,exports){
+},{"./Event":1,"./class":9,"./utils":12}],3:[function(require,module,exports){
 void function(){ "use strict"
 
     var klass = require("./class").class
@@ -328,10 +328,8 @@ void function(){ "use strict"
                   throw new Error //TODO
 
                 resolution = { key: "pending", value: null }
-                Object.defineProperty(this, "_state", {
-                    get: function(){
-                        return resolution
-                    }
+                Object.defineProperty(this, "_state", { configurable: true,
+                    get: function(){ return resolution }
                 })
 
                 resolver(resolve.bind(this), reject.bind(this))
@@ -448,7 +446,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":9,"./utils":11}],5:[function(require,module,exports){
+},{"./class":9,"./utils":12}],5:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -499,7 +497,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":9,"./utils":11}],6:[function(require,module,exports){
+},{"./class":9,"./utils":12}],6:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -745,7 +743,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":3,"./Route":5,"./class":9,"./utils":11}],7:[function(require,module,exports){
+},{"./Iterator":3,"./Route":5,"./class":9,"./utils":12}],7:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -815,7 +813,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":3,"./class":9,"./utils":11}],8:[function(require,module,exports){
+},{"./Iterator":3,"./class":9,"./utils":12}],8:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -875,7 +873,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":9,"./utils":11}],9:[function(require,module,exports){
+},{"./class":9,"./utils":12}],9:[function(require,module,exports){
 void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
@@ -1011,29 +1009,84 @@ void function(_){ "use strict"
     }
 }( require("./utils") )
 
-},{"./utils":11}],10:[function(require,module,exports){
+},{"./utils":12}],10:[function(require,module,exports){
+void function(){
+    "use strict"
+    var Promise = require("./Promise").Promise
+
+    module.exports = new Promise(function(resolve, reject, ready){
+        function onready(){
+            if ( ready )
+              return
+            ready = true
+
+            setTimeout(resolve, 4, {
+                timestamp: Date.now()
+              , nodes: {
+                    documentElement: document.documentElement
+                  , head: document.head
+                  , body: document.body
+                  , title: function(node){
+                        if ( node ) return node
+                        return document.head.appendChild(document.createElement("title"))
+                    }( document.head.getElementsByTagName("title")[0] )
+                  , viewport: function(node){
+                        if ( node ) return node
+                        node = document.createElement("meta")
+                        node.setAttribute("name", "viewport")
+                        node.setAttribute("content", "")
+                        return document.head.appendChild(node)
+                  }( document.head.querySelector("meta[name=viewport]") )
+                }
+            })
+        }
+
+        function isready(){
+            return "interactive,complete".indexOf(document.readyState) != -1
+        }
+
+        if ( isready() )
+          onready()
+        else
+            window.addEventListener("DOMContentLoaded", onready, true),
+            window.addEventListener("load", onready, true),
+            document.addEventListener("readystatechange", isready, true)
+    })
+
+}()
+
+},{"./Promise":4}],11:[function(require,module,exports){
 void function(ns){ "use strict"
 
-    ns.class = require("./class").class
-    ns.singleton = require("./class").singleton
+    var domReady = require("./domReady")
 
-    ns.Iterator = require("./Iterator").Iterator
+    window.korbut = function(cb){
+        if ( typeof cb == "function" )
+            domReady.then(cb)
+    }
 
-    ns.EventTarget = require("./EventTarget").EventTarget
-    ns.Event = require("./Event").Event
+    Object.defineProperties(window.korbut, {
+        utils: { enumerable: true, value: require("./utils").utils }
+      , class: { enumerable: true, value: require("./class").class }
+      , singleton: { enumerable: true, value: require("./class").singleton }
 
-    ns.Promise = require("./Promise").Promise
+      , Iterator: { enumerable: true, value: require("./Iterator").Iterator }
 
-    ns.Router = require("./Router").Router
-    ns.Route = require("./Route").Route
+      , EventTarget: { enumerable: true, value: require("./EventTarget").EventTarget }
+      , Event: { enumerable: true, value: require("./Event").Event }
 
-    ns.UID = require("./UID").UID
-    ns.Serializer = require("./Serializer").Serializer
+      , Promise: { enumerable: true, value: require("./Promise").Promise }
 
-    window.k = ns
-}( { version: "korbutJS-ES5-0.0.0-1395851537711" } )
+      , Router: { enumerable: true, value: require("./Router").Router }
+      , Route: { enumerable: true, value: require("./Route").Route }
 
-},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./Route":5,"./Router":6,"./Serializer":7,"./UID":8,"./class":9}],11:[function(require,module,exports){
+      , UID: { enumerable: true, value: require("./UID").UID }
+      , Serializer: { enumerable: true, value: require("./Serializer").Serializer }
+    })
+
+}( { version: "korbutJS-ES5-0.0.0-1395915973412" } )
+
+},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./Route":5,"./Router":6,"./Serializer":7,"./UID":8,"./class":9,"./domReady":10,"./utils":12}],12:[function(require,module,exports){
 void function(){ "use strict"
 
     module.exports.native = function(rnative){
@@ -1062,4 +1115,4 @@ void function(){ "use strict"
 
 }()
 
-},{}]},{},[10])
+},{}]},{},[11])

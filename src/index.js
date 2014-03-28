@@ -1,20 +1,29 @@
 void function(ns){ "use strict"
 
-    ns.class = require("./class").class
-    ns.singleton = require("./class").singleton
+    var domReady = require("./domReady")
 
-    ns.Iterator = require("./Iterator").Iterator
+    window.korbut = function(cb){
+        if ( typeof cb == "function" )
+            domReady.then(cb)
+    }
 
-    ns.EventTarget = require("./EventTarget").EventTarget
-    ns.Event = require("./Event").Event
+    Object.defineProperties(window.korbut, {
+        utils: { enumerable: true, value: require("./utils").utils }
+      , class: { enumerable: true, value: require("./class").class }
+      , singleton: { enumerable: true, value: require("./class").singleton }
 
-    ns.Promise = require("./Promise").Promise
+      , Iterator: { enumerable: true, value: require("./Iterator").Iterator }
 
-    ns.Router = require("./Router").Router
-    ns.Route = require("./Route").Route
+      , EventTarget: { enumerable: true, value: require("./EventTarget").EventTarget }
+      , Event: { enumerable: true, value: require("./Event").Event }
 
-    ns.UID = require("./UID").UID
-    ns.Serializer = require("./Serializer").Serializer
+      , Promise: { enumerable: true, value: require("./Promise").Promise }
 
-    window.k = ns
+      , Router: { enumerable: true, value: require("./Router").Router }
+      , Route: { enumerable: true, value: require("./Route").Route }
+
+      , UID: { enumerable: true, value: require("./UID").UID }
+      , Serializer: { enumerable: true, value: require("./Serializer").Serializer }
+    })
+
 }( { version: "korbutJS-ES5-x.y.z-t" } )
