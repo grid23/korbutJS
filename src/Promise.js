@@ -2,17 +2,73 @@ void function(){ "use strict"
 
     var _ = require("./utils")
       , klass = require("./class").class
+      , Iterator = require("./Iterator").Iterator
 
     module.exports.Promise = klass(function(statics){
         Object.defineProperties(statics, {
             all: { enumerable: true,
-                value: function(){}
+                value: function(){
+                    if ( !Iterator.iterable(promises) )
+                      throw new TypeError("korbut.Promise.race requires an iterable object as argument 0.")
+
+                    return new module.exports.Promise(function(resolve, reject, iterator, length, value){
+                        iterator = new Iterator(promises)
+                        length = promises.length()
+                        value = []
+
+                        function onresolve(idx){
+                            return function(v){
+                                value[idx] = v
+
+                                if ( !(--length) )
+                                  resolve(value)
+                            }
+                        }
+
+                        function onreject(e){ reject(e) }
+
+                        while ( !iterator.next().done )
+                          void function(iteration, input){
+                              input = iteration.value
+                              if ( !module.exports.Promise.isImplementedBy(input) )
+                                input = module.exports.Promise.cast(input)
+                              input.then(onresolve(iteration.index), onreject)
+                          }(iterator.current)
+                    })
+                }
             }
           , cast: { enumerable: true,
-                value: function(){}
+                value: function(v){
+                    return new module.exports.Promise(function(resolve){ resolve(v) })
+                }
             }
           , race: { enumerable: true,
-                value: function(){}
+                value: function(promises){
+                    if ( !Iterator.iterable(promises) )
+                      throw new TypeError("korbut.Promise.race requires an iterable object as argument 0.")
+
+                    return new module.exports.Promise(function(resolve, reject, length, resolved){
+                        iterator = new Iterator(promises)
+                        length = iterator.length()
+
+                        function onresolve(v){
+                            if ( resolved )
+                              return
+
+                            resolved = true
+                            resolve(v)
+                        }
+
+                        function onreject(){
+                            if ( !(--length) )
+                              reject(new Error("all promises were rejected"))
+                        }
+
+                        while ( !iterator.next().done )
+                          if ( module.exports.Promise.isImplementedBy(iterator.current.value) )
+                            iterator.current.value.then(onresolve, onreject)
+                    })
+                }
             }
           , reject: { enumerable: true,
                 value: function(reason){
@@ -33,7 +89,7 @@ void function(){ "use strict"
         return {
             constructor: function(resolver, resolution){
                 if ( typeof resolver !== "function" )
-                  throw new Error //TODO
+                  throw new TypeError("Constructor korbut.Promise requires a resolver function as argument 0.")
 
                 resolution = { key: "pending", value: null }
                 Object.defineProperty(this, "_state", { configurable: true,

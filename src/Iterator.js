@@ -5,7 +5,19 @@ void function(){ "use strict"
     module.exports.Iterator = klass(function(statics){
 
         Object.defineProperties(statics, {
-            iterate: { enumerable: true,
+            iterable: { enumerable: true,
+                value: function(o){
+                    try {
+                        Object.keys(o)
+                        return true
+                    } catch(e){
+                        return o.hasOwnProperty("length")
+                    }
+
+                    return false
+                }
+            }
+          , iterate: { enumerable: true,
                 value: function(o, rv, i, l, lead, trail){
                     o = o || Object.create(null)
 
@@ -58,6 +70,11 @@ void function(){ "use strict"
                       cb(this.current.done, this.current.key, this.current.value)
 
                     return this.current
+                }
+            }
+          , length: { enumerable: true,
+                value: function(){
+                    return this._range.length
                 }
             }
           , current: { enumerable: true,
