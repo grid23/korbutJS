@@ -47,7 +47,7 @@ void function(_){ "use strict"
                     Object.defineProperty(prototype, property, descriptor)
                 }( propertyNames[0], Object.getOwnPropertyDescriptor(Super.prototype, propertyNames.shift()) )
           }( args.shift() )
-        Object.defineProperty(prototype, "constructor", { configurable: true, value: Class })
+        Object.defineProperty(prototype, "constructor", { value: Class })
 
         Class.prototype = prototype
 
