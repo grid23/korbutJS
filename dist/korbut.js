@@ -634,7 +634,11 @@ void function(){ "use strict"
         return {
             constructor: function(dispatcher){
                 if ( typeof dispatcher == "function" )
-                  Object.defineProperty(this, "_dispatcher", { configurable: true, value: dispatcher })
+                  dispatcher.call(this, function(self){
+                      return function dispatch(){
+                          return self.dispatch.apply(self, arguments)
+                      }
+                  }(this))
             }
           , addRouteHandler: { enumerable: true,
                 value: function(route, handler, handlers){
@@ -996,7 +1000,7 @@ void function(_){ "use strict"
                     Object.defineProperty(prototype, property, descriptor)
                 }( propertyNames[0], Object.getOwnPropertyDescriptor(Super.prototype, propertyNames.shift()) )
           }( args.shift() )
-        Object.defineProperty(prototype, "constructor", { configurable: true, value: Class })
+        Object.defineProperty(prototype, "constructor", { value: Class })
 
         Class.prototype = prototype
 
@@ -1157,7 +1161,7 @@ void function(ns){ "use strict"
       , Serializer: { enumerable: true, value: require("./Serializer").Serializer }
     })
 
-}( { version: "korbutJS-ES5-0.0.1-1396275302231" } )
+}( { version: "korbutJS-ES5-0.0.1-1399475487037" } )
 
 },{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./Route":5,"./Router":6,"./Serializer":7,"./UID":8,"./class":9,"./domReady":10,"./utils":12}],12:[function(require,module,exports){
 void function(){ "use strict"

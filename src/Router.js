@@ -61,7 +61,11 @@ void function(){ "use strict"
         return {
             constructor: function(dispatcher){
                 if ( typeof dispatcher == "function" )
-                  Object.defineProperty(this, "_dispatcher", { configurable: true, value: dispatcher })
+                  dispatcher.call(this, function(self){
+                      return function dispatch(){
+                          return self.dispatch.apply(self, arguments)
+                      }
+                  }(this))
             }
           , addRouteHandler: { enumerable: true,
                 value: function(route, handler, handlers){
