@@ -1,11 +1,12 @@
 void function(){ "use strict"
+
     var _ = require("./utils")
-      , klass = require("./class").class
-      , EventTarget = require("./EventTarget").EventTarget
-      , Event = require("./Event").Event
-      , Iterator = require("./Iterator").Iterator
-      , UID = require("./UID").UID
-      , Serializer = require("./Serializer").Serializer
+    var klass = require("./class").class
+    var EventTarget = require("./EventTarget").EventTarget
+    var Event = require("./Event").Event
+    var Iterator = require("./Iterator").Iterator
+    var UID = require("./UID").UID
+    var Serializer = require("./Serializer").Serializer
 
     module.exports.Model = klass(EventTarget, function(statics){
         function fromObject(model, o, root, iterator){
@@ -33,8 +34,7 @@ void function(){ "use strict"
 
         return {
             constructor: function(items){
-                this._uid = UID.uid()
-                this.defaults ? this.setItem(this.defaults)
+                this.defaults && this.setItem(this.defaults)
                 items && items.constructor === Object && this.setItem(items)
             }
           , setItem: { enumeable: true,
@@ -88,9 +88,16 @@ void function(){ "use strict"
                       cb.apply(null, items)
                 }
             }
+          , serialize: { enumerable: true,
+                value: function(){
 
-          , uid: { enumerable: true,
+                }
+            }
+
+          , uid: { enumerable: true, configurable: true,
                 get: function(){
+                    if ( !this._uid )
+                      this._uid = UID.uid()
                     return this._uid
                 }
             }
@@ -99,7 +106,7 @@ void function(){ "use strict"
                     return this._defaults
                 }
             }
-          , Serializer: { enumerable: true,
+          , Serializer: { enumerable: true, configurable: true,
                 get: function(){
                     return this._Serializer || Serializer
                 }

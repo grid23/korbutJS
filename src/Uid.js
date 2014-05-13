@@ -1,13 +1,13 @@
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
+    var klass = require("./class").class
 
     module.exports.UID = klass(function(statics){
         var CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-          , MAP = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-          , RADIX = 16
-          , REGEXP = /[xy]/g
+        var MAP = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+        var RADIX = 16
+        var REGEXP = /[xy]/g
 
         Object.defineProperties(statics, {
             uid: { enumerable: true,

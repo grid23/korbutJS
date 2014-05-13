@@ -1,14 +1,14 @@
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
-      , Iterator = require("./Iterator").Iterator
+    var klass = require("./class").class
+    var Iterator = require("./Iterator").Iterator
 
     module.exports.Serializer = klass(function(statics){
         var DELIMITER = "="
-          , SEPARATOR = "&"
-          , rspacetoplus = /%20/g
-          , rplustospace = /\+/g
+        var SEPARATOR = "&"
+        var rspacetoplus = /%20/g
+        var rplustospace = /\+/g
 
         Object.defineProperties(statics, {
             serialize: { enumerable: true,
@@ -52,7 +52,7 @@ void function(){ "use strict"
                 _.typeof(dict.delimiter) == "string" && Object.defineProperty(this, "_delimiter", { value: dict.delimiter })
                 _.typeof(dict.separator) == "string" && Object.defineProperty(this, "_separator", { value: dict.separator })
             }
-          , serializer: { enumerable: true,
+          , serialize: { enumerable: true,
                 value: function(o){
                     return statics.serialize.call(this, o)
                 }

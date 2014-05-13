@@ -1,9 +1,10 @@
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
-      , Iterator = require("./Iterator").Iterator
-      , Route = require("./Route").Route
+    var klass = require("./class").class
+    var Iterator = require("./Iterator").Iterator
+    var Route = require("./Route").Route
+    var UID = require("./UID").UID
 
     module.exports.Router = klass(function(statics){
         Object.defineProperties(statics, {
@@ -51,7 +52,7 @@ void function(){ "use strict"
                     }
                 }( Object.create(null) )
             }
-          , "isRouteHandler": {
+          , "isRouteHandler": { enumerable: true,
                 value: function(o){
                     return o && (typeof o == "function" || typeof o.handleRoute == "function")
                 }
@@ -239,6 +240,13 @@ void function(){ "use strict"
           , dispatcher: { enumerable: true,
                 get: function(){
                     return this._dispatcher || statics.dispatcher
+                }
+            }
+
+          , uid: { enumerable: true, configurable: true,
+                get: function(){
+                    this._uid = UID.uid()
+                    return this._uid
                 }
             }
 

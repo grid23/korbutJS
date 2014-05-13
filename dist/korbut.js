@@ -8,8 +8,79 @@
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
+    var klass = require("./class").class
+    var EventTarget = require("./EventTarget").EventTarget
+    var Event = require("./Event").Event
+    var Model = require("./Model").Model
+    var Iterator = require("./Iterator").Iterator
+    var UID = require("./UID").UID
+    var Serializer = require("./Serializer").Serializer
 
+    module.exports.Collection = klass(EventTarget, function(statics){
+        Object.defineProperties(statics, {
+            Serializer: { enumerable: true,
+                value: new Serializer({delimiter: ":", separator: "|"})
+            }
+        })
+
+        return {
+            constructor: function(){
+
+            }
+          , addModel: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , removeModel: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , sort: { enumerable: true,
+                value: function(){
+
+                }
+
+            }
+          , each: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , find: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , subset: { enumerable: true,
+                value: function(){
+
+                }
+            }
+
+          , Model: { enumerable: true,
+                get: function(){
+                    return this._Model || Model
+                }
+            }
+          , Serializer: { enumerable: true,
+                get: function(){
+                    return this._Serializer || statics.Serializer
+                }
+            }
+        }
+    })
+
+}()
+
+},{"./Event":2,"./EventTarget":3,"./Iterator":4,"./Model":5,"./Serializer":9,"./UID":11,"./class":13,"./utils":16}],2:[function(require,module,exports){
+void function(){ "use strict"
+
+    var _ = require("./utils")
+    var klass = require("./class").class
+    var UID = require("./UID").UID
+    
     module = klass(function(statics){
 
         return {
@@ -54,17 +125,17 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":9,"./utils":12}],2:[function(require,module,exports){
+},{"./UID":11,"./class":13,"./utils":16}],3:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
-      , Event = require("./Event").Event
+    var klass = require("./class").class
+    var Event = require("./Event").Event
 
     module.exports.EventTarget = klass(function(statics){
 
         Object.defineProperties(statics, {
-            "isEventListener": {
+            "isEventListener": { enumerable: true,
                 value: function(o){
                     return o && (typeof o == "function" || typeof o.handleEvent == "function")
                 }
@@ -209,12 +280,20 @@ void function(){ "use strict"
                     return count
                 }
             }
+
+          , uid: { enumerable: true, configurable: true,
+                get: function(){
+                    if ( !this._uid )
+                      this._uid = UID.uid()
+                    return this._uid
+                }
+            }
         }
     })
 
 }()
 
-},{"./Event":1,"./class":9,"./utils":12}],3:[function(require,module,exports){
+},{"./Event":2,"./class":13,"./utils":16}],4:[function(require,module,exports){
 void function(){ "use strict"
 
     var klass = require("./class").class
@@ -306,12 +385,131 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":9}],4:[function(require,module,exports){
+},{"./class":13}],5:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
-      , Iterator = require("./Iterator").Iterator
+    var klass = require("./class").class
+    var EventTarget = require("./EventTarget").EventTarget
+    var Event = require("./Event").Event
+    var Iterator = require("./Iterator").Iterator
+    var UID = require("./UID").UID
+    var Serializer = require("./Serializer").Serializer
+
+    module.exports.Model = klass(EventTarget, function(statics){
+        function fromObject(model, o, root, iterator){
+            root = !!root ? root+".":""
+            iterator = new Iterator(o)
+
+
+            while ( !iterator.next().done )
+              model.setItem(root+iterator.current.key, iterator.current.value)
+        }
+
+        function fromString(model, items, o){
+            try {
+                o = JSON.parse(items)
+            } catch(e){
+                try {
+                    o = model.serializer.objectify(items)
+                } catch(e){
+                    o = {}
+                }
+            }
+
+            return fromObject(model, o)
+        }
+
+        return {
+            constructor: function(items){
+                this.defaults && this.setItem(this.defaults)
+                items && items.constructor === Object && this.setItem(items)
+            }
+          , setItem: { enumeable: true,
+                value: function(){
+
+                }
+            }
+          , getItem: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , removeItem: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , items: { enumerable: true,
+                value: function(items, cb){
+                    items = _.spread(arguments)
+                    cb = typeof items[items.length-1] == "function" ? items.pop() : null
+
+                    void function(self, i, l){
+                        for ( ; i < l; i++ )
+                          items[i] = function(item){
+                              if ( _.typeof(item) != "string" )
+                                return void 0
+
+                              return {
+                                  set: function(v){
+                                      return self.setItem(item, v)
+                                  }
+                                , get: function(){
+                                      return self.getItem(item)
+                                  }
+                                , remove: function(){
+                                      return self.removeItem(item)
+                                  }
+
+                                , on: function(e, h){
+                                      return self.addEventListner(item+":"+"e", h)
+                                  }
+                                , off: function(e, h){
+                                      return self.removeEventListner(item+":"+"e", h)
+                                  }
+                              }
+                          }(items[i])
+                    }( this, 0, items.length )
+
+                    if ( cb )
+                      cb.apply(null, items)
+                }
+            }
+          , serialize: { enumerable: true,
+                value: function(){
+
+                }
+            }
+
+          , uid: { enumerable: true, configurable: true,
+                get: function(){
+                    if ( !this._uid )
+                      this._uid = UID.uid()
+                    return this._uid
+                }
+            }
+          , defaults: { enumerable: true,
+                get: function(){
+                    return this._defaults
+                }
+            }
+          , Serializer: { enumerable: true, configurable: true,
+                get: function(){
+                    return this._Serializer || Serializer
+                }
+            }
+        }
+    })
+
+}()
+
+},{"./Event":2,"./EventTarget":3,"./Iterator":4,"./Serializer":9,"./UID":11,"./class":13,"./utils":16}],6:[function(require,module,exports){
+void function(){ "use strict"
+
+    var _ = require("./utils")
+    var klass = require("./class").class
+    var Iterator = require("./Iterator").Iterator
 
     module.exports.Promise = klass(function(statics){
         Object.defineProperties(statics, {
@@ -509,7 +707,7 @@ void function(){ "use strict"
                     }( this )
                 }
             }
-          , state: { enumerable: true,
+          , state: { enumerable: true, configurable: true,
                 get: function(){
                     return (this._state||{}).key
                 }
@@ -519,11 +717,11 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":3,"./class":9,"./utils":12}],5:[function(require,module,exports){
+},{"./Iterator":4,"./class":13,"./utils":16}],7:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
+    var klass = require("./class").class
 
     module.exports.Route = klass(function(statics){
 
@@ -570,13 +768,14 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":9,"./utils":12}],6:[function(require,module,exports){
+},{"./class":13,"./utils":16}],8:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
-      , Iterator = require("./Iterator").Iterator
-      , Route = require("./Route").Route
+    var klass = require("./class").class
+    var Iterator = require("./Iterator").Iterator
+    var Route = require("./Route").Route
+    var UID = require("./UID").UID
 
     module.exports.Router = klass(function(statics){
         Object.defineProperties(statics, {
@@ -624,7 +823,7 @@ void function(){ "use strict"
                     }
                 }( Object.create(null) )
             }
-          , "isRouteHandler": {
+          , "isRouteHandler": { enumerable: true,
                 value: function(o){
                     return o && (typeof o == "function" || typeof o.handleRoute == "function")
                 }
@@ -815,23 +1014,30 @@ void function(){ "use strict"
                 }
             }
 
+          , uid: { enumerable: true, configurable: true,
+                get: function(){
+                    this._uid = UID.uid()
+                    return this._uid
+                }
+            }
+
         }
     })
 
 }()
 
-},{"./Iterator":3,"./Route":5,"./class":9,"./utils":12}],7:[function(require,module,exports){
+},{"./Iterator":4,"./Route":7,"./UID":11,"./class":13,"./utils":16}],9:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
-      , Iterator = require("./Iterator").Iterator
+    var klass = require("./class").class
+    var Iterator = require("./Iterator").Iterator
 
     module.exports.Serializer = klass(function(statics){
         var DELIMITER = "="
-          , SEPARATOR = "&"
-          , rspacetoplus = /%20/g
-          , rplustospace = /\+/g
+        var SEPARATOR = "&"
+        var rspacetoplus = /%20/g
+        var rplustospace = /\+/g
 
         Object.defineProperties(statics, {
             serialize: { enumerable: true,
@@ -875,7 +1081,7 @@ void function(){ "use strict"
                 _.typeof(dict.delimiter) == "string" && Object.defineProperty(this, "_delimiter", { value: dict.delimiter })
                 _.typeof(dict.separator) == "string" && Object.defineProperty(this, "_separator", { value: dict.separator })
             }
-          , serializer: { enumerable: true,
+          , serialize: { enumerable: true,
                 value: function(o){
                     return statics.serialize.call(this, o)
                 }
@@ -890,17 +1096,38 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":3,"./class":9,"./utils":12}],8:[function(require,module,exports){
+},{"./Iterator":4,"./class":13,"./utils":16}],10:[function(require,module,exports){
+void function(){ "use strict"
+
+    var utils = require("./utils")
+    var klass = require("./class").class
+    var Iterator = require("./Iterator").Iterator
+
+    module.exports.Template = klass(function(statics){
+        Object.defineProperties(statics, {
+            
+        })
+
+        return {
+            constructor: function(expression, data){
+
+            }
+        }
+    })
+
+}()
+
+},{"./Iterator":4,"./class":13,"./utils":16}],11:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
+    var klass = require("./class").class
 
     module.exports.UID = klass(function(statics){
         var CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-          , MAP = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-          , RADIX = 16
-          , REGEXP = /[xy]/g
+        var MAP = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+        var RADIX = 16
+        var REGEXP = /[xy]/g
 
         Object.defineProperties(statics, {
             uid: { enumerable: true,
@@ -950,7 +1177,57 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":9,"./utils":12}],9:[function(require,module,exports){
+},{"./class":13,"./utils":16}],12:[function(require,module,exports){
+void function(){ "use strict"
+
+    var utils = require("./utils")
+    var klass = require("./class").class
+    var Template = require("./Template").Template
+
+    module.exports.View = klass(function(statics){
+        Object.defineProperties(statics, {
+
+        })
+
+        return {
+            constructor: function(){
+
+            }
+          , render: { enumerable: true,
+                value: function(){
+
+                }
+            }
+
+          , model: { enumerable: true,
+                get: function(){
+                    return this._model
+                }
+            }
+          , template: { enumerable: true,
+                get: function(){
+                    return this._template
+                }
+            }
+
+          , Model: {
+                enumerable: true,
+                get: function(){
+                    return this._Model || Model
+                }
+            }
+          , Template: { enumerable: true,
+                get: function(){
+                    return this._Template || Template
+                }
+            }
+        }
+
+    })
+
+}()
+
+},{"./Template":10,"./class":13,"./utils":16}],13:[function(require,module,exports){
 void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
@@ -1000,7 +1277,7 @@ void function(_){ "use strict"
                     Object.defineProperty(prototype, property, descriptor)
                 }( propertyNames[0], Object.getOwnPropertyDescriptor(Super.prototype, propertyNames.shift()) )
           }( args.shift() )
-        Object.defineProperty(prototype, "constructor", { value: Class })
+        Object.defineProperty(prototype, "constructor", { value: Class, configurable: true, enumerable: true })
 
         Class.prototype = prototype
 
@@ -1033,19 +1310,32 @@ void function(_){ "use strict"
         !Class.hasOwnProperty("isImplementedBy") && Object.defineProperty(Class, "isImplementedBy", {
             enumerable: true,
             value: function(o, prototype, k){
-                prototype = _.typeof(o) == "function" ? o.prototype : Object.create(null)
-
                 if ( !o )
                   return false
+
+                prototype = o && typeof o.constructor == "function" ? o.constructor.prototype : null
 
                 if ( o instanceof Class )
                   return true
 
                 for ( k in Class.prototype )
-                  if ( k != "constructor" && function(o, c){
-                      if ( o && c && o == c)
-                        return false
-                      return true
+                  if ( k != "constructor" && function(o, c, err){
+                      err = !o || !c ? true : false
+
+                      if ( o )
+                        if ( c.configurable ) {
+                          if ( c.hasOwnProperty("value") && typeof o.value != typeof c.value )
+                            err = true
+                        } else {
+                          if ( c.hasOwnProperty("value") && o.value !== c.value )
+                            err = true
+                          if ( c.hasOwnProperty("get") && o.get !== c.get )
+                            err = true
+                          if ( c.hasOwnProperty("set") && o.set !== c.set )
+                            err = true
+                        }
+
+                      return err
                   }( Object.getOwnPropertyDescriptor(prototype, k), Object.getOwnPropertyDescriptor(Class.prototype, k) ) ) return false
                 return true
             }
@@ -1054,7 +1344,7 @@ void function(_){ "use strict"
         !Class.hasOwnProperty("extend") && Object.defineProperty(Class, "implementsOn", {
             enumerable: true,
             value: function(o, prototype, properties){
-                prototype = !_.typeof(o) == "function" ? o.prototype : {}
+                prototype = _.typeof(o) == "function" ? o.prototype : {}
                 properties = Object.getOwnPropertyNames(Class.prototype)
 
                 while ( properties.length )
@@ -1086,9 +1376,9 @@ void function(_){ "use strict"
     }
 }( require("./utils") )
 
-},{"./utils":12}],10:[function(require,module,exports){
-void function(){
-    "use strict"
+},{"./utils":16}],14:[function(require,module,exports){
+void function(){ "use strict"
+
     var Promise = require("./Promise").Promise
 
     module.exports = new Promise(function(resolve, reject, ready){
@@ -1132,17 +1422,16 @@ void function(){
 
 }()
 
-},{"./Promise":4}],11:[function(require,module,exports){
+},{"./Promise":6}],15:[function(require,module,exports){
 void function(ns){ "use strict"
 
     var domReady = require("./domReady")
+    var korbut = function(cb){
+            if ( typeof cb == "function" )
+              domReady.then(cb)
+        }
 
-    window.korbut = function(cb){
-        if ( typeof cb == "function" )
-            domReady.then(cb)
-    }
-
-    Object.defineProperties(window.korbut, {
+    Object.defineProperties(korbut, {
         utils: { enumerable: true, value: require("./utils").utils }
       , class: { enumerable: true, value: require("./class").class }
       , singleton: { enumerable: true, value: require("./class").singleton }
@@ -1157,13 +1446,21 @@ void function(ns){ "use strict"
       , Router: { enumerable: true, value: require("./Router").Router }
       , Route: { enumerable: true, value: require("./Route").Route }
 
+      , View: { enumerable: true, value: require("./View").View }
+      , Template: { enumerable: true, value: require("./Template").Template }
+
+      , Model: { enumerable: true, value: require("./Model").Model }
+      , Collection: { enumerable: true, value: require("./Collection").Collection }
+
       , UID: { enumerable: true, value: require("./UID").UID }
       , Serializer: { enumerable: true, value: require("./Serializer").Serializer }
     })
 
-}( { version: "korbutJS-ES5-0.0.1-1399475487037" } )
+    window.korbut = korbut
 
-},{"./Event":1,"./EventTarget":2,"./Iterator":3,"./Promise":4,"./Route":5,"./Router":6,"./Serializer":7,"./UID":8,"./class":9,"./domReady":10,"./utils":12}],12:[function(require,module,exports){
+}( { version: "korbutJS-ES5-0.0.1-1399984472118" } )
+
+},{"./Collection":1,"./Event":2,"./EventTarget":3,"./Iterator":4,"./Model":5,"./Promise":6,"./Route":7,"./Router":8,"./Serializer":9,"./Template":10,"./UID":11,"./View":12,"./class":13,"./domReady":14,"./utils":16}],16:[function(require,module,exports){
 void function(){ "use strict"
 
     module.exports.native = function(rnative){
@@ -1192,4 +1489,4 @@ void function(){ "use strict"
 
 }()
 
-},{}]},{},[11])
+},{}]},{},[15])

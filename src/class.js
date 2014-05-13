@@ -47,7 +47,7 @@ void function(_){ "use strict"
                     Object.defineProperty(prototype, property, descriptor)
                 }( propertyNames[0], Object.getOwnPropertyDescriptor(Super.prototype, propertyNames.shift()) )
           }( args.shift() )
-        Object.defineProperty(prototype, "constructor", { value: Class })
+        Object.defineProperty(prototype, "constructor", { value: Class, configurable: true, enumerable: true })
 
         Class.prototype = prototype
 
@@ -80,19 +80,32 @@ void function(_){ "use strict"
         !Class.hasOwnProperty("isImplementedBy") && Object.defineProperty(Class, "isImplementedBy", {
             enumerable: true,
             value: function(o, prototype, k){
-                prototype = _.typeof(o) == "function" ? o.prototype : Object.create(null)
-
                 if ( !o )
                   return false
+
+                prototype = o && typeof o.constructor == "function" ? o.constructor.prototype : null
 
                 if ( o instanceof Class )
                   return true
 
                 for ( k in Class.prototype )
-                  if ( k != "constructor" && function(o, c){
-                      if ( o && c && o == c)
-                        return false
-                      return true
+                  if ( k != "constructor" && function(o, c, err){
+                      err = !o || !c ? true : false
+
+                      if ( o )
+                        if ( c.configurable ) {
+                          if ( c.hasOwnProperty("value") && typeof o.value != typeof c.value )
+                            err = true
+                        } else {
+                          if ( c.hasOwnProperty("value") && o.value !== c.value )
+                            err = true
+                          if ( c.hasOwnProperty("get") && o.get !== c.get )
+                            err = true
+                          if ( c.hasOwnProperty("set") && o.set !== c.set )
+                            err = true
+                        }
+
+                      return err
                   }( Object.getOwnPropertyDescriptor(prototype, k), Object.getOwnPropertyDescriptor(Class.prototype, k) ) ) return false
                 return true
             }
@@ -101,7 +114,7 @@ void function(_){ "use strict"
         !Class.hasOwnProperty("extend") && Object.defineProperty(Class, "implementsOn", {
             enumerable: true,
             value: function(o, prototype, properties){
-                prototype = !_.typeof(o) == "function" ? o.prototype : {}
+                prototype = _.typeof(o) == "function" ? o.prototype : {}
                 properties = Object.getOwnPropertyNames(Class.prototype)
 
                 while ( properties.length )

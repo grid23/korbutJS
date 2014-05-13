@@ -1,5 +1,5 @@
-void function(){
-    "use strict"
+void function(){ "use strict"
+
     var Promise = require("./Promise").Promise
 
     module.exports = new Promise(function(resolve, reject, ready){

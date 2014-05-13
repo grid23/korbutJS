@@ -1,7 +1,7 @@
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
+    var klass = require("./class").class
 
     module.exports.Route = klass(function(statics){
 

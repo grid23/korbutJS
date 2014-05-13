@@ -1,8 +1,9 @@
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
-
+    var klass = require("./class").class
+    var UID = require("./UID").UID
+    
     module = klass(function(statics){
 
         return {

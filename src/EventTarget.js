@@ -1,13 +1,13 @@
 void function(){ "use strict"
 
     var _ = require("./utils")
-      , klass = require("./class").class
-      , Event = require("./Event").Event
+    var klass = require("./class").class
+    var Event = require("./Event").Event
 
     module.exports.EventTarget = klass(function(statics){
 
         Object.defineProperties(statics, {
-            "isEventListener": {
+            "isEventListener": { enumerable: true,
                 value: function(o){
                     return o && (typeof o == "function" || typeof o.handleEvent == "function")
                 }
@@ -150,6 +150,14 @@ void function(){ "use strict"
                         handlers.call(handlers, event), count++
 
                     return count
+                }
+            }
+
+          , uid: { enumerable: true, configurable: true,
+                get: function(){
+                    if ( !this._uid )
+                      this._uid = UID.uid()
+                    return this._uid
                 }
             }
         }
