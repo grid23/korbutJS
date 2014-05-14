@@ -3,8 +3,8 @@ void function(){ "use strict"
     var _ = require("./utils")
     var klass = require("./class").class
     var UID = require("./UID").UID
-    
-    module = klass(function(statics){
+
+    module.exports.Event = klass(function(statics){
 
         return {
             constructor: function(type, detail){

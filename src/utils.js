@@ -24,4 +24,24 @@ void function(){ "use strict"
         }
     }( Object.prototype.toString )
 
+    module.exports.invoke = function(fn, ctx, args){
+        fn = typeof fn == "function" ? fn : function(){ throw new TypeError("korbut.utils.invoke - function expected as argument 0") }()
+        ctx = arguments[1] || null
+        args = arguments.length == 3 && Array.isArray(args) ? args
+             : module.exports.spread(arguments, 2)
+
+        switch ( args.length ) {
+            case 0:
+              return Function.prototype.call.call(fn, ctx)
+            case 1:
+              return Function.prototype.call.call(fn, ctx, args[0])
+            case 2:
+              return Function.prototype.call.call(fn, ctx, args[0], args[1])
+            case 3:
+              return Function.prototype.call.call(fn, ctx, args[0], args[1], args[2])
+            default:
+              return Function.prototype.apply.call(fn, ctx, args)
+        }
+    }
+
 }()

@@ -92,9 +92,7 @@ void function(){ "use strict"
                   throw new TypeError("Constructor korbut.Promise requires a resolver function as argument 0.")
 
                 resolution = { key: "pending", value: null }
-                Object.defineProperty(this, "_state", { configurable: true,
-                    get: function(){ return resolution }
-                })
+                Object.defineProperty(this, "_state", { get: function(){ return resolution } })
 
                 resolver(resolve.bind(this), reject.bind(this))
 
