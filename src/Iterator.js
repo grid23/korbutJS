@@ -79,9 +79,9 @@ void function(){ "use strict"
             }
           , current: { enumerable: true,
                 get: function(){
-                    if ( this._current )
-                      return this._current
-                    throw new Error("iterator, not started") //TODO
+                    if ( !this._current )
+                      this.next()
+                    return this._current
                 }
             }
         }

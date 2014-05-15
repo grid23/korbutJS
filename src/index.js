@@ -24,8 +24,10 @@ void function(ns){ "use strict"
       , Router: { enumerable: true, value: require("./Router").Router }
       , Route: { enumerable: true, value: require("./Route").Route }
 
+      , Service: { enumerable: true, value: require("./Service").Service }
+
       , View: { enumerable: true, value: require("./View").View }
-      , Template: { enumerable: true, value: require("./Template").Template }
+      , ZenParser: { enumerable: true, value: require("./View").ZenParser }
       , Stylesheet: { enumerable: true, value: require("./Stylesheet").Stylesheet }
       , Transition: { enumerable: true, value: require("./Transition").Transition }
       , Animation: { enumerable: true, value: require("./Animation").Animation }
