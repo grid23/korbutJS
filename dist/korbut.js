@@ -1403,6 +1403,12 @@ void function(){ "use strict"
                         input.context.appendChild(input.buffer)
                     }
                 }
+              , "^": { enumerable: true,
+                    value: function climb(stream, input, output){
+                        input.context = input.context.parentNode
+                        traversals["+"](stream, input, output)
+                    }
+                }
             })
 
         var operators = Object.create(null, {
@@ -1428,12 +1434,12 @@ void function(){ "use strict"
                               if ( CLASS_LIST_COMPAT )
                                 node.classList.remove(_.escapeHTML(rawRemoveClassName))
                               else
-                                node.className.replace(escapeHTML(rawRemoveClassName), "")
+                                node.className.replace(_.escapeHTML(rawRemoveClassName), "")
 
                             if ( CLASS_LIST_COMPAT )
-                              node.classList.add(input.pile)
+                              node.classList.add(_.escapeHTML(rawClassName))
                             else
-                              node.className += " "+input.pile
+                              node.className += " "+_.escapeHTML(rawClassName)
                         }
 
                         function set(node, rawClassName){
@@ -1463,14 +1469,19 @@ void function(){ "use strict"
                             write(node, key, value)
                         }
 
-                        return function attribute(stream, input, output){
-                            set(input.buffer, input.pile[input.pile.length-1] === "]" ? input.pile.slice(0, input.pile.length-1) : input.pile)
+                        function attribute(stream, input, output){
+                            set(input.buffer, input.pile)//[input.pile.length-1] === "]" ? input.pile.slice(0, input.pile.length-1) : input.pile)
                         }
+
+                        attribute.enclosing_glyph = "]"
+
+                        return attribute
                     }()
                 }
               , "$": { enumerable: true,
                     value: function assign_var(stream, input, output){
-                        (output.vars[input.pile] = output.vars[input.pile] || []).push(input.buffer)
+                        output.vars[input.pile] = output.vars[input.pile] || []
+                        output.vars[input.pile].push(input.buffer)
                     }
                 }
               , "{": { enumerable: true,
@@ -1486,9 +1497,33 @@ void function(){ "use strict"
                             write(node, rawTextContent)
                         }
 
-                        return function textContent(stream, input, output, str){
-                            set(input.buffer, input.pile[input.pile.length-1]==="}"?input.pile.slice(0,input.pile.length-1):input.pile)
+                        function textContent(stream, input, output, str){
+                            set(input.buffer, input.pile)
                         }
+
+                        textContent.enclosing_glyph = "}"
+
+                        return textContent
+                    }()
+                }
+              , "(": { enumerable: true,
+                    value: function(){
+                        function group(stream, input, output, rv, vars){
+                            rv = module.exports.ZenParser.parse(input.pile, input.data)
+                            input.buffer = rv.tree.childNodes.length == 1 ? rv.tree.childNodes[0] : rv.tree
+                            vars = new Iterator(rv.vars)
+
+                            while ( vars.next(), !vars.current.done ) {
+                                output.vars[vars.current.key] = output.vars[vars.current.key] || []
+
+                                while (vars.current.value.length)
+                                  output.vars[vars.current.key].push(vars.current.value.shift())
+                            }
+                        }
+
+                        group.enclosing_glyph = ")"
+
+                        return group
                     }()
                 }
             })
@@ -1505,63 +1540,69 @@ void function(){ "use strict"
                 input.pile = ""
                 input.glyph = ""
                 input.operator = null
-                if ( input.buffer.nodeType === Node.ELEMENT_NODE )
+                if ( input.buffer && input.buffer.nodeType === Node.ELEMENT_NODE )
                   input.context = input.buffer
                 input.buffer = null
             }
 
-        var operate = function(stream, input, output){
-                if ( !input.operator)
-                  input.buffer = input.pile !== "text" ? document.createElement(input.pile.length?input.pile:"div")
-                               : document.createTextNode("")
-                else
-                  operators[input.operator](stream, input, output)
+        var operate = function(autoVars){
+                autoVars = ["A", "INPUT", "SUBMIT", "BUTTON"]
+                return function(stream, input, output){
+                    input.pile = input.pile.trim()
 
-                input.pile = ""
-                input.operator = input.glyph
-            }
+                    if ( !input.operator) {
+                        input.buffer = !input.pile.length && input.glyph === "{" ? document.createTextNode("")
+                                     : !input.pile.length && input.glyph !== "{" ? document.createElement("div")
+                                     : input.pile === "text" ? document.createTextNode("")
+                                     : document.createElement(input.pile)
 
-        var group = function(stream, input, output, expression, ignore, glyph){
-            expression = ""
-            ignore = 0
+                      if ( autoVars.indexOf(input.buffer.nodeName) != -1 )
+                        input.pile = input.buffer.nodeName.toLowerCase(),
+                        operators["$"](stream, input, output)
+                    }
+                    else
+                      operators[input.operator](stream, input, output)
 
-            while ( stream.next(), !stream.current.done ) {
-                glyph = stream.current.value
+                    input.pile = ""
 
-                if ( glyph === ")" ) {
-                    if ( !ignore )
-                      return function(rv, vars){
-                          rv = module.exports.ZenParser.parse(expression, input.data)
-                          input.buffer = rv.tree.childNodes.length == 1 ? rv.tree.childNodes[0] : rv.tree
-                          vars = new Iterator(rv.vars)
-
-                          while ( vars.next(), !vars.current.done ) {
-                              (output.vars[vars.current.key] = output.vars[vars.current.key] || []).concat(vars.current.value)
-                          }
-
-                      }()
-                    else ignore--
+                    input.operator = input.glyph
                 }
-                else if ( glyph == "(" )
-                  ignore++
+            }()
 
-                expression += glyph
-            }
-        }
+        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph){
+                capture = false
 
-        var parse = function(stream, input, output){
                 while ( stream.next(), !stream.current.done ) {
                     input.glyph = stream.current.value
 
-                    if ( input.glyph === "(" && !input.pile.length && !input.buffer )
-                          group(stream, input, output)
-                    else
-                      if ( traversals[input.glyph] )
-                        traverse(stream, input, output)
-                      else if ( operators[input.glyph] )
-                        operate(stream, input, output)
-                      else
-                        input.pile += input.glyph
+                    //if ( input.glyph === "(" && !input.pile.length && !input.buffer )
+                          //group(stream, input, output)
+                    //else
+                      if ( !capture ) {
+                        if ( traversals[input.glyph] )
+                          traverse(stream, input, output)
+                        else if ( operators[input.glyph] ) {
+                            operate(stream, input, output)
+                            if ( operators[input.glyph].hasOwnProperty("enclosing_glyph") )
+                              capture = true
+                              ignore = 0
+                              openGlyph = input.glyph
+                              closeGlyph = operators[input.glyph].enclosing_glyph
+                        }
+                        else
+                          input.pile += input.glyph
+                      } else {
+                          if ( input.glyph === closeGlyph && !ignore )
+                            capture = false
+                          else {
+                              if ( input.glyph === closeGlyph )
+                                ignore--
+                              else if ( input.glyph === openGlyph )
+                                ignore++
+
+                              input.pile += input.glyph
+                          }
+                      }
                 }
 
                 traverse(stream, input, output)
@@ -1579,7 +1620,7 @@ void function(){ "use strict"
         return {
             constructor: function(expression){
                 Object.defineProperty(this, "_expression", {
-                    value: _.typeof(expression) == "string" ? expression : Object.prototype.toString.call(expression)
+                    value: _.typeof(expression) == "string" ? expression : ""
                 })
             }
           , parse: { enumerable: true,
@@ -1605,10 +1646,51 @@ void function(){ "use strict"
         })
 
         return {
-            constructor: function(){
+            constructor: function(args, handler, data, dict, expression, buffer){
+                args = _.spread(arguments)
+                handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
+                data = Model.isImplementedBy(args[args.lenght-1]) ? args.pop()
+                     : args.length > 1 && "string, object".indexOf(_.typeof(args[args.length-1])) != -1 ? new this.Model(args.pop())
+                     : new this.Model
+                dict = _.typeof(args[args.length-1]) == "string" ? { template: args.pop() }
+                     : _.typeof(args[args.length-1]) == "object" ? args.pop()
+                     : {}
 
+                expression = _.typeof(dict.template) == "string" ? dict.template : ""
+                buffer = new this.Template(expression).parse(this)
+
+                Object.defineProperties(this, {
+                    _template: { value: expression }
+                  , _model: { value: data }
+                  , _vars: { value: buffer.vars }
+                  , _fragment: { value: buffer.tree }
+                  , _DOMEvents: { value: _.typeof(dict.events) == "object" ? dict.events : {} }
+                })
+
+                this.addDOMEventListener(this.DOMEvents)
             }
           , render: { enumerable: true,
+                value: function(){
+                    return this._fragment
+                }
+            }
+          , element: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , addDOMEventListener: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , removeDOMEventListener: { enumerable: true,
+                value: function(){
+
+                }
+            }
+
+          , clone: { enumerable: true,
                 value: function(){
 
                 }
@@ -1624,6 +1706,11 @@ void function(){ "use strict"
                     return this._template
                 }
             }
+          , DOMEvents: { enumerable: true,
+                get: function(){
+                    return this._DOMEvents || {}
+                }
+            }
 
           , Model: {
                 enumerable: true,
@@ -1633,7 +1720,7 @@ void function(){ "use strict"
             }
           , Template: { enumerable: true,
                 get: function(){
-                    return this._Template || Template
+                    return this._Template || module.exports.ZenParser
                 }
             }
         }
@@ -1913,7 +2000,7 @@ void function(ns){ "use strict"
 
     window.korbut = korbut
 
-}( { version: "korbutJS-ES5-0.0.1-1400169323600" } )
+}( { version: "korbutJS-ES5-0.0.1-1400255169743" } )
 
 },{"./Animation":1,"./ClientRect":2,"./Collection":3,"./Cookie":4,"./CustomEvent":5,"./Event":6,"./EventTarget":7,"./Iterator":8,"./Model":9,"./PointerEvent":10,"./Promise":11,"./Route":12,"./Router":13,"./Serializer":14,"./Service":15,"./Stylesheet":16,"./Transition":17,"./UID":18,"./View":19,"./WebStore":20,"./class":21,"./domReady":22,"./utils":24}],24:[function(require,module,exports){
 void function(){ "use strict"
