@@ -475,6 +475,47 @@ void function(){ "use strict"
     var UID = require("./UID").UID
     var Serializer = require("./Serializer").Serializer
 
+    module.exports.Collection = klass(EventTarget, function(statics){
+
+        return {
+            constructor: function(){
+
+            }
+          , addModel: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , removeModel: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , find: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , subset: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , serialize: { enumerable: true,
+                value: function(){
+
+                }
+
+            }
+
+          , Serializer: { enumerable: true,
+                get: function(){
+                    return this._serializer || module.exports.Collection.Serializer
+                }
+            }
+        }
+    })
+
     module.exports.Model = klass(EventTarget, function(statics){
         function fromObject(model, o, root, iterator){
             root = !!root ? root+".":""
@@ -1405,7 +1446,7 @@ void function(){ "use strict"
                 }
               , "^": { enumerable: true,
                     value: function climb(stream, input, output){
-                        input.context = input.context.parentNode
+                        input.context = input.context.parentNode || input.context
                         traversals["+"](stream, input, output)
                     }
                 }
@@ -1415,7 +1456,7 @@ void function(){ "use strict"
                 "#": { enumerable: true,
                     value: function(){
                         function write(node, rawId){
-                            node.setAttribute("id", _.escapeHTML(rawId))
+                            node.setAttribute("id", module.exports.ZenParser.escapeHTML(rawId))
                         }
 
                         function set(node, rawId){
@@ -1432,14 +1473,14 @@ void function(){ "use strict"
                         function write(node, rawClassName, rawRemoveClassName){
                             if ( rawRemoveClassName )
                               if ( CLASS_LIST_COMPAT )
-                                node.classList.remove(_.escapeHTML(rawRemoveClassName))
+                                node.classList.remove(module.exports.ZenParser.escapeHTML(rawRemoveClassName))
                               else
-                                node.className.replace(_.escapeHTML(rawRemoveClassName), "")
+                                node.className.replace(module.exports.ZenParser.escapeHTML(rawRemoveClassName), "")
 
                             if ( CLASS_LIST_COMPAT )
-                              node.classList.add(_.escapeHTML(rawClassName))
+                              node.classList.add(module.exports.ZenParser.escapeHTML(rawClassName))
                             else
-                              node.className += " "+_.escapeHTML(rawClassName)
+                              node.className += " "+module.exports.ZenParser.escapeHTML(rawClassName)
                         }
 
                         function set(node, rawClassName){
@@ -1454,7 +1495,7 @@ void function(){ "use strict"
               , "[": { enumerable: true,
                     value: function(){
                         function write(node, rawKey, rawValue){
-                            node.setAttribute(_.escapeHTML(rawKey), _.escapeHTML(rawValue))
+                            node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(rawValue))
                         }
 
                         function set(node, attr, key, value, idx){
@@ -1575,9 +1616,6 @@ void function(){ "use strict"
                 while ( stream.next(), !stream.current.done ) {
                     input.glyph = stream.current.value
 
-                    //if ( input.glyph === "(" && !input.pile.length && !input.buffer )
-                          //group(stream, input, output)
-                    //else
                       if ( !capture ) {
                         if ( traversals[input.glyph] )
                           traverse(stream, input, output)
@@ -1614,6 +1652,14 @@ void function(){ "use strict"
                 value: function(expression, data){
                     return new module.exports.ZenParser(expression).parse(data)
                 }
+            }
+          , escapeHTML: { enumerable: true,
+                value: function(dummy){
+                    return function(str){
+                        dummy.nodeValue = str
+                        return dummy.nodeValue
+                    }
+                }( document.createTextNode("") )
             }
         })
 
@@ -2000,7 +2046,7 @@ void function(ns){ "use strict"
 
     window.korbut = korbut
 
-}( { version: "korbutJS-ES5-0.0.1-1400255169743" } )
+}( { version: "korbutJS-ES5-0.0.1-1400353686098" } )
 
 },{"./Animation":1,"./ClientRect":2,"./Collection":3,"./Cookie":4,"./CustomEvent":5,"./Event":6,"./EventTarget":7,"./Iterator":8,"./Model":9,"./PointerEvent":10,"./Promise":11,"./Route":12,"./Router":13,"./Serializer":14,"./Service":15,"./Stylesheet":16,"./Transition":17,"./UID":18,"./View":19,"./WebStore":20,"./class":21,"./domReady":22,"./utils":24}],24:[function(require,module,exports){
 void function(){ "use strict"
@@ -2048,13 +2094,6 @@ void function(){ "use strict"
               return Function.prototype.apply.call(fn, ctx, args)
         }
     }
-    
-    module.exports.escapeHTML = function(dummy){
-        return function(str){
-            dummy.nodeValue = str
-            return dummy.nodeValue
-        }
-    }( document.createTextNode("") )
 
 }()
 

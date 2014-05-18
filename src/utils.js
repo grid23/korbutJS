@@ -43,12 +43,5 @@ void function(){ "use strict"
               return Function.prototype.apply.call(fn, ctx, args)
         }
     }
-    
-    module.exports.escapeHTML = function(dummy){
-        return function(str){
-            dummy.nodeValue = str
-            return dummy.nodeValue
-        }
-    }( document.createTextNode("") )
 
 }()

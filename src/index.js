@@ -1,4 +1,4 @@
-void function(ns){ "use strict"
+void function(){ "use strict"
 
     var domReady = require("./domReady")
     var korbut = function(cb){
@@ -7,6 +7,7 @@ void function(ns){ "use strict"
         }
 
     Object.defineProperties(korbut, {
+        version: { enumerable: true, value: "korbutJS-ES5-x.y.z-t" }
         utils: { enumerable: true, value: require("./utils") }
       , class: { enumerable: true, value: require("./class").class }
       , singleton: { enumerable: true, value: require("./class").singleton }
@@ -34,7 +35,7 @@ void function(ns){ "use strict"
       , ClientRect: { enumerable: true, value: require("./ClientRect").ClientRect }
 
       , Model: { enumerable: true, value: require("./Model").Model }
-      , Collection: { enumerable: true, value: require("./Collection").Collection }
+      , Collection: { enumerable: true, value: require("./Model").Collection }
       , Cookie: { enumerable: true, value: require("./Cookie").Cookie }
       , WebStore: { enumerable: true, value: require("./WebStore").WebStore }
 
@@ -44,4 +45,4 @@ void function(ns){ "use strict"
 
     window.korbut = korbut
 
-}( { version: "korbutJS-ES5-x.y.z-t" } )
+}()

@@ -21,7 +21,7 @@ void function(){ "use strict"
                 }
               , "^": { enumerable: true,
                     value: function climb(stream, input, output){
-                        input.context = input.context.parentNode
+                        input.context = input.context.parentNode || input.context
                         traversals["+"](stream, input, output)
                     }
                 }
@@ -31,7 +31,7 @@ void function(){ "use strict"
                 "#": { enumerable: true,
                     value: function(){
                         function write(node, rawId){
-                            node.setAttribute("id", _.escapeHTML(rawId))
+                            node.setAttribute("id", module.exports.ZenParser.escapeHTML(rawId))
                         }
 
                         function set(node, rawId){
@@ -48,14 +48,14 @@ void function(){ "use strict"
                         function write(node, rawClassName, rawRemoveClassName){
                             if ( rawRemoveClassName )
                               if ( CLASS_LIST_COMPAT )
-                                node.classList.remove(_.escapeHTML(rawRemoveClassName))
+                                node.classList.remove(module.exports.ZenParser.escapeHTML(rawRemoveClassName))
                               else
-                                node.className.replace(_.escapeHTML(rawRemoveClassName), "")
+                                node.className.replace(module.exports.ZenParser.escapeHTML(rawRemoveClassName), "")
 
                             if ( CLASS_LIST_COMPAT )
-                              node.classList.add(_.escapeHTML(rawClassName))
+                              node.classList.add(module.exports.ZenParser.escapeHTML(rawClassName))
                             else
-                              node.className += " "+_.escapeHTML(rawClassName)
+                              node.className += " "+module.exports.ZenParser.escapeHTML(rawClassName)
                         }
 
                         function set(node, rawClassName){
@@ -70,7 +70,7 @@ void function(){ "use strict"
               , "[": { enumerable: true,
                     value: function(){
                         function write(node, rawKey, rawValue){
-                            node.setAttribute(_.escapeHTML(rawKey), _.escapeHTML(rawValue))
+                            node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(rawValue))
                         }
 
                         function set(node, attr, key, value, idx){
@@ -191,9 +191,6 @@ void function(){ "use strict"
                 while ( stream.next(), !stream.current.done ) {
                     input.glyph = stream.current.value
 
-                    //if ( input.glyph === "(" && !input.pile.length && !input.buffer )
-                          //group(stream, input, output)
-                    //else
                       if ( !capture ) {
                         if ( traversals[input.glyph] )
                           traverse(stream, input, output)
@@ -230,6 +227,14 @@ void function(){ "use strict"
                 value: function(expression, data){
                     return new module.exports.ZenParser(expression).parse(data)
                 }
+            }
+          , escapeHTML: { enumerable: true,
+                value: function(dummy){
+                    return function(str){
+                        dummy.nodeValue = str
+                        return dummy.nodeValue
+                    }
+                }( document.createTextNode("") )
             }
         })
 

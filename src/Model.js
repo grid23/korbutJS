@@ -8,6 +8,47 @@ void function(){ "use strict"
     var UID = require("./UID").UID
     var Serializer = require("./Serializer").Serializer
 
+    module.exports.Collection = klass(EventTarget, function(statics){
+
+        return {
+            constructor: function(){
+
+            }
+          , addModel: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , removeModel: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , find: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , subset: { enumerable: true,
+                value: function(){
+
+                }
+            }
+          , serialize: { enumerable: true,
+                value: function(){
+
+                }
+
+            }
+
+          , Serializer: { enumerable: true,
+                get: function(){
+                    return this._serializer || module.exports.Collection.Serializer
+                }
+            }
+        }
+    })
+
     module.exports.Model = klass(EventTarget, function(statics){
         function fromObject(model, o, root, iterator){
             root = !!root ? root+".":""
