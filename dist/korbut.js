@@ -22,7 +22,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Stylesheet":16,"./class":21,"./utils":24}],2:[function(require,module,exports){
+},{"./Stylesheet":15,"./class":20,"./utils":23}],2:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -48,77 +48,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":21,"./utils":24}],3:[function(require,module,exports){
-void function(){ "use strict"
-
-    var _ = require("./utils")
-    var klass = require("./class").class
-    var EventTarget = require("./EventTarget").EventTarget
-    var Event = require("./Event").Event
-    var Model = require("./Model").Model
-    var Iterator = require("./Iterator").Iterator
-    var UID = require("./UID").UID
-    var Serializer = require("./Serializer").Serializer
-
-    module.exports.Collection = klass(EventTarget, function(statics){
-        Object.defineProperties(statics, {
-            Serializer: { enumerable: true,
-                value: new Serializer({delimiter: ":", separator: "|"})
-            }
-        })
-
-        return {
-            constructor: function(){
-
-            }
-          , addModel: { enumerable: true,
-                value: function(){
-
-                }
-            }
-          , removeModel: { enumerable: true,
-                value: function(){
-
-                }
-            }
-          , sort: { enumerable: true,
-                value: function(){
-
-                }
-
-            }
-          , each: { enumerable: true,
-                value: function(){
-
-                }
-            }
-          , find: { enumerable: true,
-                value: function(){
-
-                }
-            }
-          , subset: { enumerable: true,
-                value: function(){
-
-                }
-            }
-
-          , Model: { enumerable: true,
-                get: function(){
-                    return this._Model || Model
-                }
-            }
-          , Serializer: { enumerable: true,
-                get: function(){
-                    return this._Serializer || statics.Serializer
-                }
-            }
-        }
-    })
-
-}()
-
-},{"./Event":6,"./EventTarget":7,"./Iterator":8,"./Model":9,"./Serializer":14,"./UID":18,"./class":21,"./utils":24}],4:[function(require,module,exports){
+},{"./class":20,"./utils":23}],3:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -136,7 +66,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Model":9,"./class":21,"./utils":24}],5:[function(require,module,exports){
+},{"./Model":8,"./class":20,"./utils":23}],4:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -153,7 +83,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":21,"./utils":24}],6:[function(require,module,exports){
+},{"./class":20,"./utils":23}],5:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -204,7 +134,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./UID":18,"./class":21,"./utils":24}],7:[function(require,module,exports){
+},{"./UID":17,"./class":20,"./utils":23}],6:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -372,7 +302,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Event":6,"./class":21,"./utils":24}],8:[function(require,module,exports){
+},{"./Event":5,"./class":20,"./utils":23}],7:[function(require,module,exports){
 void function(){ "use strict"
 
     var klass = require("./class").class
@@ -464,7 +394,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":21}],9:[function(require,module,exports){
+},{"./class":20}],8:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -624,7 +554,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Event":6,"./EventTarget":7,"./Iterator":8,"./Serializer":14,"./UID":18,"./class":21,"./utils":24}],10:[function(require,module,exports){
+},{"./Event":5,"./EventTarget":6,"./Iterator":7,"./Serializer":13,"./UID":17,"./class":20,"./utils":23}],9:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -641,7 +571,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":21,"./utils":24}],11:[function(require,module,exports){
+},{"./class":20,"./utils":23}],10:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -852,7 +782,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":8,"./class":21,"./utils":24}],12:[function(require,module,exports){
+},{"./Iterator":7,"./class":20,"./utils":23}],11:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -903,7 +833,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":21,"./utils":24}],13:[function(require,module,exports){
+},{"./class":20,"./utils":23}],12:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1161,7 +1091,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":8,"./Route":12,"./UID":18,"./class":21,"./utils":24}],14:[function(require,module,exports){
+},{"./Iterator":7,"./Route":11,"./UID":17,"./class":20,"./utils":23}],13:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1231,7 +1161,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":8,"./class":21,"./utils":24}],15:[function(require,module,exports){
+},{"./Iterator":7,"./class":20,"./utils":23}],14:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1247,7 +1177,7 @@ void function(){ "use strict"
     })
 }()
 
-},{"./class":21,"./utils":24}],16:[function(require,module,exports){
+},{"./class":20,"./utils":23}],15:[function(require,module,exports){
 void function(){ "use strict"
 
     var utils = require("./utils")
@@ -1344,7 +1274,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./EventTarget":7,"./Iterator":8,"./class":21,"./domReady":22,"./utils":24}],17:[function(require,module,exports){
+},{"./EventTarget":6,"./Iterator":7,"./class":20,"./domReady":21,"./utils":23}],16:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1362,7 +1292,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Stylesheet":16,"./class":21,"./utils":24}],18:[function(require,module,exports){
+},{"./Stylesheet":15,"./class":20,"./utils":23}],17:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1422,7 +1352,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":21,"./utils":24}],19:[function(require,module,exports){
+},{"./class":20,"./utils":23}],18:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1588,6 +1518,7 @@ void function(){ "use strict"
 
         var operate = function(autoVars){
                 autoVars = ["A", "INPUT", "SUBMIT", "BUTTON"]
+                
                 return function(stream, input, output){
                     input.pile = input.pile.trim()
 
@@ -1610,7 +1541,7 @@ void function(){ "use strict"
                 }
             }()
 
-        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph){
+        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph, i, l){
                 capture = false
 
                 while ( stream.next(), !stream.current.done ) {
@@ -1644,6 +1575,9 @@ void function(){ "use strict"
                 }
 
                 traverse(stream, input, output)
+
+                output.vars.root = _.spread(output.tree.childNodes)
+
                 return output
             }
 
@@ -1707,38 +1641,39 @@ void function(){ "use strict"
 
                 Object.defineProperties(this, {
                     _template: { value: expression }
+                  , _dict: { value: dict }
                   , _model: { value: data }
                   , _vars: { value: buffer.vars }
                   , _fragment: { value: buffer.tree }
                   , _DOMEvents: { value: _.typeof(dict.events) == "object" ? dict.events : {} }
                 })
 
-                this.addDOMEventListener(this.DOMEvents)
+                //this.addDOMEventListener(this.DOMEvents)
             }
-          , render: { enumerable: true,
-                value: function(){
-                    return this._fragment
+          , root: { enumerable: true,
+                value: function(root){
+                    root = this.queryAll("root")
+
+                    return root.length > 1 ? root : root[0]
                 }
             }
-          , element: { enumerable: true,
-                value: function(){
-
+          , query: { enumerable: true,
+                value: function(query){
+                    if ( this._vars.hasOwnProperty(query) )
+                      return this._vars[query][0]
+                    return null
                 }
             }
-          , addDOMEventListener: { enumerable: true,
-                value: function(){
-
+          , queryAll: { enumerable: true,
+                value: function(query){
+                    if ( this._vars.hasOwnProperty(query) )
+                      return this._vars[query]
+                    return []
                 }
             }
-          , removeDOMEventListener: { enumerable: true,
-                value: function(){
-
-                }
-            }
-
           , clone: { enumerable: true,
                 value: function(){
-
+                    return new this.constructor(this._dict, this.model)
                 }
             }
 
@@ -1750,11 +1685,6 @@ void function(){ "use strict"
           , template: { enumerable: true,
                 get: function(){
                     return this._template
-                }
-            }
-          , DOMEvents: { enumerable: true,
-                get: function(){
-                    return this._DOMEvents || {}
                 }
             }
 
@@ -1775,7 +1705,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":8,"./Model":9,"./class":21,"./utils":24}],20:[function(require,module,exports){
+},{"./Iterator":7,"./Model":8,"./class":20,"./utils":23}],19:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1793,7 +1723,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Model":9,"./class":21,"./utils":24}],21:[function(require,module,exports){
+},{"./Model":8,"./class":20,"./utils":23}],20:[function(require,module,exports){
 void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
@@ -1942,7 +1872,7 @@ void function(_){ "use strict"
     }
 }( require("./utils") )
 
-},{"./utils":24}],22:[function(require,module,exports){
+},{"./utils":23}],21:[function(require,module,exports){
 void function(){ "use strict"
 
     var Promise = require("./Promise").Promise
@@ -1999,8 +1929,8 @@ void function(){ "use strict"
 
 }()
 
-},{"./Event":6,"./Promise":11,"./class":21}],23:[function(require,module,exports){
-void function(ns){ "use strict"
+},{"./Event":5,"./Promise":10,"./class":20}],22:[function(require,module,exports){
+void function(){ "use strict"
 
     var domReady = require("./domReady")
     var korbut = function(cb){
@@ -2009,7 +1939,8 @@ void function(ns){ "use strict"
         }
 
     Object.defineProperties(korbut, {
-        utils: { enumerable: true, value: require("./utils") }
+        version: { enumerable: true, value: "korbutJS-ES5-0.0.1-1400446972965" }
+      , utils: { enumerable: true, value: require("./utils") }
       , class: { enumerable: true, value: require("./class").class }
       , singleton: { enumerable: true, value: require("./class").singleton }
 
@@ -2036,7 +1967,7 @@ void function(ns){ "use strict"
       , ClientRect: { enumerable: true, value: require("./ClientRect").ClientRect }
 
       , Model: { enumerable: true, value: require("./Model").Model }
-      , Collection: { enumerable: true, value: require("./Collection").Collection }
+      , Collection: { enumerable: true, value: require("./Model").Collection }
       , Cookie: { enumerable: true, value: require("./Cookie").Cookie }
       , WebStore: { enumerable: true, value: require("./WebStore").WebStore }
 
@@ -2046,9 +1977,9 @@ void function(ns){ "use strict"
 
     window.korbut = korbut
 
-}( { version: "korbutJS-ES5-0.0.1-1400353686098" } )
+}()
 
-},{"./Animation":1,"./ClientRect":2,"./Collection":3,"./Cookie":4,"./CustomEvent":5,"./Event":6,"./EventTarget":7,"./Iterator":8,"./Model":9,"./PointerEvent":10,"./Promise":11,"./Route":12,"./Router":13,"./Serializer":14,"./Service":15,"./Stylesheet":16,"./Transition":17,"./UID":18,"./View":19,"./WebStore":20,"./class":21,"./domReady":22,"./utils":24}],24:[function(require,module,exports){
+},{"./Animation":1,"./ClientRect":2,"./Cookie":3,"./CustomEvent":4,"./Event":5,"./EventTarget":6,"./Iterator":7,"./Model":8,"./PointerEvent":9,"./Promise":10,"./Route":11,"./Router":12,"./Serializer":13,"./Service":14,"./Stylesheet":15,"./Transition":16,"./UID":17,"./View":18,"./WebStore":19,"./class":20,"./domReady":21,"./utils":23}],23:[function(require,module,exports){
 void function(){ "use strict"
 
     module.exports.native = function(rnative){
@@ -2097,4 +2028,4 @@ void function(){ "use strict"
 
 }()
 
-},{}]},{},[23])
+},{}]},{},[22])

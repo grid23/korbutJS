@@ -8,7 +8,7 @@ void function(){ "use strict"
 
     Object.defineProperties(korbut, {
         version: { enumerable: true, value: "korbutJS-ES5-x.y.z-t" }
-        utils: { enumerable: true, value: require("./utils") }
+      , utils: { enumerable: true, value: require("./utils") }
       , class: { enumerable: true, value: require("./class").class }
       , singleton: { enumerable: true, value: require("./class").singleton }
 

@@ -163,6 +163,7 @@ void function(){ "use strict"
 
         var operate = function(autoVars){
                 autoVars = ["A", "INPUT", "SUBMIT", "BUTTON"]
+
                 return function(stream, input, output){
                     input.pile = input.pile.trim()
 
@@ -185,7 +186,7 @@ void function(){ "use strict"
                 }
             }()
 
-        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph){
+        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph, i, l){
                 capture = false
 
                 while ( stream.next(), !stream.current.done ) {
@@ -219,7 +220,10 @@ void function(){ "use strict"
                 }
 
                 traverse(stream, input, output)
-                return output
+
+                output.vars.root = _.spread(output.tree.childNodes)
+
+                return output 
             }
 
         Object.defineProperties(statics, {
@@ -282,38 +286,39 @@ void function(){ "use strict"
 
                 Object.defineProperties(this, {
                     _template: { value: expression }
+                  , _dict: { value: dict }
                   , _model: { value: data }
                   , _vars: { value: buffer.vars }
                   , _fragment: { value: buffer.tree }
                   , _DOMEvents: { value: _.typeof(dict.events) == "object" ? dict.events : {} }
                 })
 
-                this.addDOMEventListener(this.DOMEvents)
+                //this.addDOMEventListener(this.DOMEvents)
             }
-          , render: { enumerable: true,
-                value: function(){
-                    return this._fragment
+          , root: { enumerable: true,
+                value: function(root){
+                    root = this.queryAll("root")
+
+                    return root.length > 1 ? root : root[0]
                 }
             }
-          , element: { enumerable: true,
-                value: function(){
-
+          , query: { enumerable: true,
+                value: function(query){
+                    if ( this._vars.hasOwnProperty(query) )
+                      return this._vars[query][0]
+                    return null
                 }
             }
-          , addDOMEventListener: { enumerable: true,
-                value: function(){
-
+          , queryAll: { enumerable: true,
+                value: function(query){
+                    if ( this._vars.hasOwnProperty(query) )
+                      return this._vars[query]
+                    return []
                 }
             }
-          , removeDOMEventListener: { enumerable: true,
-                value: function(){
-
-                }
-            }
-
           , clone: { enumerable: true,
                 value: function(){
-
+                    return new this.constructor(this._dict, this.model)
                 }
             }
 
@@ -325,11 +330,6 @@ void function(){ "use strict"
           , template: { enumerable: true,
                 get: function(){
                     return this._template
-                }
-            }
-          , DOMEvents: { enumerable: true,
-                get: function(){
-                    return this._DOMEvents || {}
                 }
             }
 
