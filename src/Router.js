@@ -72,7 +72,7 @@ void function(){ "use strict"
                 value: function(route, handler, handlers){
                     !this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
                       return function(self, routes, count, k){
                           count = 0
 
@@ -102,7 +102,7 @@ void function(){ "use strict"
                 value: function(route, handler){
                     !this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
                       return function(self, routes, count, k){
                           count = 0
 

@@ -15,7 +15,7 @@ void function(){ "use strict"
       , Iterator: { enumerable: true, value: require("./Iterator").Iterator }
 
       , EventTarget: { enumerable: true, value: require("./EventTarget").EventTarget }
-      , Event: { enumerable: true, value: require("./Event").Event }
+      , Event: { enumerable: true, value: require("./EventTarget").Event }
 
       , CustomEvent: { enumerable: true, value: require("./CustomEvent").CustomEvent }
       , PointerEvent: { enumerable: true, value: require("./PointerEvent").PointerEvent }

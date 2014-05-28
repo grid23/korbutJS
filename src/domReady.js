@@ -2,7 +2,7 @@ void function(){ "use strict"
 
     var Promise = require("./Promise").Promise
     var klass = require("./class").class
-    var Event = require("./Event").Event
+    var Event = require("./EventTarget").Event
     var DomReadyEvent = klass(Event, {
             constructor: function(){
                 Event.call(this, "domReady")

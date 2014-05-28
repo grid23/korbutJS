@@ -22,7 +22,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Stylesheet":15,"./class":20,"./utils":23}],2:[function(require,module,exports){
+},{"./Stylesheet":14,"./class":19,"./utils":22}],2:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -48,7 +48,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":20,"./utils":23}],3:[function(require,module,exports){
+},{"./class":19,"./utils":22}],3:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -66,7 +66,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Model":8,"./class":20,"./utils":23}],4:[function(require,module,exports){
+},{"./Model":7,"./class":19,"./utils":22}],4:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -83,12 +83,11 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":20,"./utils":23}],5:[function(require,module,exports){
+},{"./class":19,"./utils":22}],5:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
     var klass = require("./class").class
-    var UID = require("./UID").UID
 
     module.exports.Event = klass(function(statics){
 
@@ -97,15 +96,15 @@ void function(){ "use strict"
                 type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
                 detail = function(detail){
                     return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
-                         : detail.length == 1 && detail[0].constructor === Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
+                         : detail.length == 1 && _typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
                          : detail.length == 1 ? detail[0]
                          : detail
                 }( _.spread(arguments, 1) )
 
                 Object.defineProperties(this, {
-                    "_type": { configurable: true, value: type }
-                  , "_detail": { configurable: true, value: detail }
-                  , "_timestamp": { configurable: true, value: +(new Date) }
+                    "type": { enumerable: true, get: function(){ return type } }
+                  , "detail": { enumerable: true, get: function(){ return detail } }
+                  , "timestamp": { enumerable: true, get: function(){ return timestamp } }
                 })
             }
           , initEvent: {
@@ -113,33 +112,8 @@ void function(){ "use strict"
                     return this.constructor.apply(this, arguments)
                 }
             }
-
-          , type: { enumerable: true,
-                get: function(){
-                    return this._type
-                }
-            }
-          , timestamp: { enumerable: true,
-                get: function(){
-                    return this._timestamp || 0
-                }
-            }
-          , detail: { enumerable: true,
-                get: function(){
-                    return this._detail
-                }
-            }
         }
     })
-
-}()
-
-},{"./UID":17,"./class":20,"./utils":23}],6:[function(require,module,exports){
-void function(){ "use strict"
-
-    var _ = require("./utils")
-    var klass = require("./class").class
-    var Event = require("./Event").Event
 
     module.exports.EventTarget = klass(function(statics){
 
@@ -156,7 +130,7 @@ void function(){ "use strict"
                 value: function(type, handler, handlers){
                     !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
                       return function(self, events, count, k){
                           count = 0
 
@@ -187,7 +161,7 @@ void function(){ "use strict"
                 value: function(type, handler, handlers){
                     !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
                       return function(self, events, count, k){
                           count = 0
 
@@ -265,12 +239,12 @@ void function(){ "use strict"
 
           , dispatchEvent: { enumerable: true,
                 value: function(event, handlers, count){
-                    event = Event.isImplementedBy(event) ? event : Event.create.apply(null, arguments)
+                    event = module.exports.Event.isImplementedBy(event) ? event : module.exports.Event.create.apply(null, arguments)
                     handlers = (this._events||{})[event.type]
                     count = 0
 
                     if ( event.type == "error" && !handlers )
-                      throw Event.isImplementedBy(event.detail) ? event.detail : new Error
+                      throw module.exports.Event.isImplementedBy(event.detail) ? event.detail : new Error
 
                     if ( handlers )
                       if ( typeof handlers == "function" )
@@ -278,13 +252,15 @@ void function(){ "use strict"
                       else if ( Array.isArray(handlers) )
                         void function(handlers){
                             while ( handlers.length )
-                              if ( typeof handlers[i] == "function" )
-                                handlers[i].call(null, event), count++
-                              else if ( typeof handlers.handleEvent == "function" )
-                                handlers[i].call(handlers, event), count++
+                              if ( typeof handlers[0] == "function" )
+                                handlers.shift().call(null, event), count++
+                              else if ( typeof handlers[0].handleEvent == "function" )
+                                handlers.shift().handleEvent.call(handlers, event), count++
+                              else
+                                handlers.shift()
                         }( [].concat(handlers) )
                       else if ( typeof handlers.handleEvent == "function" )
-                        handlers.call(handlers, event), count++
+                        handlers.handleEvent.call(handlers, event), count++
 
                     return count
                 }
@@ -302,7 +278,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Event":5,"./class":20,"./utils":23}],7:[function(require,module,exports){
+},{"./class":19,"./utils":22}],6:[function(require,module,exports){
 void function(){ "use strict"
 
     var klass = require("./class").class
@@ -394,13 +370,13 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":20}],8:[function(require,module,exports){
+},{"./class":19}],7:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
     var klass = require("./class").class
     var EventTarget = require("./EventTarget").EventTarget
-    var Event = require("./Event").Event
+    var Event = require("./EventTarget").Event
     var Iterator = require("./Iterator").Iterator
     var UID = require("./UID").UID
     var Serializer = require("./Serializer").Serializer
@@ -446,43 +422,146 @@ void function(){ "use strict"
         }
     })
 
-    module.exports.Model = klass(EventTarget, function(statics){
-        function fromObject(model, o, root, iterator){
-            root = !!root ? root+".":""
-            iterator = new Iterator(o)
+    module.exports.RemoveDataEvent = klass(Event, {
+        constructor: function(model, key, pvalue){
+            Event.call(this, "remove")
 
+            Object.defineProperties(this, {
+                model: { enumerable: true, get: function(){ return model } }
+              , key: { enumerable: true, get: function(){ return key } }
+              , from: { enumerable: true, get: function(){ return pvalue }}
+              , to: { enumerable: true, get: function(){ return void 0 }}
+            })
+        }
+    })
 
-            while ( !iterator.next().done )
-              model.setItem(root+iterator.current.key, iterator.current.value)
+    module.exports.AddDataEvent = klass(Event, {
+        constructor: function(model, key, nvalue, pvalue){
+            Event.call(this, "add")
+
+            Object.defineProperties(this, {
+                model: { enumerable: true, get: function(){ return model } }
+              , key: { enumerable: true, get: function(){ return key } }
+              , from: { enumerable: true, get: function(){ return pvalue }}
+              , to: { enumerable: true, get: function(){ return nvalue }}
+            })
+        }
+    })
+
+    module.exports.UpdateDataEvent = klass(Event, {
+        constructor: function(model, keys){
+            Event.call(this, "update")
+
+            Object.defineProperties(this, {
+                model: { enumerable: true, get: function(){ return model } }
+              , keys: { enumerable: true, get: function(){ return [].concat(keys) } }
+            })
+        }
+    })
+
+    module.exports.Model = klass(EventTarget, function(statics, models){
+        models = Object.create(null)
+
+        function fromObject(){
         }
 
-        function fromString(model, items, o){
-            try {
-                o = JSON.parse(items)
-            } catch(e){
-                try {
-                    o = model.serializer.objectify(items)
-                } catch(e){
-                    o = {}
-                }
+        function fromString(){
+        }
+
+        function update(model, key){
+            if ( !models[model.uid] )
+              return
+
+            if ( models[model.uid].updating.keys.indexOf(key) == -1 ) {
+              models[model.uid].updating.keys.push(key)
+              clearTimeout(models[model.uid].updating.timer)
+              models[model.uid].updating.timer = setTimeout(function(){
+                  model.dispatchEvent(new module.exports.UpdateDataEvent(model, models[model.uid].updating.keys.splice(0, models[model.uid].updating.keys.length)))
+              }, 4)
             }
-
-            return fromObject(model, o)
         }
+
+        Object.defineProperties(statics, {
+            getModelByUid: { enumerable: true, value: function(uid){ return models[uid] ? models[uid].instance : null } }
+        })
 
         return {
             constructor: function(items){
-                this.defaults && this.setItem(this.defaults)
-                items && items.constructor === Object && this.setItem(items)
-            }
-          , setItem: { enumeable: true,
-                value: function(){
+                Object.defineProperties(this, {
+                    _data: { value: this.constructor.prototype._data ? Object.create(this.constructor.prototype._data) : {} }
+                  , _hooks: { value: this.constructor.prototype._hooks ? Object.create(this.constructor.prototype._hooks) : {} }
+                  , _uid: { value: UID.uid() }
+                })
 
+                if ( items = arguments.length == 1 && _.typeof(items) == "object" ? items : null, items )
+                  this.setItem(items)
+
+                models[this.uid] = { instance: this, updating: { keys: [], timer: null } }
+            }
+          , setItem: { enumerable: true,
+                value: function(key, nvalue, pvalue, hook, added, updated, removed){
+                    if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
+                      return function(iterator){
+                          while ( iterator.next(), !iterator.current.done )
+                            this.setItem(iterator.current.key, iterator.current.value)
+                      }.call(this, new Iterator(arguments[0]))
+
+                    key = _.typeof(key) == "string" ? key : Object.prototype.toString.call(key)
+                    nvalue = function(value){
+                        if ( typeof value == "function" )
+                          while ( typeof value == "function" )
+                            value = value.call(this)
+                        return value
+                    }.call(this, nvalue)
+
+                    hook = this.hooks.hasOwnProperty(key) ? this.hooks[key] : null
+                    pvalue = this.data.hasOwnProperty(key) ? this.data[key] : void 0
+
+                    if ( typeof hook == "function" )
+                      nvalue = hook.call(this, nvalue, pvalue)
+
+                    if ( _.typeof(nvalue) == "object" )
+                      return function(iterator){
+                          while ( iterator.next(), !iterator.current.done )
+                            this.setItem(iterator.current.key, iterator.current.value)
+                      }.call(this, new Iterator(nvalue))
+
+                    if ( _.typeof(nvalue) == "array" )
+                      nvalue = [].concat(nvalue)
+
+                    if ( nvalue == void 0 && this.data.hasOwnProperty(key) )
+                      removed = true,
+                      delete this.data[key]
+                    else {
+                      if ( !this.data.hasOwnProperty(key) )
+                        added = true
+
+                      this.data[key] = nvalue
+                    }
+
+                    if ( nvalue !== pvalue )
+                      updated = true
+
+                    if ( removed )
+                      this.dispatchEvent(new module.exports.RemoveDataEvent(this, key, pvalue) )
+                    if ( added )
+                      this.dispatchEvent(new module.exports.AddDataEvent(this, key, nvalue, pvalue) )
+                    if ( updated )
+                      update(this, key)
                 }
             }
           , getItem: { enumerable: true,
-                value: function(){
+                value: function(keys, hits, iterator){
+                    keys = arguments.length == 1 ? [keys]
+                        : arguments.length > 1 ? _.spread(arguments)
+                        : []
+                    hits = []
+                    iterator = new Iterator(keys)
 
+                    while( iterator.next(), !iterator.current.done )
+                      hits.push( this.data.hasOwnProperty(iterator.current.value) ? this.data[iterator.current.value] : void 0 )
+
+                    return hits.length > 1 ? hits : hits[0]
                 }
             }
           , removeItem: { enumerable: true,
@@ -490,42 +569,18 @@ void function(){ "use strict"
 
                 }
             }
-          , items: { enumerable: true,
-                value: function(items, cb){
-                    items = _.spread(arguments)
-                    cb = typeof items[items.length-1] == "function" ? items.pop() : null
 
-                    void function(self, i, l){
-                        for ( ; i < l; i++ )
-                          items[i] = function(item){
-                              if ( _.typeof(item) != "string" )
-                                return void 0
-
-                              return {
-                                  set: function(v){
-                                      return self.setItem(item, v)
-                                  }
-                                , get: function(){
-                                      return self.getItem(item)
-                                  }
-                                , remove: function(){
-                                      return self.removeItem(item)
-                                  }
-
-                                , on: function(e, h){
-                                      return self.addEventListner(item+":"+"e", h)
-                                  }
-                                , off: function(e, h){
-                                      return self.removeEventListner(item+":"+"e", h)
-                                  }
-                              }
-                          }(items[i])
-                    }( this, 0, items.length )
-
-                    if ( cb )
-                      cb.apply(null, items)
+          , data: { enumerable: true,
+                get: function(){
+                    return this._data
                 }
             }
+          , hooks: { enumerable: true,
+                get: function(){
+                    return this._hooks
+                }
+            }
+
           , serialize: { enumerable: true,
                 value: function(){
 
@@ -535,7 +590,7 @@ void function(){ "use strict"
           , uid: { enumerable: true, configurable: true,
                 get: function(){
                     if ( !this._uid )
-                      this._uid = UID.uid()
+                      Object.defineProperty(this, "_uid", { value: UID.uid() })
                     return this._uid
                 }
             }
@@ -554,7 +609,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Event":5,"./EventTarget":6,"./Iterator":7,"./Serializer":13,"./UID":17,"./class":20,"./utils":23}],9:[function(require,module,exports){
+},{"./EventTarget":5,"./Iterator":6,"./Serializer":12,"./UID":16,"./class":19,"./utils":22}],8:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -571,7 +626,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":20,"./utils":23}],10:[function(require,module,exports){
+},{"./class":19,"./utils":22}],9:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -782,7 +837,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":7,"./class":20,"./utils":23}],11:[function(require,module,exports){
+},{"./Iterator":6,"./class":19,"./utils":22}],10:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -795,7 +850,7 @@ void function(){ "use strict"
                 path = _.typeof(path) == "string" ? path : function(){ throw new Error("Route.path") }() //TODO
                 detail = function(detail){
                     return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
-                         : detail.length == 1 && detail[0].constructor === Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
+                         : detail.length == 1 && _.typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
                          : detail.length == 1 ? detail[0]
                          : detail
                 }( _.spread(arguments, 1) )
@@ -833,7 +888,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":20,"./utils":23}],12:[function(require,module,exports){
+},{"./class":19,"./utils":22}],11:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -908,7 +963,7 @@ void function(){ "use strict"
                 value: function(route, handler, handlers){
                     !this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
                       return function(self, routes, count, k){
                           count = 0
 
@@ -938,7 +993,7 @@ void function(){ "use strict"
                 value: function(route, handler){
                     !this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
                       return function(self, routes, count, k){
                           count = 0
 
@@ -1091,7 +1146,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":7,"./Route":11,"./UID":17,"./class":20,"./utils":23}],13:[function(require,module,exports){
+},{"./Iterator":6,"./Route":10,"./UID":16,"./class":19,"./utils":22}],12:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1141,7 +1196,7 @@ void function(){ "use strict"
 
         return {
             constructor: function(dict){
-                dict = dict && dict.constructor === Object ? dict : {}
+                dict = dict && _.typeof(dict) == Object ? dict : {}
 
                 _.typeof(dict.delimiter) == "string" && Object.defineProperty(this, "_delimiter", { value: dict.delimiter })
                 _.typeof(dict.separator) == "string" && Object.defineProperty(this, "_separator", { value: dict.separator })
@@ -1161,7 +1216,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":7,"./class":20,"./utils":23}],14:[function(require,module,exports){
+},{"./Iterator":6,"./class":19,"./utils":22}],13:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1177,7 +1232,7 @@ void function(){ "use strict"
     })
 }()
 
-},{"./class":20,"./utils":23}],15:[function(require,module,exports){
+},{"./class":19,"./utils":22}],14:[function(require,module,exports){
 void function(){ "use strict"
 
     var utils = require("./utils")
@@ -1274,7 +1329,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./EventTarget":6,"./Iterator":7,"./class":20,"./domReady":21,"./utils":23}],16:[function(require,module,exports){
+},{"./EventTarget":5,"./Iterator":6,"./class":19,"./domReady":20,"./utils":22}],15:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1292,7 +1347,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Stylesheet":15,"./class":20,"./utils":23}],17:[function(require,module,exports){
+},{"./Stylesheet":14,"./class":19,"./utils":22}],16:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1300,7 +1355,7 @@ void function(){ "use strict"
 
     module.exports.UID = klass(function(statics){
         var CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-        var MAP = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+        var MAP = "Kxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
         var RADIX = 16
         var REGEXP = /[xy]/g
 
@@ -1327,7 +1382,7 @@ void function(){ "use strict"
 
         return {
             constructor: function(dict){
-                dict = dict && dict.constructor === Object ? dict : {}
+                dict = dict && _.typeof(dict) == Object ? dict : {}
 
                 _.typeof(dict.map) == "string" && Object.defineProperty(this, "_map", { value: dict.map })
                 _.typeof(dict.radix) == "number" && Object.defineProperty(this, "_map", { value: dict.number })
@@ -1352,7 +1407,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":20,"./utils":23}],18:[function(require,module,exports){
+},{"./class":19,"./utils":22}],17:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1518,7 +1573,7 @@ void function(){ "use strict"
 
         var operate = function(autoVars){
                 autoVars = ["A", "INPUT", "SUBMIT", "BUTTON"]
-                
+
                 return function(stream, input, output){
                     input.pile = input.pile.trim()
 
@@ -1541,7 +1596,7 @@ void function(){ "use strict"
                 }
             }()
 
-        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph, i, l){
+        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph){
                 capture = false
 
                 while ( stream.next(), !stream.current.done ) {
@@ -1552,11 +1607,13 @@ void function(){ "use strict"
                           traverse(stream, input, output)
                         else if ( operators[input.glyph] ) {
                             operate(stream, input, output)
-                            if ( operators[input.glyph].hasOwnProperty("enclosing_glyph") )
+
+                            if ( operators[input.glyph].hasOwnProperty("enclosing_glyph") ) {
                               capture = true
                               ignore = 0
                               openGlyph = input.glyph
                               closeGlyph = operators[input.glyph].enclosing_glyph
+                            }
                         }
                         else
                           input.pile += input.glyph
@@ -1625,11 +1682,32 @@ void function(){ "use strict"
 
         })
 
+        function addEventListeners(instance, dict, iterator){
+            iterator = new Iterator(dict)
+
+            while ( iterator.next(), !iterator.current.done )
+              void function(nodes, iterator, i, l, handler){
+                  if ( l = nodes.length, !l )
+                    return
+
+                  while ( iterator.next(), !iterator.current.done )
+                    for ( i = 0; i < l; i++ )
+                      nodes[i].addEventListener(iterator.current.key, function(fn){
+                          return function(e){
+                              fn.call(instance,e)
+                          }
+                      }(iterator.current.value))
+
+              }(instance.queryAll(iterator.current.key), new Iterator(iterator.current.value))
+
+
+        }
+
         return {
-            constructor: function(args, handler, data, dict, expression, buffer){
+            constructor: function(args, handler, data, dict, expression, buffer, events){
                 args = _.spread(arguments)
                 handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
-                data = Model.isImplementedBy(args[args.lenght-1]) ? args.pop()
+                data = Model.isImplementedBy(args[args.length-1]) ? args.pop()
                      : args.length > 1 && "string, object".indexOf(_.typeof(args[args.length-1])) != -1 ? new this.Model(args.pop())
                      : new this.Model
                 dict = _.typeof(args[args.length-1]) == "string" ? { template: args.pop() }
@@ -1645,10 +1723,10 @@ void function(){ "use strict"
                   , _model: { value: data }
                   , _vars: { value: buffer.vars }
                   , _fragment: { value: buffer.tree }
-                  , _DOMEvents: { value: _.typeof(dict.events) == "object" ? dict.events : {} }
                 })
 
-                //this.addDOMEventListener(this.DOMEvents)
+                _.typeof(this._DOMEvents) == "object" && addEventListeners(this, this._DOMEvents)
+                _.typeof(dict.events) == "object" && addEventListeners(this, dict.events)
             }
           , root: { enumerable: true,
                 value: function(root){
@@ -1667,7 +1745,7 @@ void function(){ "use strict"
           , queryAll: { enumerable: true,
                 value: function(query){
                     if ( this._vars.hasOwnProperty(query) )
-                      return this._vars[query]
+                      return [].concat(this._vars[query])
                     return []
                 }
             }
@@ -1705,7 +1783,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":7,"./Model":8,"./class":20,"./utils":23}],19:[function(require,module,exports){
+},{"./Iterator":6,"./Model":7,"./class":19,"./utils":22}],18:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1723,7 +1801,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Model":8,"./class":20,"./utils":23}],20:[function(require,module,exports){
+},{"./Model":7,"./class":19,"./utils":22}],19:[function(require,module,exports){
 void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
@@ -1872,12 +1950,12 @@ void function(_){ "use strict"
     }
 }( require("./utils") )
 
-},{"./utils":23}],21:[function(require,module,exports){
+},{"./utils":22}],20:[function(require,module,exports){
 void function(){ "use strict"
 
     var Promise = require("./Promise").Promise
     var klass = require("./class").class
-    var Event = require("./Event").Event
+    var Event = require("./EventTarget").Event
     var DomReadyEvent = klass(Event, {
             constructor: function(){
                 Event.call(this, "domReady")
@@ -1929,7 +2007,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Event":5,"./Promise":10,"./class":20}],22:[function(require,module,exports){
+},{"./EventTarget":5,"./Promise":9,"./class":19}],21:[function(require,module,exports){
 void function(){ "use strict"
 
     var domReady = require("./domReady")
@@ -1939,7 +2017,7 @@ void function(){ "use strict"
         }
 
     Object.defineProperties(korbut, {
-        version: { enumerable: true, value: "korbutJS-ES5-0.0.1-1400446972965" }
+        version: { enumerable: true, value: "korbutJS-ES5-0.0.1-1401293428343" }
       , utils: { enumerable: true, value: require("./utils") }
       , class: { enumerable: true, value: require("./class").class }
       , singleton: { enumerable: true, value: require("./class").singleton }
@@ -1947,7 +2025,7 @@ void function(){ "use strict"
       , Iterator: { enumerable: true, value: require("./Iterator").Iterator }
 
       , EventTarget: { enumerable: true, value: require("./EventTarget").EventTarget }
-      , Event: { enumerable: true, value: require("./Event").Event }
+      , Event: { enumerable: true, value: require("./EventTarget").Event }
 
       , CustomEvent: { enumerable: true, value: require("./CustomEvent").CustomEvent }
       , PointerEvent: { enumerable: true, value: require("./PointerEvent").PointerEvent }
@@ -1979,7 +2057,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Animation":1,"./ClientRect":2,"./Cookie":3,"./CustomEvent":4,"./Event":5,"./EventTarget":6,"./Iterator":7,"./Model":8,"./PointerEvent":9,"./Promise":10,"./Route":11,"./Router":12,"./Serializer":13,"./Service":14,"./Stylesheet":15,"./Transition":16,"./UID":17,"./View":18,"./WebStore":19,"./class":20,"./domReady":21,"./utils":23}],23:[function(require,module,exports){
+},{"./Animation":1,"./ClientRect":2,"./Cookie":3,"./CustomEvent":4,"./EventTarget":5,"./Iterator":6,"./Model":7,"./PointerEvent":8,"./Promise":9,"./Route":10,"./Router":11,"./Serializer":12,"./Service":13,"./Stylesheet":14,"./Transition":15,"./UID":16,"./View":17,"./WebStore":18,"./class":19,"./domReady":20,"./utils":22}],22:[function(require,module,exports){
 void function(){ "use strict"
 
     module.exports.native = function(rnative){
@@ -2000,6 +2078,9 @@ void function(){ "use strict"
 
     module.exports.typeof = function(toString){
         return function(o, ntypeof){
+            if ( Array.isArray(o) )
+              return "array"
+
             ntypeof = typeof o
 
             return ntypeof == "object" ? toString.call(o).slice(8, -1).toLowerCase() : ntypeof
@@ -2028,4 +2109,4 @@ void function(){ "use strict"
 
 }()
 
-},{}]},{},[22])
+},{}]},{},[21])

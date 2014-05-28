@@ -18,6 +18,9 @@ void function(){ "use strict"
 
     module.exports.typeof = function(toString){
         return function(o, ntypeof){
+            if ( Array.isArray(o) )
+              return "array"
+
             ntypeof = typeof o
 
             return ntypeof == "object" ? toString.call(o).slice(8, -1).toLowerCase() : ntypeof

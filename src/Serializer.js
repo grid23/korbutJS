@@ -47,7 +47,7 @@ void function(){ "use strict"
 
         return {
             constructor: function(dict){
-                dict = dict && dict.constructor === Object ? dict : {}
+                dict = dict && _.typeof(dict) == Object ? dict : {}
 
                 _.typeof(dict.delimiter) == "string" && Object.defineProperty(this, "_delimiter", { value: dict.delimiter })
                 _.typeof(dict.separator) == "string" && Object.defineProperty(this, "_separator", { value: dict.separator })

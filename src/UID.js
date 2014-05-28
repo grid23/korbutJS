@@ -5,7 +5,7 @@ void function(){ "use strict"
 
     module.exports.UID = klass(function(statics){
         var CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-        var MAP = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+        var MAP = "Kxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
         var RADIX = 16
         var REGEXP = /[xy]/g
 
@@ -32,7 +32,7 @@ void function(){ "use strict"
 
         return {
             constructor: function(dict){
-                dict = dict && dict.constructor === Object ? dict : {}
+                dict = dict && _.typeof(dict) == Object ? dict : {}
 
                 _.typeof(dict.map) == "string" && Object.defineProperty(this, "_map", { value: dict.map })
                 _.typeof(dict.radix) == "number" && Object.defineProperty(this, "_map", { value: dict.number })

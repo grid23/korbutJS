@@ -2,7 +2,32 @@ void function(){ "use strict"
 
     var _ = require("./utils")
     var klass = require("./class").class
-    var Event = require("./Event").Event
+
+    module.exports.Event = klass(function(statics){
+
+        return {
+            constructor: function(type, detail){
+                type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
+                detail = function(detail){
+                    return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
+                         : detail.length == 1 && _typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
+                         : detail.length == 1 ? detail[0]
+                         : detail
+                }( _.spread(arguments, 1) )
+
+                Object.defineProperties(this, {
+                    "type": { enumerable: true, get: function(){ return type } }
+                  , "detail": { enumerable: true, get: function(){ return detail } }
+                  , "timestamp": { enumerable: true, get: function(){ return timestamp } }
+                })
+            }
+          , initEvent: {
+                value: function(){
+                    return this.constructor.apply(this, arguments)
+                }
+            }
+        }
+    })
 
     module.exports.EventTarget = klass(function(statics){
 
@@ -19,7 +44,7 @@ void function(){ "use strict"
                 value: function(type, handler, handlers){
                     !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
                       return function(self, events, count, k){
                           count = 0
 
@@ -50,7 +75,7 @@ void function(){ "use strict"
                 value: function(type, handler, handlers){
                     !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && arguments[0].constructor === Object )
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
                       return function(self, events, count, k){
                           count = 0
 
@@ -128,12 +153,12 @@ void function(){ "use strict"
 
           , dispatchEvent: { enumerable: true,
                 value: function(event, handlers, count){
-                    event = Event.isImplementedBy(event) ? event : Event.create.apply(null, arguments)
+                    event = module.exports.Event.isImplementedBy(event) ? event : module.exports.Event.create.apply(null, arguments)
                     handlers = (this._events||{})[event.type]
                     count = 0
 
                     if ( event.type == "error" && !handlers )
-                      throw Event.isImplementedBy(event.detail) ? event.detail : new Error
+                      throw module.exports.Event.isImplementedBy(event.detail) ? event.detail : new Error
 
                     if ( handlers )
                       if ( typeof handlers == "function" )
@@ -141,13 +166,15 @@ void function(){ "use strict"
                       else if ( Array.isArray(handlers) )
                         void function(handlers){
                             while ( handlers.length )
-                              if ( typeof handlers[i] == "function" )
-                                handlers[i].call(null, event), count++
-                              else if ( typeof handlers.handleEvent == "function" )
-                                handlers[i].call(handlers, event), count++
+                              if ( typeof handlers[0] == "function" )
+                                handlers.shift().call(null, event), count++
+                              else if ( typeof handlers[0].handleEvent == "function" )
+                                handlers.shift().handleEvent.call(handlers, event), count++
+                              else
+                                handlers.shift()
                         }( [].concat(handlers) )
                       else if ( typeof handlers.handleEvent == "function" )
-                        handlers.call(handlers, event), count++
+                        handlers.handleEvent.call(handlers, event), count++
 
                     return count
                 }

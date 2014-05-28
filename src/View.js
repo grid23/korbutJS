@@ -186,7 +186,7 @@ void function(){ "use strict"
                 }
             }()
 
-        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph, i, l){
+        var parse = function(stream, input, output, capture, ignore, openGlyph, closeGlyph){
                 capture = false
 
                 while ( stream.next(), !stream.current.done ) {
@@ -197,11 +197,13 @@ void function(){ "use strict"
                           traverse(stream, input, output)
                         else if ( operators[input.glyph] ) {
                             operate(stream, input, output)
-                            if ( operators[input.glyph].hasOwnProperty("enclosing_glyph") )
+
+                            if ( operators[input.glyph].hasOwnProperty("enclosing_glyph") ) {
                               capture = true
                               ignore = 0
                               openGlyph = input.glyph
                               closeGlyph = operators[input.glyph].enclosing_glyph
+                            }
                         }
                         else
                           input.pile += input.glyph
@@ -223,7 +225,7 @@ void function(){ "use strict"
 
                 output.vars.root = _.spread(output.tree.childNodes)
 
-                return output 
+                return output
             }
 
         Object.defineProperties(statics, {
@@ -270,11 +272,32 @@ void function(){ "use strict"
 
         })
 
+        function addEventListeners(instance, dict, iterator){
+            iterator = new Iterator(dict)
+
+            while ( iterator.next(), !iterator.current.done )
+              void function(nodes, iterator, i, l, handler){
+                  if ( l = nodes.length, !l )
+                    return
+
+                  while ( iterator.next(), !iterator.current.done )
+                    for ( i = 0; i < l; i++ )
+                      nodes[i].addEventListener(iterator.current.key, function(fn){
+                          return function(e){
+                              fn.call(instance,e)
+                          }
+                      }(iterator.current.value))
+
+              }(instance.queryAll(iterator.current.key), new Iterator(iterator.current.value))
+
+
+        }
+
         return {
-            constructor: function(args, handler, data, dict, expression, buffer){
+            constructor: function(args, handler, data, dict, expression, buffer, events){
                 args = _.spread(arguments)
                 handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
-                data = Model.isImplementedBy(args[args.lenght-1]) ? args.pop()
+                data = Model.isImplementedBy(args[args.length-1]) ? args.pop()
                      : args.length > 1 && "string, object".indexOf(_.typeof(args[args.length-1])) != -1 ? new this.Model(args.pop())
                      : new this.Model
                 dict = _.typeof(args[args.length-1]) == "string" ? { template: args.pop() }
@@ -290,10 +313,10 @@ void function(){ "use strict"
                   , _model: { value: data }
                   , _vars: { value: buffer.vars }
                   , _fragment: { value: buffer.tree }
-                  , _DOMEvents: { value: _.typeof(dict.events) == "object" ? dict.events : {} }
                 })
 
-                //this.addDOMEventListener(this.DOMEvents)
+                _.typeof(this._DOMEvents) == "object" && addEventListeners(this, this._DOMEvents)
+                _.typeof(dict.events) == "object" && addEventListeners(this, dict.events)
             }
           , root: { enumerable: true,
                 value: function(root){
@@ -312,7 +335,7 @@ void function(){ "use strict"
           , queryAll: { enumerable: true,
                 value: function(query){
                     if ( this._vars.hasOwnProperty(query) )
-                      return this._vars[query]
+                      return [].concat(this._vars[query])
                     return []
                 }
             }

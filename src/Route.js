@@ -10,7 +10,7 @@ void function(){ "use strict"
                 path = _.typeof(path) == "string" ? path : function(){ throw new Error("Route.path") }() //TODO
                 detail = function(detail){
                     return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
-                         : detail.length == 1 && detail[0].constructor === Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
+                         : detail.length == 1 && _.typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
                          : detail.length == 1 ? detail[0]
                          : detail
                 }( _.spread(arguments, 1) )
