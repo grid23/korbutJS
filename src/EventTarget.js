@@ -16,14 +16,29 @@ void function(){ "use strict"
                 }( _.spread(arguments, 1) )
 
                 Object.defineProperties(this, {
-                    "type": { enumerable: true, get: function(){ return type } }
-                  , "detail": { enumerable: true, get: function(){ return detail } }
-                  , "timestamp": { enumerable: true, get: function(){ return timestamp } }
+                    "_type": { value: type }
+                  , "_detail": { value: Object.create(detail) }
+                  , "_timestamp": { value: Date.now() }
                 })
             }
           , initEvent: {
                 value: function(){
                     return this.constructor.apply(this, arguments)
+                }
+            }
+          , type: { enumerable: true,
+                get: function(){
+                    return this._type
+                }
+            }
+          , detail: { enumerable: true,
+                get: function(){
+                    return this._detail
+                }
+            }
+          , timestamp: { enumerable: true,
+                get: function(){
+                      return this._timestamp
                 }
             }
         }

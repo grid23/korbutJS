@@ -16,10 +16,10 @@ void function(){ "use strict"
                 }( _.spread(arguments, 1) )
 
                 Object.defineProperties(this, {
-                    "_path": { configurable: true, value: path }
-                  , "_detail": { configurable: true, value: detail }
-                  , "_timestamp": { configurable: true, value: +(new Date) }
-                  , "_matches": { configurable: true, value: {} }
+                    "_path": { value: path }
+                  , "_detail": { value: Object.create(detail) }
+                  , "_timestamp": { value: Date.now() }
+                  , "_matches": { value: {} }
                 })
             }
 
