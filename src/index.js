@@ -23,7 +23,7 @@ void function(){ "use strict"
       , Promise: { enumerable: true, value: require("./Promise").Promise }
 
       , Router: { enumerable: true, value: require("./Router").Router }
-      , Route: { enumerable: true, value: require("./Route").Route }
+      , Route: { enumerable: true, value: require("./Router").Route }
 
       , Service: { enumerable: true, value: require("./Service").Service }
 

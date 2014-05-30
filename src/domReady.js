@@ -8,26 +8,34 @@ void function(){ "use strict"
                 Event.call(this, "domReady")
 
                 Object.defineProperties(this, {
-                    nodes: { enumerable: true,
-                        value: {
-                            documentElement: document.documentElement
-                          , head: document.head
-                          , body: document.body
-                          , title: function(node){
-                                if ( node ) return node
-                                return document.head.appendChild(document.createElement("title"))
-                            }( document.head.getElementsByTagName("title")[0] )
-                          , viewport: function(node){
-                                if ( node ) return node
-                                node = document.createElement("meta")
-                                node.setAttribute("name", "viewport")
-                                node.setAttribute("content", "")
-                                return document.head.appendChild(node)
-                            }( document.head.querySelector("meta[name=viewport]") )
-                        }
+                    _nodes: {
+                        value: Object.create({}, {
+                            documentElement: { enumerable: true, value: document.documentElement }
+                          , head: { enumerable: true, value: document.head }
+                          , body: { enumerable: true, value: document.body }
+                          , title: { enumerable: true,
+                                value: function(node){
+                                    if ( node ) return node
+                                    return document.head.appendChild(document.createElement("title"))
+                                }( document.head.getElementsByTagName("title")[0] )
+                            }
+                          , viewport: { enumerable: true,
+                                value: function(node){
+                                    if ( node ) return node
+                                    node = document.createElement("meta")
+                                    node.setAttribute("name", "viewport")
+                                    node.setAttribute("content", "")
+                                    return document.head.appendChild(node)
+                                }( document.head.querySelector("meta[name=viewport]") )
+                            }
+                        })
                     }
                 })
-
+            }
+          , nodes: { enumerable: true,
+                get: function(){
+                    return this._nodes || {}
+                }
             }
         })
 

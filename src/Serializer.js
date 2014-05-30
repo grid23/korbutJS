@@ -62,6 +62,16 @@ void function(){ "use strict"
                     return statics.objectify.call(this, s)
                 }
             }
+          , delimiter: { enumerable: true,
+                get: function(){
+                    return this._delimiter || DELIMITER
+                }
+            }
+          , separator: { enumerable: true,
+                get: function(){
+                    return this._separator || SEPARATOR
+                }
+            }
         }
     })
 

@@ -72,6 +72,20 @@ void function(){ "use strict"
                     return this.current
                 }
             }
+          , range: { enumerable: true,
+                get: function(){
+                    return this._range ? [].concat(this._range) : []
+                }
+            }
+          , pointer: { enumerable: true,
+                get: function(){
+                    return this._pointer || -1
+                }
+              , set: function(v){
+                    this._pointer = this._pointer || Object.defineProperty(this, "_pointer", { value: -1 })._pointer
+                    this._pointer = v
+                }
+            }
           , length: { enumerable: true,
                 value: function(){
                     return this._range.length

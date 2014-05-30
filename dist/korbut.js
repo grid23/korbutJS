@@ -22,7 +22,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Stylesheet":14,"./class":19,"./utils":22}],2:[function(require,module,exports){
+},{"./Stylesheet":13,"./class":18,"./utils":21}],2:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -48,7 +48,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":19,"./utils":22}],3:[function(require,module,exports){
+},{"./class":18,"./utils":21}],3:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -66,7 +66,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Model":7,"./class":19,"./utils":22}],4:[function(require,module,exports){
+},{"./Model":7,"./class":18,"./utils":21}],4:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -83,7 +83,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":19,"./utils":22}],5:[function(require,module,exports){
+},{"./class":18,"./utils":21}],5:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -95,22 +95,30 @@ void function(){ "use strict"
             constructor: function(type, detail){
                 type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
                 detail = function(detail){
-                    return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
-                         : detail.length == 1 && _typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
-                         : detail.length == 1 ? detail[0]
-                         : detail
+                    return detail.length == 1 && _typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? Object.create(detail[0])
+                         : null
                 }( _.spread(arguments, 1) )
 
-                Object.defineProperties(this, {
-                    "type": { enumerable: true, get: function(){ return type } }
-                  , "detail": { enumerable: true, get: function(){ return detail } }
-                  , "timestamp": { enumerable: true, get: function(){ return timestamp } }
-                })
+                this.type = type
+                this.detail = detail
+                this.timestamp = Date.now()
             }
           , initEvent: {
                 value: function(){
                     return this.constructor.apply(this, arguments)
                 }
+            }
+          , type: { enumerable: true,
+                get: function(){ return this._type }
+              , set: function(v){ !this._type && Object.defineProperty(this, "_type", { value: v }) }
+            }
+          , detail: { enumerable: true,
+                get: function(){ return this._detail }
+              , set: function(v){ this._detail === void 0 && Object.defineProperty(this, "_detail", { value: v }) }
+            }
+          , timestamp: { enumerable: true,
+                get: function(){ return this._timestamp }
+              , set: function(v){ !this._timestamp && Object.defineProperty(this, "_timestamp", { value: v }) }
             }
         }
     })
@@ -278,7 +286,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":19,"./utils":22}],6:[function(require,module,exports){
+},{"./class":18,"./utils":21}],6:[function(require,module,exports){
 void function(){ "use strict"
 
     var klass = require("./class").class
@@ -353,6 +361,20 @@ void function(){ "use strict"
                     return this.current
                 }
             }
+          , range: { enumerable: true,
+                get: function(){
+                    return this._range ? [].concat(this._range) : []
+                }
+            }
+          , pointer: { enumerable: true,
+                get: function(){
+                    return this._pointer || -1
+                }
+              , set: function(v){
+                    this._pointer = this._pointer || Object.defineProperty(this, "_pointer", { value: -1 })._pointer
+                    this._pointer = v
+                }
+            }
           , length: { enumerable: true,
                 value: function(){
                     return this._range.length
@@ -370,7 +392,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":19}],7:[function(require,module,exports){
+},{"./class":18}],7:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -382,6 +404,14 @@ void function(){ "use strict"
     var Serializer = require("./Serializer").Serializer
 
     module.exports.Collection = klass(EventTarget, function(statics){
+        Object.defineProperties(statics, {
+            Serializer: { enumerable: true,
+                value: klass(Serializer, {
+                    _delimiter: ":"
+                  , _separator: "|"
+                })
+            }
+        })
 
         return {
             constructor: function(){
@@ -415,9 +445,8 @@ void function(){ "use strict"
             }
 
           , Serializer: { enumerable: true,
-                get: function(){
-                    return this._serializer || module.exports.Collection.Serializer
-                }
+                get: function(){ return this._Serializer || module.exports.Collection.Serializer }
+              , set: function(v){ !this._Serializer && Object.defineProperty(this, "_Serializer", { value: v }) }
             }
         }
     })
@@ -426,44 +455,60 @@ void function(){ "use strict"
         constructor: function(model, key, pvalue){
             Event.call(this, "remove")
 
-            Object.defineProperties(this, {
-                model: { enumerable: true, get: function(){ return model } }
-              , key: { enumerable: true, get: function(){ return key } }
-              , from: { enumerable: true, get: function(){ return pvalue }}
-              , to: { enumerable: true, get: function(){ return void 0 }}
-            })
+            this.model = model
+            this.key = key
+            this.from = pvalue
+            this.to = void 0
         }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
+      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
+      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
     })
 
     module.exports.AddDataEvent = klass(Event, {
         constructor: function(model, key, nvalue, pvalue){
             Event.call(this, "add")
 
-            Object.defineProperties(this, {
-                model: { enumerable: true, get: function(){ return model } }
-              , key: { enumerable: true, get: function(){ return key } }
-              , from: { enumerable: true, get: function(){ return pvalue }}
-              , to: { enumerable: true, get: function(){ return nvalue }}
-            })
+            this.model = model
+            this.key = key
+            this.from = pvalue
+            this.to = nvalue
         }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
+      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
+      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
+    })
+
+    module.exports.ChangeDataEvent = klass(Event, {
+        constructor: function(model, key, nvalue, pvalue){
+              Event.call(this, "change")
+
+              this.model = model
+              this.key = key
+              this.from = pvalue
+              this.to = nvalue
+        }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
+      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
+      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
     })
 
     module.exports.UpdateDataEvent = klass(Event, {
         constructor: function(model, keys){
             Event.call(this, "update")
 
-            Object.defineProperties(this, {
-                model: { enumerable: true, get: function(){ return model } }
-              , keys: { enumerable: true, get: function(){ return [].concat(keys) } }
-            })
+            this.model = model
+            this.keys = [].concat(keys)
         }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_keys", { value: v }) } }
     })
 
     module.exports.Model = klass(EventTarget, function(statics, models){
         models = Object.create(null)
-
-        function fromObject(){
-        }
 
         function fromString(){
         }
@@ -482,16 +527,14 @@ void function(){ "use strict"
         }
 
         Object.defineProperties(statics, {
-            getModelByUid: { enumerable: true, value: function(uid){ return models[uid] ? models[uid].instance : null } }
+            Serializer: { enumerable: true, value: Serializer }
+          , getModelByUid: { enumerable: true, value: function(uid){ return models[uid] ? models[uid].instance : null } }
         })
 
         return {
             constructor: function(items){
-                Object.defineProperties(this, {
-                    _data: { value: this.constructor.prototype._data ? Object.create(this.constructor.prototype._data) : {} }
-                  , _hooks: { value: this.constructor.prototype._hooks ? Object.create(this.constructor.prototype._hooks) : {} }
-                  , _uid: { value: UID.uid() }
-                })
+                // generate uid first, because we need it when we set items (prevents "update" event from being fired at first pass)
+                Object.defineProperty(this, "_uid", { value: UID.uid() })
 
                 if ( items = arguments.length == 1 && _.typeof(items) == "object" ? items : null, items )
                   this.setItem(items)
@@ -543,10 +586,11 @@ void function(){ "use strict"
                       updated = true
 
                     if ( removed )
-                      this.dispatchEvent(new module.exports.RemoveDataEvent(this, key, pvalue) )
+                      this.dispatchEvent(new module.exports.RemoveDataEvent(this, key, pvalue))
                     if ( added )
-                      this.dispatchEvent(new module.exports.AddDataEvent(this, key, nvalue, pvalue) )
+                      this.dispatchEvent(new module.exports.AddDataEvent(this, key, nvalue, pvalue))
                     if ( updated )
+                      this.dispatchEvent(new module.exports.ChangeDataEvent(this, key, nvalue, pvalue)),
                       update(this, key)
                 }
             }
@@ -565,43 +609,43 @@ void function(){ "use strict"
                 }
             }
           , removeItem: { enumerable: true,
-                value: function(){
-
+                value: function(key){
+                    return this.setItem(key, void 0)
                 }
             }
 
           , data: { enumerable: true,
                 get: function(){
-                    return this._data
+                    return this._data ? this._data : Object.defineProperty(this, "_data", { value: Object.create(this.constructor.prototype._data||{}) })._data
                 }
             }
           , hooks: { enumerable: true,
                 get: function(){
-                    return this._hooks
+                  return this._hooks ? this._hooks : Object.defineProperty(this, "_hooks", { value: Object.create(this.constructor.prototype._hooks||{}) })._hooks
                 }
             }
 
           , serialize: { enumerable: true,
-                value: function(){
-
+                value: function(serializer){
+                    return Serializer.isImplementedBy(serializer) ? serializer.serialize(this.data)
+                         : this.serializer.serialize(this.data)
                 }
             }
 
           , uid: { enumerable: true, configurable: true,
                 get: function(){
-                    if ( !this._uid )
-                      Object.defineProperty(this, "_uid", { value: UID.uid() })
-                    return this._uid
+                    return this._uid ? this._uid : Object.defineProperty(this, "_uid", { value: UID.uid() })
                 }
             }
-          , defaults: { enumerable: true,
+
+          , serializer: { enumerable: true,
                 get: function(){
-                    return this._defaults
+                    return this._serializer ? this._serializer : Object.defineProperty(this, "_serializer", { value: module.exports.Model.Serializer })._serializer
                 }
             }
           , Serializer: { enumerable: true, configurable: true,
                 get: function(){
-                    return this._Serializer || Serializer
+                    return this._serializer.constructor
                 }
             }
         }
@@ -609,7 +653,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./EventTarget":5,"./Iterator":6,"./Serializer":12,"./UID":16,"./class":19,"./utils":22}],8:[function(require,module,exports){
+},{"./EventTarget":5,"./Iterator":6,"./Serializer":11,"./UID":15,"./class":18,"./utils":21}],8:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -626,7 +670,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":19,"./utils":22}],9:[function(require,module,exports){
+},{"./class":18,"./utils":21}],9:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -837,14 +881,15 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":6,"./class":19,"./utils":22}],10:[function(require,module,exports){
+},{"./Iterator":6,"./class":18,"./utils":21}],10:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
     var klass = require("./class").class
+    var Iterator = require("./Iterator").Iterator
+    var UID = require("./UID").UID
 
     module.exports.Route = klass(function(statics){
-
         return {
             constructor: function(path, detail){
                 path = _.typeof(path) == "string" ? path : function(){ throw new Error("Route.path") }() //TODO
@@ -856,10 +901,10 @@ void function(){ "use strict"
                 }( _.spread(arguments, 1) )
 
                 Object.defineProperties(this, {
-                    "_path": { configurable: true, value: path }
-                  , "_detail": { configurable: true, value: detail }
-                  , "_timestamp": { configurable: true, value: +(new Date) }
-                  , "_matches": { configurable: true, value: {} }
+                    "_path": { value: path }
+                  , "_detail": { value: Object.create(detail) }
+                  , "_timestamp": { value: Date.now() }
+                  , "_matches": { value: {} }
                 })
             }
 
@@ -885,17 +930,6 @@ void function(){ "use strict"
             }
         }
     })
-
-}()
-
-},{"./class":19,"./utils":22}],11:[function(require,module,exports){
-void function(){ "use strict"
-
-    var _ = require("./utils")
-    var klass = require("./class").class
-    var Iterator = require("./Iterator").Iterator
-    var Route = require("./Route").Route
-    var UID = require("./UID").UID
 
     module.exports.Router = klass(function(statics){
         Object.defineProperties(statics, {
@@ -1040,7 +1074,7 @@ void function(){ "use strict"
             }
           , dispatchRoute: { enumerable: true,
                 value: function(route, iterator){
-                    route = Route.isImplementedBy(route) ? route : Route.create.apply(null, arguments)
+                    route = module.exports.Route.isImplementedBy(route) ? route : module.exports.Route.create.apply(null, arguments)
                     iterator = function(routes, copy, keys){
                         keys = Object.keys(routes).sort()
 
@@ -1146,7 +1180,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":6,"./Route":10,"./UID":16,"./class":19,"./utils":22}],12:[function(require,module,exports){
+},{"./Iterator":6,"./UID":15,"./class":18,"./utils":21}],11:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1211,12 +1245,22 @@ void function(){ "use strict"
                     return statics.objectify.call(this, s)
                 }
             }
+          , delimiter: { enumerable: true,
+                get: function(){
+                    return this._delimiter || DELIMITER
+                }
+            }
+          , separator: { enumerable: true,
+                get: function(){
+                    return this._separator || SEPARATOR
+                }
+            }
         }
     })
 
 }()
 
-},{"./Iterator":6,"./class":19,"./utils":22}],13:[function(require,module,exports){
+},{"./Iterator":6,"./class":18,"./utils":21}],12:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1232,7 +1276,7 @@ void function(){ "use strict"
     })
 }()
 
-},{"./class":19,"./utils":22}],14:[function(require,module,exports){
+},{"./class":18,"./utils":21}],13:[function(require,module,exports){
 void function(){ "use strict"
 
     var utils = require("./utils")
@@ -1329,7 +1373,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./EventTarget":5,"./Iterator":6,"./class":19,"./domReady":20,"./utils":22}],15:[function(require,module,exports){
+},{"./EventTarget":5,"./Iterator":6,"./class":18,"./domReady":19,"./utils":21}],14:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1347,7 +1391,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Stylesheet":14,"./class":19,"./utils":22}],16:[function(require,module,exports){
+},{"./Stylesheet":13,"./class":18,"./utils":21}],15:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1407,7 +1451,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./class":19,"./utils":22}],17:[function(require,module,exports){
+},{"./class":18,"./utils":21}],16:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1783,7 +1827,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Iterator":6,"./Model":7,"./class":19,"./utils":22}],18:[function(require,module,exports){
+},{"./Iterator":6,"./Model":7,"./class":18,"./utils":21}],17:[function(require,module,exports){
 void function(){ "use strict"
 
     var _ = require("./utils")
@@ -1801,7 +1845,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Model":7,"./class":19,"./utils":22}],19:[function(require,module,exports){
+},{"./Model":7,"./class":18,"./utils":21}],18:[function(require,module,exports){
 void function(_){ "use strict"
 
     module.exports.class = function(args, statics, Class, prototype, k){
@@ -1950,7 +1994,7 @@ void function(_){ "use strict"
     }
 }( require("./utils") )
 
-},{"./utils":22}],20:[function(require,module,exports){
+},{"./utils":21}],19:[function(require,module,exports){
 void function(){ "use strict"
 
     var Promise = require("./Promise").Promise
@@ -1961,26 +2005,34 @@ void function(){ "use strict"
                 Event.call(this, "domReady")
 
                 Object.defineProperties(this, {
-                    nodes: { enumerable: true,
-                        value: {
-                            documentElement: document.documentElement
-                          , head: document.head
-                          , body: document.body
-                          , title: function(node){
-                                if ( node ) return node
-                                return document.head.appendChild(document.createElement("title"))
-                            }( document.head.getElementsByTagName("title")[0] )
-                          , viewport: function(node){
-                                if ( node ) return node
-                                node = document.createElement("meta")
-                                node.setAttribute("name", "viewport")
-                                node.setAttribute("content", "")
-                                return document.head.appendChild(node)
-                            }( document.head.querySelector("meta[name=viewport]") )
-                        }
+                    _nodes: {
+                        value: Object.create({}, {
+                            documentElement: { enumerable: true, value: document.documentElement }
+                          , head: { enumerable: true, value: document.head }
+                          , body: { enumerable: true, value: document.body }
+                          , title: { enumerable: true,
+                                value: function(node){
+                                    if ( node ) return node
+                                    return document.head.appendChild(document.createElement("title"))
+                                }( document.head.getElementsByTagName("title")[0] )
+                            }
+                          , viewport: { enumerable: true,
+                                value: function(node){
+                                    if ( node ) return node
+                                    node = document.createElement("meta")
+                                    node.setAttribute("name", "viewport")
+                                    node.setAttribute("content", "")
+                                    return document.head.appendChild(node)
+                                }( document.head.querySelector("meta[name=viewport]") )
+                            }
+                        })
                     }
                 })
-
+            }
+          , nodes: { enumerable: true,
+                get: function(){
+                    return this._nodes || {}
+                }
             }
         })
 
@@ -2007,7 +2059,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./EventTarget":5,"./Promise":9,"./class":19}],21:[function(require,module,exports){
+},{"./EventTarget":5,"./Promise":9,"./class":18}],20:[function(require,module,exports){
 void function(){ "use strict"
 
     var domReady = require("./domReady")
@@ -2017,7 +2069,7 @@ void function(){ "use strict"
         }
 
     Object.defineProperties(korbut, {
-        version: { enumerable: true, value: "korbutJS-ES5-0.0.1-1401293428343" }
+        version: { enumerable: true, value: "korbutJS-ES5-0.0.1-1401450896049" }
       , utils: { enumerable: true, value: require("./utils") }
       , class: { enumerable: true, value: require("./class").class }
       , singleton: { enumerable: true, value: require("./class").singleton }
@@ -2033,7 +2085,7 @@ void function(){ "use strict"
       , Promise: { enumerable: true, value: require("./Promise").Promise }
 
       , Router: { enumerable: true, value: require("./Router").Router }
-      , Route: { enumerable: true, value: require("./Route").Route }
+      , Route: { enumerable: true, value: require("./Router").Route }
 
       , Service: { enumerable: true, value: require("./Service").Service }
 
@@ -2057,7 +2109,7 @@ void function(){ "use strict"
 
 }()
 
-},{"./Animation":1,"./ClientRect":2,"./Cookie":3,"./CustomEvent":4,"./EventTarget":5,"./Iterator":6,"./Model":7,"./PointerEvent":8,"./Promise":9,"./Route":10,"./Router":11,"./Serializer":12,"./Service":13,"./Stylesheet":14,"./Transition":15,"./UID":16,"./View":17,"./WebStore":18,"./class":19,"./domReady":20,"./utils":22}],22:[function(require,module,exports){
+},{"./Animation":1,"./ClientRect":2,"./Cookie":3,"./CustomEvent":4,"./EventTarget":5,"./Iterator":6,"./Model":7,"./PointerEvent":8,"./Promise":9,"./Router":10,"./Serializer":11,"./Service":12,"./Stylesheet":13,"./Transition":14,"./UID":15,"./View":16,"./WebStore":17,"./class":18,"./domReady":19,"./utils":21}],21:[function(require,module,exports){
 void function(){ "use strict"
 
     module.exports.native = function(rnative){
@@ -2109,4 +2161,4 @@ void function(){ "use strict"
 
 }()
 
-},{}]},{},[21])
+},{}]},{},[20])

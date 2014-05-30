@@ -9,17 +9,13 @@ void function(){ "use strict"
             constructor: function(type, detail){
                 type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
                 detail = function(detail){
-                    return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
-                         : detail.length == 1 && _typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
-                         : detail.length == 1 ? detail[0]
-                         : detail
+                    return detail.length == 1 && _typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? Object.create(detail[0])
+                         : null
                 }( _.spread(arguments, 1) )
 
-                Object.defineProperties(this, {
-                    "_type": { value: type }
-                  , "_detail": { value: Object.create(detail) }
-                  , "_timestamp": { value: Date.now() }
-                })
+                this.type = type
+                this.detail = detail
+                this.timestamp = Date.now()
             }
           , initEvent: {
                 value: function(){
@@ -27,19 +23,16 @@ void function(){ "use strict"
                 }
             }
           , type: { enumerable: true,
-                get: function(){
-                    return this._type
-                }
+                get: function(){ return this._type }
+              , set: function(v){ !this._type && Object.defineProperty(this, "_type", { value: v }) }
             }
           , detail: { enumerable: true,
-                get: function(){
-                    return this._detail
-                }
+                get: function(){ return this._detail }
+              , set: function(v){ this._detail === void 0 && Object.defineProperty(this, "_detail", { value: v }) }
             }
           , timestamp: { enumerable: true,
-                get: function(){
-                      return this._timestamp
-                }
+                get: function(){ return this._timestamp }
+              , set: function(v){ !this._timestamp && Object.defineProperty(this, "_timestamp", { value: v }) }
             }
         }
     })

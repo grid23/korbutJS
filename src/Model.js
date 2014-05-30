@@ -9,6 +9,14 @@ void function(){ "use strict"
     var Serializer = require("./Serializer").Serializer
 
     module.exports.Collection = klass(EventTarget, function(statics){
+        Object.defineProperties(statics, {
+            Serializer: { enumerable: true,
+                value: klass(Serializer, {
+                    _delimiter: ":"
+                  , _separator: "|"
+                })
+            }
+        })
 
         return {
             constructor: function(){
@@ -42,9 +50,8 @@ void function(){ "use strict"
             }
 
           , Serializer: { enumerable: true,
-                get: function(){
-                    return this._serializer || module.exports.Collection.Serializer
-                }
+                get: function(){ return this._Serializer || module.exports.Collection.Serializer }
+              , set: function(v){ !this._Serializer && Object.defineProperty(this, "_Serializer", { value: v }) }
             }
         }
     })
@@ -53,44 +60,60 @@ void function(){ "use strict"
         constructor: function(model, key, pvalue){
             Event.call(this, "remove")
 
-            Object.defineProperties(this, {
-                model: { enumerable: true, get: function(){ return model } }
-              , key: { enumerable: true, get: function(){ return key } }
-              , from: { enumerable: true, get: function(){ return pvalue }}
-              , to: { enumerable: true, get: function(){ return void 0 }}
-            })
+            this.model = model
+            this.key = key
+            this.from = pvalue
+            this.to = void 0
         }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
+      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
+      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
     })
 
     module.exports.AddDataEvent = klass(Event, {
         constructor: function(model, key, nvalue, pvalue){
             Event.call(this, "add")
 
-            Object.defineProperties(this, {
-                model: { enumerable: true, get: function(){ return model } }
-              , key: { enumerable: true, get: function(){ return key } }
-              , from: { enumerable: true, get: function(){ return pvalue }}
-              , to: { enumerable: true, get: function(){ return nvalue }}
-            })
+            this.model = model
+            this.key = key
+            this.from = pvalue
+            this.to = nvalue
         }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
+      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
+      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
+    })
+
+    module.exports.ChangeDataEvent = klass(Event, {
+        constructor: function(model, key, nvalue, pvalue){
+              Event.call(this, "change")
+
+              this.model = model
+              this.key = key
+              this.from = pvalue
+              this.to = nvalue
+        }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
+      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
+      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
     })
 
     module.exports.UpdateDataEvent = klass(Event, {
         constructor: function(model, keys){
             Event.call(this, "update")
 
-            Object.defineProperties(this, {
-                model: { enumerable: true, get: function(){ return model } }
-              , keys: { enumerable: true, get: function(){ return [].concat(keys) } }
-            })
+            this.model = model
+            this.keys = [].concat(keys)
         }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_keys", { value: v }) } }
     })
 
     module.exports.Model = klass(EventTarget, function(statics, models){
         models = Object.create(null)
-
-        function fromObject(){
-        }
 
         function fromString(){
         }
@@ -109,16 +132,14 @@ void function(){ "use strict"
         }
 
         Object.defineProperties(statics, {
-            getModelByUid: { enumerable: true, value: function(uid){ return models[uid] ? models[uid].instance : null } }
+            Serializer: { enumerable: true, value: Serializer }
+          , getModelByUid: { enumerable: true, value: function(uid){ return models[uid] ? models[uid].instance : null } }
         })
 
         return {
             constructor: function(items){
-                Object.defineProperties(this, {
-                    _data: { value: this.constructor.prototype._data ? Object.create(this.constructor.prototype._data) : {} }
-                  , _hooks: { value: this.constructor.prototype._hooks ? Object.create(this.constructor.prototype._hooks) : {} }
-                  , _uid: { value: UID.uid() }
-                })
+                // generate uid first, because we need it when we set items (prevents "update" event from being fired at first pass)
+                Object.defineProperty(this, "_uid", { value: UID.uid() })
 
                 if ( items = arguments.length == 1 && _.typeof(items) == "object" ? items : null, items )
                   this.setItem(items)
@@ -170,10 +191,11 @@ void function(){ "use strict"
                       updated = true
 
                     if ( removed )
-                      this.dispatchEvent(new module.exports.RemoveDataEvent(this, key, pvalue) )
+                      this.dispatchEvent(new module.exports.RemoveDataEvent(this, key, pvalue))
                     if ( added )
-                      this.dispatchEvent(new module.exports.AddDataEvent(this, key, nvalue, pvalue) )
+                      this.dispatchEvent(new module.exports.AddDataEvent(this, key, nvalue, pvalue))
                     if ( updated )
+                      this.dispatchEvent(new module.exports.ChangeDataEvent(this, key, nvalue, pvalue)),
                       update(this, key)
                 }
             }
@@ -192,43 +214,43 @@ void function(){ "use strict"
                 }
             }
           , removeItem: { enumerable: true,
-                value: function(){
-
+                value: function(key){
+                    return this.setItem(key, void 0)
                 }
             }
 
           , data: { enumerable: true,
                 get: function(){
-                    return this._data
+                    return this._data ? this._data : Object.defineProperty(this, "_data", { value: Object.create(this.constructor.prototype._data||{}) })._data
                 }
             }
           , hooks: { enumerable: true,
                 get: function(){
-                    return this._hooks
+                  return this._hooks ? this._hooks : Object.defineProperty(this, "_hooks", { value: Object.create(this.constructor.prototype._hooks||{}) })._hooks
                 }
             }
 
           , serialize: { enumerable: true,
-                value: function(){
-
+                value: function(serializer){
+                    return Serializer.isImplementedBy(serializer) ? serializer.serialize(this.data)
+                         : this.serializer.serialize(this.data)
                 }
             }
 
           , uid: { enumerable: true, configurable: true,
                 get: function(){
-                    if ( !this._uid )
-                      Object.defineProperty(this, "_uid", { value: UID.uid() })
-                    return this._uid
+                    return this._uid ? this._uid : Object.defineProperty(this, "_uid", { value: UID.uid() })
                 }
             }
-          , defaults: { enumerable: true,
+
+          , serializer: { enumerable: true,
                 get: function(){
-                    return this._defaults
+                    return this._serializer ? this._serializer : Object.defineProperty(this, "_serializer", { value: module.exports.Model.Serializer })._serializer
                 }
             }
           , Serializer: { enumerable: true, configurable: true,
                 get: function(){
-                    return this._Serializer || Serializer
+                    return this._serializer.constructor
                 }
             }
         }
