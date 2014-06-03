@@ -8,7 +8,59 @@ void function(){ "use strict"
     var UID = require("./UID").UID
     var Serializer = require("./Serializer").Serializer
 
-    module.exports.Collection = klass(EventTarget, function(statics){
+    module.exports.CollectionAddModelEvent = klass(Event, {
+        constructor: function(collections, model){
+            Event.call(this, "modeladd")
+
+            this.collection = collection
+            this.model = model
+        }
+      , collection: { enumerable: true, get: function(){ return this._collection }, set: function(v){ !this._collection && Object.defineProperty(this, "_collection", { value: v }) } }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+    })
+
+    module.exports.CollectionRemoveModelEvent = klass(Event, {
+        constructor: function(collections, model){
+            Event.call(this, "modelremove")
+
+            this.collection = collection
+            this.model = model
+        }
+      , collection: { enumerable: true, get: function(){ return this._collection }, set: function(v){ !this._collection && Object.defineProperty(this, "_collection", { value: v }) } }
+      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+    })
+
+    module.exports.CollectionUpdateEvent = klass(Event, {
+        constructor: function(collections, models){
+            Event.call(this, "collectionupdate")
+
+            this.collection = collection
+            this.models = models
+        }
+      , collection: { enumerable: true, get: function(){ return this._collection }, set: function(v){ !this._collection && Object.defineProperty(this, "_collection", { value: v }) } }
+      , models: { enumerable: true, get: function(){ return this._models }, set: function(v){ !this._models && Object.defineProperty(this, "_models", { value: v }) } }
+    })
+
+    module.exports.Collection = klass(EventTarget, function(statics, collections){
+        collections = Object.create(null)
+
+        function update(collection, models){
+            if ( !collections[collection.uid] )
+              return
+
+            while ( models.length )
+              void function(model){
+                  if ( collections[collection.uid].updating.models.indexOf(model) != -1  )
+                    return
+
+                  collections[collection.uid].updating.models.push(model)
+                  clearTimeout(collections[collection.uid].updating.timer)
+                  collections[collection.uid].updating.timer = setTimeout(function(){
+                      collection.dispatchEvent( new module.exports.CollectionUpdateEvent(collection, collections[collection.uid].updating.models.splice(1, collections[collection.uid].updating.models.length)) )
+                  }, 4)
+              }( models.shift() )
+        }
+
         Object.defineProperties(statics, {
             Serializer: { enumerable: true,
                 value: klass(Serializer, {
@@ -20,11 +72,29 @@ void function(){ "use strict"
 
         return {
             constructor: function(){
+                if (arguments.length)
+                  this.addModel.apply(this, arguments)
 
+                collections[this.uid] = { instance: this, updating: { models: [], timer: null }}
             }
           , addModel: { enumerable: true,
-                value: function(){
+                value: function(models, args){
+                    args = arguments.length == 1 && _.typeof(models) == "array" ? [].concat(models)
+                         : _.spread(arguments)
 
+                    added = []
+
+                    while ( args.length )
+                      void function(model){
+                          if ( !module.exports.isImplementedBy(model) || this.models.indexOf(model) != -1 )
+                            return
+
+                          added.push(model)
+                          this.models.push(model)
+                          this.dispatchEvent( new module.exports.CollectionAddModelEvent(this, model) )
+                      }.call(this, args.shift())
+
+                    update(this, added)
                 }
             }
           , removeModel: { enumerable: true,
@@ -49,6 +119,28 @@ void function(){ "use strict"
 
             }
 
+          , uid: { enumerable: true, configurable: true,
+                get: function(){
+                    return this._uid ? this._uid : Object.defineProperty(this, "_uid", { value: UID.uid() })
+                }
+            }
+          , models: { enumerable: true,
+                get: function(){
+                    return this._models || Object.defineProperty(this, "_models", { value: [] })
+                }
+            }
+          , Model: { enumerable: true,
+                get: function(){
+                    return this._Model || module.exports.Model
+                }
+              , set: function(v){
+                    try {
+                      if ( !this._Model && model.exports.Model.isImplementedBy(new v) )
+                        Object.defineProperty(this, "_Model", { value: v })
+                    } catch(e){}
+                }
+            }
+
           , Serializer: { enumerable: true,
                 get: function(){ return this._Serializer || module.exports.Collection.Serializer }
               , set: function(v){ !this._Serializer && Object.defineProperty(this, "_Serializer", { value: v }) }
@@ -58,7 +150,7 @@ void function(){ "use strict"
 
     module.exports.RemoveDataEvent = klass(Event, {
         constructor: function(model, key, pvalue){
-            Event.call(this, "remove")
+            Event.call(this, "dataremove")
 
             this.model = model
             this.key = key
@@ -73,7 +165,7 @@ void function(){ "use strict"
 
     module.exports.AddDataEvent = klass(Event, {
         constructor: function(model, key, nvalue, pvalue){
-            Event.call(this, "add")
+            Event.call(this, "dataadde")
 
             this.model = model
             this.key = key
@@ -88,7 +180,7 @@ void function(){ "use strict"
 
     module.exports.ChangeDataEvent = klass(Event, {
         constructor: function(model, key, nvalue, pvalue){
-              Event.call(this, "change")
+              Event.call(this, "datachange")
 
               this.model = model
               this.key = key
@@ -103,7 +195,7 @@ void function(){ "use strict"
 
     module.exports.UpdateDataEvent = klass(Event, {
         constructor: function(model, keys){
-            Event.call(this, "update")
+            Event.call(this, "dataupdate")
 
             this.model = model
             this.keys = [].concat(keys)
