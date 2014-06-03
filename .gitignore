@@ -1,5 +1,7 @@
 # node
 node_modules/
+archive/
+dist/
 
 # bower
 bower_components/
