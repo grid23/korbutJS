@@ -29,7 +29,7 @@ void function(){ "use strict"
                     o = {}
                     del = this.delimiter || DELIMITER
                     sep = this.separator || SEPARATOR
-                    iterator = new Iterator(s.search(sep) != -1 ? s.split(sep) : s.length ? [str] : [])
+                    iterator = new Iterator(s.search(sep) != -1 ? s.split(sep) : s.length ? [s] : [])
 
                     while ( !iterator.next().done )
                       void function(pair, idx, k, v){
@@ -37,7 +37,10 @@ void function(){ "use strict"
                           k = pair.split(del, 1)
                           v = pair.slice(idx+1)
 
-                          o[k] = v
+                          if ( idx != -1 )
+                            o[k] = v
+                          else
+                            o[pair] = true
                       }( unescape(iterator.current.value.replace(rplustospace, "%20")) )
 
                     return o
