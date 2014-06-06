@@ -8,6 +8,9 @@ void function(){ "use strict"
     module.exports.ZenParser = klass(function(statics){
         var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
 
+        var rtemplatevars = /\$([^$\W]*)/g
+        var templateVarGlyph = "$"
+
         var traversals = Object.create(null, {
                 "+": { enumerable: true,
                     value: function sibling(stream, input, output){
@@ -29,19 +32,42 @@ void function(){ "use strict"
 
         var operators = Object.create(null, {
                 "#": { enumerable: true,
-                    value: function(){
-                        function write(node, rawId){
-                            node.setAttribute("id", module.exports.ZenParser.escapeHTML(rawId))
-                        }
+                    value: function(stream, input, output, node, rawid, model, vars, hit, onupdate){
+                        node = input.buffer
+                        rawid = input.pile
+                        model = input.data
+                        vars = []
 
-                        function set(node, rawId){
-                            write(node, rawId)
-                        }
+                        while ( hit = (rtemplatevars.exec(rawid)||[])[1], hit )
+                          if ( vars.indexOf(hit) == -1 )
+                            vars.push(hit)
 
-                        return function id(stream, input, output){
-                            set(input.buffer, input.pile)
-                        }
-                    }()
+                        if ( vars.length ) {
+                            onupdate = function(e, str, hit, i, l, value){
+                                str = rawid
+
+                                for ( i = 0, l = e.keys.length; i < l; i++ )
+                                  if ( vars.indexOf(e.keys[i]) != -1 ) {
+                                      hit = true
+                                      break
+                                  }
+
+                                if ( hit )
+                                  for ( i = 0, l = vars.length; i < l; i++ ) {
+                                    value = model.getItem(vars[i])
+
+                                    if ( value !== void 0 && value !== null )
+                                      str = str.replace(templateVarGlyph+vars[i], value, "gi")
+                                  }
+
+                                node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
+                            }
+
+                            input.update.push(onupdate)
+                            onupdate({keys: vars})
+                        } else
+                            node.setAttribute("id", module.exports.ZenParser.escapeHTML(rawid))
+                    }
                 }
               , ".": { enumerable: true,
                     value: function(){
@@ -94,7 +120,7 @@ void function(){ "use strict"
                         return attribute
                     }()
                 }
-              , "$": { enumerable: true,
+              , "@": { enumerable: true,
                     value: function assign_var(stream, input, output){
                         output.vars[input.pile] = output.vars[input.pile] || []
                         output.vars[input.pile].push(input.buffer)
@@ -170,7 +196,7 @@ void function(){ "use strict"
                     if ( !input.operator) {
                         input.buffer = !input.pile.length && input.glyph === "{" ? document.createTextNode("")
                                      : !input.pile.length && input.glyph !== "{" ? document.createElement("div")
-                                     : input.pile === "text" ? document.createTextNode("")
+                                     : input.pile === "§" ? document.createTextNode("")
                                      : document.createElement(input.pile)
 
                       if ( autoVars.indexOf(input.buffer.nodeName) != -1 )
@@ -225,6 +251,14 @@ void function(){ "use strict"
 
                 output.vars.root = _.spread(output.tree.childNodes)
 
+                if ( input.update )
+                  input.data.addEventListener("update", function(sequence, l){
+                      return function(e, i){
+                          for ( i = 0; i < l; i++ )
+                            sequence[i](e)
+                      }
+                  }(input.update, input.update.length))
+
                 return output
             }
 
@@ -252,8 +286,12 @@ void function(){ "use strict"
             }
           , parse: { enumerable: true,
                 value: function(data, stream, input, output){
+                    data = module.exports.View.isImplementedBy(data) ? data.model
+                         : Model.isImplementedBy(data) ? data
+                         : "string, object".indexOf(_.typeof(data)) != -1 ? new Model(data)
+                         : new Model
                     stream = new Iterator(this.expression)
-                    input = { data: data, pile: "", glyph: "", buffer: null, operator: null, traversal: null, context: null }
+                    input = { data: data, update: [], pile: "", glyph: "", buffer: null, operator: null, traversal: null, context: null }
                     output = { vars: {}, tree: document.createDocumentFragment() }
 
                     return parse(stream, input, output)
