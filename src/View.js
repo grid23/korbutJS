@@ -57,7 +57,7 @@ void function(){ "use strict"
                                     value = model.getItem(vars[i])
 
                                     if ( value !== void 0 && value !== null )
-                                      str = str.replace(templateVarGlyph+vars[i], value, "gi")
+                                      str = str.replace(templateVarGlyph+vars[i], function(){ return value }, "g")
                                   }
 
                                 node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
@@ -71,7 +71,58 @@ void function(){ "use strict"
                 }
               , ".": { enumerable: true,
                     value: function(){
-                        function write(node, rawClassName, rawRemoveClassName){
+                        function set(node, newClass, replacedClass){
+                            if ( CLASS_LIST_COMPAT ) {
+                              if ( replacedClass )
+                                node.classList.remove(module.exports.ZenParser.escapeHTML(replacedClass))
+                              node.classList.add(module.exports.ZenParser.escapeHTML(newClass))
+                            } else {
+                              if ( replacedClass )
+                                node.className = node.className.replace(" "+module.exports.ZenParser.escapeHTML(replacedClass), function(){ return " "+module.exports.ZenParser.escapeHTML(newClass) })
+                              else
+                                node.className += " "+module.exports.ZenParser.escapeHTML(newClass)
+                            }
+                        }
+
+                        return function(stream, input, output, node, rawClassName, model, vars, hit, onupdate, lastValue){
+                            node = input.buffer
+                            rawClassName = input.pile
+                            model = input.data
+                            vars = []
+
+                            while ( hit = (rtemplatevars.exec(rawClassName)||[])[1], hit )
+                              if ( vars.indexOf(hit) == -1 )
+                                vars.push(hit)
+
+                            if ( vars.length ) {
+                                onupdate = function(e, str, hit, i, l, value){
+                                    str = rawClassName
+                                    for ( i = 0, l = e.keys.length; i < l; i++ )
+
+                                    if ( vars.indexOf(e.keys[i]) != -1 ) {
+                                        hit = true
+                                        break
+                                    }
+
+                                    if ( hit )
+                                      for ( i = 0, l = vars.length; i < l; i++ ) {
+                                        value = model.getItem(vars[i])
+
+                                        if ( value !== void 0 && value !== null )
+                                          str = str.replace(templateVarGlyph+vars[i], function(){ return value }, "g")
+                                      }
+
+                                    set(node, str, lastValue)
+                                    lastValue = str
+                                }
+                                input.update.push(onupdate)
+                                onupdate({keys: vars})
+                            }
+                            else
+                              set(node, rawClassName)
+                        }
+                    }()
+                        /*function write(node, rawClassName, rawRemoveClassName){
                             if ( rawRemoveClassName )
                               if ( CLASS_LIST_COMPAT )
                                 node.classList.remove(module.exports.ZenParser.escapeHTML(rawRemoveClassName))
@@ -91,7 +142,7 @@ void function(){ "use strict"
                         return function classname(stream, input, output){
                             set(input.buffer, input.pile)
                         }
-                    }()
+                    }()*/
                 }
               , "[": { enumerable: true,
                     value: function(){
