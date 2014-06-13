@@ -9,7 +9,7 @@ void function(){ "use strict"
         var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
 
         var rtemplatevars = /\$([^$\W]*)/g
-        var templateVarGlyph = "$"
+        var templateVarGlyph = "\\$"
 
         var traversals = Object.create(null, {
                 "+": { enumerable: true,
@@ -57,7 +57,7 @@ void function(){ "use strict"
                                     value = model.getItem(vars[i])
 
                                     if ( value !== void 0 && value !== null )
-                                      str = str.replace(templateVarGlyph+vars[i], function(){ return value }, "g")
+                                      str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
                                 node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
@@ -109,7 +109,7 @@ void function(){ "use strict"
                                         value = model.getItem(vars[i])
 
                                         if ( value !== void 0 && value !== null )
-                                          str = str.replace(templateVarGlyph+vars[i], function(){ return value }, "g")
+                                          str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
 
                                     set(node, str, lastValue)
