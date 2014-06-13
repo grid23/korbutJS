@@ -98,11 +98,10 @@ void function(){ "use strict"
                                 onupdate = function(e, str, hit, i, l, value){
                                     str = rawClassName
                                     for ( i = 0, l = e.keys.length; i < l; i++ )
-
-                                    if ( vars.indexOf(e.keys[i]) != -1 ) {
-                                        hit = true
-                                        break
-                                    }
+                                      if ( vars.indexOf(e.keys[i]) != -1 ) {
+                                          hit = true
+                                          break
+                                      }
 
                                     if ( hit )
                                       for ( i = 0, l = vars.length; i < l; i++ ) {
@@ -122,48 +121,52 @@ void function(){ "use strict"
                               set(node, rawClassName)
                         }
                     }()
-                        /*function write(node, rawClassName, rawRemoveClassName){
-                            if ( rawRemoveClassName )
-                              if ( CLASS_LIST_COMPAT )
-                                node.classList.remove(module.exports.ZenParser.escapeHTML(rawRemoveClassName))
-                              else
-                                node.className.replace(module.exports.ZenParser.escapeHTML(rawRemoveClassName), "")
-
-                            if ( CLASS_LIST_COMPAT )
-                              node.classList.add(module.exports.ZenParser.escapeHTML(rawClassName))
-                            else
-                              node.className += " "+module.exports.ZenParser.escapeHTML(rawClassName)
-                        }
-
-                        function set(node, rawClassName){
-                            write(node, rawClassName)
-                        }
-
-                        return function classname(stream, input, output){
-                            set(input.buffer, input.pile)
-                        }
-                    }()*/
                 }
               , "[": { enumerable: true,
                     value: function(){
-                        function write(node, rawKey, rawValue){
-                            node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(rawValue))
-                        }
+                        function attribute(stream, input, output, node, model, vars, pair, idx, rawKey, rawValue, hit, onupdate){
+                            node = input.buffer
+                            model = input.data
+                            vars = []
 
-                        function set(node, attr, key, value, idx){
-                            idx = attr.search("=")
+                            pair = input.pile
+                            idx = pair.search("=")
 
-                            if ( idx < 1 )
-                              throw new Error("korbut.ZenParser.parse, malformatted attribute substring")
+                            if ( idx == -1 )
+                              rawKey = pair,
+                              rawValue = "1"
+                            else
+                              rawKey = pair.split("=")[0],
+                              rawValue = pair.slice(idx+1)
 
-                            key = attr.split("=")[0]
-                            value = attr.slice(idx+1)
+                            while ( hit = (rtemplatevars.exec(rawValue)||[])[1], hit )
+                              if ( vars.indexOf(hit) == -1 )
+                                vars.push(hit)
 
-                            write(node, key, value)
-                        }
+                            if ( vars.length ) {
+                                onupdate = function(e, str, hit, i, l, value){
+                                    str = rawKey
 
-                        function attribute(stream, input, output){
-                            set(input.buffer, input.pile)//[input.pile.length-1] === "]" ? input.pile.slice(0, input.pile.length-1) : input.pile)
+                                    for ( i = 0, l = e.keys.length; i < l; i++ )
+                                      if ( vars.indexOf(e.keys[i]) != -1 ) {
+                                          hit = true
+                                          break
+                                      }
+
+                                    if ( hit )
+                                      for ( i = 0, l = vars.length; i < l; i++ ) {
+                                        value = model.getItem(vars[i])
+
+                                        if ( value !== void 0 && value !== null )
+                                          str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
+                                      }
+
+                                    node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str))
+                                }
+                                input.update.push(onupdate)
+                                onupdate({keys: vars})
+                            } else
+                              node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(rawValue))
                         }
 
                         attribute.enclosing_glyph = "]"
@@ -179,19 +182,44 @@ void function(){ "use strict"
                 }
               , "{": { enumerable: true,
                     value: function(){
-                        function write(node, rawTextContent){
-                            if ( node.nodeType === Node.ELEMENT_NODE )
-                              node.appendChild(document.createTextNode(rawTextContent))
-                            else if ( node.nodeType === Node.TEXT_NODE )
+                        function textContent(stream, input, output, node, rawTextContent, model, vars, hit, onupdate){
+                            node = function(node){
+                                if ( node.nodeType === Node.TEXT_NODE)
+                                  return node
+                                return node.appendChild(document.createTextNode(""))
+                            }(input.buffer)
+                            rawTextContent = input.pile
+                            model = input.data
+                            vars = []
+
+                            while ( hit = (rtemplatevars.exec(rawTextContent)||[])[1], hit )
+                              if ( vars.indexOf(hit) == -1 )
+                                vars.push(hit)
+
+                            if ( vars.length ) {
+                                onupdate = function(e, str, hit, i, l, value){
+                                    str = rawTextContent
+
+                                    for ( i = 0, l = e.keys.length; i < l; i++ )
+                                      if ( vars.indexOf(e.keys[i]) != -1 ) {
+                                          hit = true
+                                          break
+                                      }
+
+                                    if ( hit )
+                                      for ( i = 0, l = vars.length; i < l; i++ ) {
+                                        value = model.getItem(vars[i])
+
+                                        if ( value !== void 0 && value !== null )
+                                          str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
+                                      }
+
+                                    node.nodeValue = str
+                                }
+                                input.update.push(onupdate)
+                                onupdate({keys: vars})
+                            } else
                               node.nodeValue = rawTextContent
-                        }
-
-                        function set(node, rawTextContent){
-                            write(node, rawTextContent)
-                        }
-
-                        function textContent(stream, input, output, str){
-                            set(input.buffer, input.pile)
                         }
 
                         textContent.enclosing_glyph = "}"
@@ -252,7 +280,7 @@ void function(){ "use strict"
 
                       if ( autoVars.indexOf(input.buffer.nodeName) != -1 )
                         input.pile = input.buffer.nodeName.toLowerCase(),
-                        operators["$"](stream, input, output)
+                        operators["@"](stream, input, output)
                     }
                     else
                       operators[input.operator](stream, input, output)
@@ -337,10 +365,13 @@ void function(){ "use strict"
             }
           , parse: { enumerable: true,
                 value: function(data, stream, input, output){
+
+                    console.log(module.exports.View.isImplementedBy(data), data.model)
                     data = module.exports.View.isImplementedBy(data) ? data.model
                          : Model.isImplementedBy(data) ? data
                          : "string, object".indexOf(_.typeof(data)) != -1 ? new Model(data)
                          : new Model
+
                     stream = new Iterator(this.expression)
                     input = { data: data, update: [], pile: "", glyph: "", buffer: null, operator: null, traversal: null, context: null }
                     output = { vars: {}, tree: document.createDocumentFragment() }
@@ -389,26 +420,34 @@ void function(){ "use strict"
                 data = Model.isImplementedBy(args[args.length-1]) ? args.pop()
                      : args.length > 1 && "string, object".indexOf(_.typeof(args[args.length-1])) != -1 ? new this.Model(args.pop())
                      : new this.Model
+
                 dict = _.typeof(args[args.length-1]) == "string" ? { template: args.pop() }
                      : _.typeof(args[args.length-1]) == "object" ? args.pop()
                      : {}
 
-                expression = _.typeof(dict.template) == "string" ? dict.template : ""
-                buffer = new this.Template(expression).parse(this)
-
-                Object.defineProperties(this, {
-                    _template: { value: expression }
-                  , _dict: { value: dict }
-                  , _model: { value: data }
-                  , _vars: { value: buffer.vars }
-                  , _fragment: { value: buffer.tree }
-                })
+                this.model = data
+                this.template = _.typeof(dict.template) == "string" ? dict.template : ""
+                buffer = new this.Template(this.template).parse(this)
+                this.fragment = buffer.tree
+                this.vars = buffer.vars
 
                 _.typeof(this._DOMEvents) == "object" && addEventListeners(this, this._DOMEvents)
                 _.typeof(dict.events) == "object" && addEventListeners(this, dict.events)
             }
+          , template: { enumerable: true,
+                get: function(){ return this._template }
+              , set: function(v){ !this._template && Object.defineProperty(this, "_template", { value: v }) }
+            }
+          , fragment: { enumerable: true,
+                get: function(){ return this._fragment }
+              , set: function(v){ !this._fragment && Object.defineProperty(this, "_fragment", { value: v }) }
+            }
+          , vars: { enumerable: true,
+                get: function(){ return this._vars }
+              , set: function(v){ !this._vars && Object.defineProperty(this, "_vars", { value: v })  }
+            }
           , root: { enumerable: true,
-                value: function(root){
+                get: function(root){
                     root = this.queryAll("root")
 
                     return root.length > 1 ? root : root[0]
@@ -416,21 +455,21 @@ void function(){ "use strict"
             }
           , query: { enumerable: true,
                 value: function(query){
-                    if ( this._vars.hasOwnProperty(query) )
-                      return this._vars[query][0]
+                    if ( this.vars.hasOwnProperty(query) )
+                      return this.vars[query][0]
                     return null
                 }
             }
           , queryAll: { enumerable: true,
                 value: function(query){
-                    if ( this._vars.hasOwnProperty(query) )
-                      return [].concat(this._vars[query])
+                    if ( this.vars.hasOwnProperty(query) )
+                      return [].concat(this.vars[query])
                     return []
                 }
             }
           , clone: { enumerable: true,
                 value: function(){
-                    return new this.constructor(this._dict, this.model)
+                    return new this.constructor({ template: this.template }, this.model)
                 }
             }
 
@@ -438,23 +477,15 @@ void function(){ "use strict"
                 get: function(){
                     return this._model
                 }
-            }
-          , template: { enumerable: true,
-                get: function(){
-                    return this._template
-                }
+              , set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) }
             }
 
           , Model: {
                 enumerable: true,
-                get: function(){
-                    return this._Model || Model
-                }
+                get: function(){ return this._Model || Model }
             }
           , Template: { enumerable: true,
-                get: function(){
-                    return this._Template || module.exports.ZenParser
-                }
+                get: function(){ return this._Template || module.exports.ZenParser }
             }
         }
 
