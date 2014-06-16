@@ -442,13 +442,13 @@ void function(){ "use strict"
                 _.typeof(dict.events) == "object" && addEventListeners(this, dict.events)
             }
           , template: { enumerable: true,
-                get: function(){ return views[this.uid] ? views[this.uid].template : void 0}
+                get: function(){ return views[this.uid] ? views[this.uid].template : (this.constructor.call(this), this.template)}
             }
           , fragment: { enumerable: true,
-                get: function(){ return views[this.uid] ? views[this.uid].fragment : void 0 }
+                get: function(){ return views[this.uid] ? views[this.uid].fragment : (this.constructor.call(this), this.fragment) }
             }
           , vars: { enumerable: true,
-                get: function(){ return views[this.uid] ? views[this.uid].vars : void 0 }
+                get: function(){ return views[this.uid] ? views[this.uid].vars : (this.constructor.call(this), this.vars) }
             }
           , root: { enumerable: true,
                 get: function(root){
@@ -473,7 +473,7 @@ void function(){ "use strict"
             }
           , clone: { enumerable: true,
                 value: function(){
-                    return new this.constructor({ template: this.template }, this.model)
+                    return new this.constructor({ template: this.template }, (this.constructor.call(this), this.model))
                 }
             }
 
