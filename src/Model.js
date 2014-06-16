@@ -15,8 +15,14 @@ void function(){ "use strict"
             this.collection = collection
             this.model = model
         }
-      , collection: { enumerable: true, get: function(){ return this._collection }, set: function(v){ !this._collection && Object.defineProperty(this, "_collection", { value: v }) } }
-      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , collection: { enumerable: true,
+            get: function(){ return this._collection }
+          , set: function(v){ !this._collection && Object.defineProperty(this, "_collection", { value: v }) }
+        }
+      , model: { enumerable: true,
+            get: function(){ return this._model }
+          , set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) }
+        }
     })
 
     module.exports.CollectionRemoveModelEvent = klass(Event, {
@@ -26,8 +32,14 @@ void function(){ "use strict"
             this.collection = collection
             this.model = model
         }
-      , collection: { enumerable: true, get: function(){ return this._collection }, set: function(v){ !this._collection && Object.defineProperty(this, "_collection", { value: v }) } }
-      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
+      , collection: { enumerable: true,
+            get: function(){ return this._collection }
+          , set: function(v){ !this._collection && Object.defineProperty(this, "_collection", { value: v }) }
+        }
+      , model: { enumerable: true,
+            get: function(){ return this._model }
+          , set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) }
+        }
     })
 
     module.exports.CollectionUpdateEvent = klass(Event, {
@@ -39,25 +51,27 @@ void function(){ "use strict"
       , collection: { enumerable: true, get: function(){ return this._collection }, set: function(v){ !this._collection && Object.defineProperty(this, "_collection", { value: v }) } }
     })
 
-    module.exports.Collection = klass(EventTarget, function(statics, collections){
-        collections = Object.create(null)
+    module.exports.Collection = klass(EventTarget, function(statics){
+        var collections = Object.create(null)
 
         function update(collection){
             if ( !collections[collection.uid] )
               return
 
-            clearTimeout(collections[collection.uid].updating.timer)
-            collections[collection.uid].updating.timer = setTimeout(function(){
+            clearTimeout(collections[collection.uid].update.timer)
+            collections[collection.uid].update.timer = setTimeout(function(){
                 collection.dispatchEvent( new module.exports.CollectionUpdateEvent(collection) )
             }, 4)
         }
 
         Object.defineProperties(statics, {
-            Serializer: { enumerable: true,
-                value: klass(Serializer, {
-                    _delimiter: ":"
-                  , _separator: "|"
-                })
+            serializer: { enumerable: true,
+                value: new ( klass(Serializer, { _delimiter: ":", _separator: "|"}) )
+            }
+          , getByUid: { enumerable: true,
+                value: function(uid){
+                    return collections[uid] ? collections[uid].collection : void 0
+                }
             }
         })
 
@@ -65,8 +79,18 @@ void function(){ "use strict"
             constructor: function(){
                 if (arguments.length)
                   this.addModel.apply(this, arguments)
-
-                collections[this.uid] = { instance: this, updating: { timer: null }}
+            }
+          , models: { enumerable: true,
+                get: function(){
+                    return collections[this.uid] ? collections[this.uid].models : function(){
+                        collections[this.uid] = Object.create(null, {
+                            collection: { value: this }
+                          , models: { value: [] }
+                          , update: { value: { timer: null } }
+                        })
+                        return this.models
+                    }.call(this)
+                }
             }
           , addModel: { enumerable: true,
                 value: function(models, updated){
@@ -173,8 +197,14 @@ void function(){ "use strict"
                 }
             }
           , serialize: { enumerable: true,
-                value: function(){
+                value: function(str){
+                    str = []
 
+                    this.forEach(function(model){
+                      str.push(model.serialize())
+                    })
+
+                    return this.serializer.serialize(str)
                 }
 
             }
@@ -184,11 +214,7 @@ void function(){ "use strict"
                     return this._uid ? this._uid : Object.defineProperty(this, "_uid", { value: UID.uid() })._uid
                 }
             }
-          , models: { enumerable: true,
-                get: function(){
-                    return this._models || Object.defineProperty(this, "_models", { value: [] })._models
-                }
-            }
+
           , Model: { enumerable: true,
                 get: function(){
                     return this._Model || module.exports.Model
@@ -201,9 +227,13 @@ void function(){ "use strict"
                 }
             }
 
-          , Serializer: { enumerable: true,
-                get: function(){ return this._Serializer || module.exports.Collection.Serializer }
-              , set: function(v){ !this._Serializer && Object.defineProperty(this, "_Serializer", { value: v }) }
+          , serializer: { enumerable: true,
+                get: function(){
+                    return this._serializer ? this._serializer : Object.defineProperty(this, "_serializer", { value: module.exports.Collection.serializer })._serializer
+                }
+            }
+          , Serializer: { enumerable: true, configurable: true,
+                get: function(){ return this._serializer.constructor }
             }
         }
     })
@@ -217,10 +247,22 @@ void function(){ "use strict"
             this.from = pvalue
             this.to = void 0
         }
-      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
-      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
-      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
-      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
+      , model: { enumerable: true,
+            get: function(){ return this._model }
+          , set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) }
+        }
+      , key: { enumerable: true,
+            get: function(){ return this._key }
+          , set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) }
+        }
+      , from: { enumerable: true,
+            get: function(){ return this._from }
+          , set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) }
+        }
+      , to: { enumerable: true,
+            get: function(){ return this._to }
+          , set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) }
+        }
     })
 
     module.exports.AddDataEvent = klass(Event, {
@@ -232,10 +274,22 @@ void function(){ "use strict"
             this.from = pvalue
             this.to = nvalue
         }
-      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
-      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
-      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
-      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
+      , model: { enumerable: true,
+            get: function(){ return this._model }
+          , set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) }
+        }
+      , key: { enumerable: true,
+            get: function(){ return this._key }
+          , set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) }
+        }
+      , from: { enumerable: true,
+            get: function(){ return this._from }
+          , set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) }
+        }
+      , to: { enumerable: true,
+            get: function(){ return this._to }
+          , set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) }
+        }
     })
 
     module.exports.ChangeDataEvent = klass(Event, {
@@ -247,10 +301,22 @@ void function(){ "use strict"
               this.from = pvalue
               this.to = nvalue
         }
-      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
-      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) } }
-      , from: { enumerable: true, get: function(){ return this._from }, set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) } }
-      , to: { enumerable: true, get: function(){ return this._to }, set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) } }
+      , model: { enumerable: true,
+            get: function(){ return this._model }
+          , set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) }
+        }
+      , key: { enumerable: true,
+            get: function(){ return this._key }
+          , set: function(v){ !this._key && Object.defineProperty(this, "_key", { value: v }) }
+        }
+      , from: { enumerable: true,
+            get: function(){ return this._from }
+          , set: function(v){ !this._from && Object.defineProperty(this, "_from", { value: v }) }
+        }
+      , to: { enumerable: true,
+            get: function(){ return this._to }
+          , set: function(v){ !this._to && Object.defineProperty(this, "to", { value: v }) }
+        }
     })
 
     module.exports.UpdateDataEvent = klass(Event, {
@@ -260,40 +326,74 @@ void function(){ "use strict"
             this.model = model
             this.keys = [].concat(keys)
         }
-      , model: { enumerable: true, get: function(){ return this._model }, set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) } }
-      , key: { enumerable: true, get: function(){ return this._key }, set: function(v){ !this._key && Object.defineProperty(this, "_keys", { value: v }) } }
+      , model: { enumerable: true,
+            get: function(){ return this._model }
+          , set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) }
+        }
+      , key: { enumerable: true,
+            get: function(){ return this._key }
+          , set: function(v){ !this._key && Object.defineProperty(this, "_keys", { value: v }) }
+        }
     })
 
-    module.exports.Model = klass(EventTarget, function(statics, models){
-        models = Object.create(null)
+    module.exports.Model = klass(EventTarget, function(statics){
+        var models = Object.create(null)
 
         function update(model, key){
             if ( !models[model.uid] )
               return
 
-            if ( models[model.uid].updating.keys.indexOf(key) == -1 ) {
-              models[model.uid].updating.keys.push(key)
-              clearTimeout(models[model.uid].updating.timer)
-              models[model.uid].updating.timer = setTimeout(function(){
-                  model.dispatchEvent(new module.exports.UpdateDataEvent(model, models[model.uid].updating.keys.splice(0, models[model.uid].updating.keys.length)))
-              }, 4)
+            if ( models[model.uid].update.keys.indexOf(key) == -1 ) {
+                models[model.uid].update.keys.push(key)
+                clearTimeout(models[model.uid].update.timer)
+                models[model.uid].update.timer = setTimeout(function(){
+                    model.dispatchEvent( new module.exports.UpdateDataEvent(model, models[model.uid].update.keys.splice(0)) )
+                }, 4)
             }
         }
 
         Object.defineProperties(statics, {
-            Serializer: { enumerable: true, value: Serializer }
-          , getModelByUid: { enumerable: true, value: function(uid){ return models[uid] ? models[uid].instance : null } }
+            serializer: { enumerable: true,
+                value: new Serializer
+            }
+          , getByUid: { enumerable: true,
+                value: function(uid){
+                    return models[uid] ? models[uid].model : void 0
+                }
+            }
         })
 
         return {
             constructor: function(){
-                // generate uid first, because we need it when we set items (prevents "update" event from being fired at first pass)
-                Object.defineProperty(this, "_uid", { value: UID.uid() })
+                if ( this.constructor.prototype._hooks )
+                  this.setHook(this.constructor.prototype._hooks )
+
+                if ( this.constructor.prototype._data )
+                  this.setItem(this.constructor.prototype._data )
 
                 if ( arguments.length )
                   this.setItem.apply(this, arguments)
-
-                models[this.uid] = { instance: this, updating: { keys: [], timer: null } }
+            }
+          , data: { enumerable: true,
+                get: function(){
+                    return models[this.uid] ? models[this.uid].data : function(){
+                        models[this.uid] = Object.create(null, {
+                            model: { value: this }
+                          , data: { value: Object.create(null) }
+                          , hooks: { value: Object.create(null) }
+                          , update: {value: { keys: [], timer: null } }
+                        })
+                        return this.data
+                    }.call(this)
+                }
+            }
+          , hooks: { enumerable: true,
+                get: function(){
+                    return models[this.uid] ? models[this.uid].hooks : function(){
+                        this.data // access this.data to trigger the creation of models[this.uid]
+                        return this.hooks
+                    }.call(this)
+                }
             }
           , setItem: { enumerable: true,
                 value: function(key, nvalue, pvalue, hook, added, updated, removed){
@@ -316,8 +416,8 @@ void function(){ "use strict"
                         return value
                     }.call(this, nvalue)
 
-                    hook = this.hooks.hasOwnProperty(key) ? this.hooks[key] : null
-                    pvalue = this.data.hasOwnProperty(key) ? this.data[key] : void 0
+                    hook = this.hooks[key] || null
+                    pvalue = this.data[key] || void 0
 
                     if ( typeof hook == "function" )
                       nvalue = hook.call(this, nvalue, pvalue)
@@ -331,11 +431,11 @@ void function(){ "use strict"
                     if ( _.typeof(nvalue) == "array" )
                       nvalue = [].concat(nvalue)
 
-                    if ( nvalue == void 0 && this.data.hasOwnProperty(key) )
+                    if ( nvalue == void 0 && this.data[key] )
                       removed = true,
                       delete this.data[key]
                     else {
-                      if ( !this.data.hasOwnProperty(key) )
+                      if ( !this.data[key] )
                         added = true
 
                       this.data[key] = nvalue
@@ -362,7 +462,7 @@ void function(){ "use strict"
                     iterator = new Iterator(keys)
 
                     while( iterator.next(), !iterator.current.done )
-                      hits.push( this.data.hasOwnProperty(iterator.current.value) ? this.data[iterator.current.value] : void 0 )
+                      hits.push( this.data[iterator.current.value] || void 0 )
 
                     return hits.length > 1 ? hits : hits[0]
                 }
@@ -373,14 +473,16 @@ void function(){ "use strict"
                 }
             }
 
-          , data: { enumerable: true,
-                get: function(){
-                    return this._data ? this._data : Object.defineProperty(this, "_data", { value: Object.create(this.constructor.prototype._data||{}) })._data
-                }
-            }
-          , hooks: { enumerable: true,
-                get: function(){
-                  return this._hooks ? this._hooks : Object.defineProperty(this, "_hooks", { value: Object.create(this.constructor.prototype._hooks||{}) })._hooks
+          , setHook: { enumerable: true,
+                value: function(key, handler){
+                    if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
+                      return function(iterator){
+                          while ( iterator.next(), !iterator.done )
+                            this.setHook(iterator.current.key, iterator.current.value)
+                      }.call(this, new Iterator(arguments[0]))
+
+                    if ( _.typeof(key) == "string" && _.typeof(handler) == "function" )
+                      this.hooks[key] = handler
                 }
             }
 
@@ -392,19 +494,22 @@ void function(){ "use strict"
             }
 
           , uid: { enumerable: true, configurable: true,
-                get: function(){
-                    return this._uid ? this._uid : Object.defineProperty(this, "_uid", { value: UID.uid() })
-                }
+                get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
             }
 
           , serializer: { enumerable: true,
                 get: function(){
-                    return this._serializer ? this._serializer : Object.defineProperty(this, "_serializer", { value: module.exports.Model.Serializer })._serializer
+                    return this._serializer ? this._serializer : Object.defineProperty(this, "_serializer", { value: module.exports.Model.serializer })._serializer
                 }
             }
           , Serializer: { enumerable: true, configurable: true,
-                get: function(){
-                    return this._serializer.constructor
+                get: function(){ return this._serializer.constructor }
+            }
+
+          , purge: { enumerable: true, configurable: true,
+                value: function(){
+                    EventTarget.prototype.purge.call(this)
+                    delete models[this.uid]
                 }
             }
         }

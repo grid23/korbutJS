@@ -2,8 +2,10 @@ void function(){ "use strict"
 
     var _ = require("./utils")
     var klass = require("./class").class
+    var EventTarget = require("./EventTarget").EventTarget
     var Iterator = require("./Iterator").Iterator
     var Model = require("./Model").Model
+    var UID = require("./UID").UID
 
     module.exports.ZenParser = klass(function(statics){
         var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
@@ -387,9 +389,13 @@ void function(){ "use strict"
         }
     })
 
-    module.exports.View = klass(function(statics){
-        Object.defineProperties(statics, {
+    module.exports.View = klass(EventTarget, function(statics){
+        var views = Object.create(null)
 
+        Object.defineProperties(statics, {
+            getByUid: function(uid){
+                return views[uid]
+            }
         })
 
         function addEventListeners(instance, dict, iterator){
@@ -425,26 +431,24 @@ void function(){ "use strict"
                      : _.typeof(args[args.length-1]) == "object" ? args.pop()
                      : {}
 
-                this.model = data
-                this.template = _.typeof(dict.template) == "string" ? dict.template : ""
+                views[this.uid] = Object.create(null)
+                views[this.uid].model = data
+                views[this.uid].template = _.typeof(dict.template) == "string" ? dict.template : ""
                 buffer = new this.Template(this.template).parse(this)
-                this.fragment = buffer.tree
-                this.vars = buffer.vars
+                views[this.uid].fragment = buffer.tree
+                views[this.uid].vars = buffer.vars
 
                 _.typeof(this._DOMEvents) == "object" && addEventListeners(this, this._DOMEvents)
                 _.typeof(dict.events) == "object" && addEventListeners(this, dict.events)
             }
           , template: { enumerable: true,
-                get: function(){ return this._template }
-              , set: function(v){ !this._template && Object.defineProperty(this, "_template", { value: v }) }
+                get: function(){ return views[this.uid] ? views[this.uid].template : void 0}
             }
           , fragment: { enumerable: true,
-                get: function(){ return this._fragment }
-              , set: function(v){ !this._fragment && Object.defineProperty(this, "_fragment", { value: v }) }
+                get: function(){ return views[this.uid] ? views[this.uid].fragment : void 0 }
             }
           , vars: { enumerable: true,
-                get: function(){ return this._vars }
-              , set: function(v){ !this._vars && Object.defineProperty(this, "_vars", { value: v })  }
+                get: function(){ return views[this.uid] ? views[this.uid].vars : void 0 }
             }
           , root: { enumerable: true,
                 get: function(root){
@@ -474,14 +478,34 @@ void function(){ "use strict"
             }
 
           , model: { enumerable: true,
-                get: function(){
-                    return this._model
-                }
-              , set: function(v){ !this._model && Object.defineProperty(this, "_model", { value: v }) }
+                get: function(){ return views[this.uid] ? views[this.uid].model : void 0 }
+            }
+          , uid: { enumerable: true, configurable: true,
+                get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
             }
 
-          , Model: {
-                enumerable: true,
+          , purge: { enumerable: true, configurable: true,
+                value: function(what, nodes){
+                    what = _.typeof(what) == "boolean" && what ? { nodes: true, model: true }
+                         : _.typeof(what) == "object" ? what
+                         : { nodes: false, model: false }
+
+                    EventTarget.prototype.purge.call(this)
+
+                    if ( what.nodes ) {
+                      nodes = this.queryAll("root")
+                      while ( nodes.length )
+                        this.fragment.appendChild(nodes.shift())
+                    }
+
+                    if ( what.model )
+                      this.model.purge()
+
+                    delete views[this.uid]
+                }
+            }
+
+          , Model: { enumerable: true,
                 get: function(){ return this._Model || Model }
             }
           , Template: { enumerable: true,

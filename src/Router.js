@@ -2,16 +2,18 @@ void function(){ "use strict"
 
     var _ = require("./utils")
     var klass = require("./class").class
+    var EventTarget = require("./EventTarget").EventTarget
     var Iterator = require("./Iterator").Iterator
     var UID = require("./UID").UID
 
     module.exports.Route = klass(function(statics){
+
         return {
             constructor: function(path, detail){
                 path = _.typeof(path) == "string" ? path : function(){ throw new Error("Route.path") }() //TODO
                 detail = function(detail){
                     return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
-                         : detail.length == 1 && _.typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? detail[0].detail
+                         : detail.length == 1 && _.typeof(detail[0]) == "object" && detail[0].hasOwnProperty("detail") ? detail[0].detail
                          : detail.length == 1 ? detail[0]
                          : detail
                 }( _.spread(arguments, 1) )
@@ -47,9 +49,14 @@ void function(){ "use strict"
         }
     })
 
-    module.exports.Router = klass(function(statics){
+    module.exports.Router = klass(EventTarget, function(statics){
+        var routers = Object.create(null)
+
         Object.defineProperties(statics, {
-            dispatcher: { enumerable: true,
+            getByUid: function(uid){
+                return routers[uid] ? routers[uid].router : void 0
+            }
+          , dispatcher: { enumerable: true,
                 value: function(cache){
                     function getRule(str, regexp, assignments, split){
                         if ( !cache[str] )
@@ -103,55 +110,67 @@ void function(){ "use strict"
         return {
             constructor: function(dispatcher){
                 if ( typeof dispatcher == "function" )
-                  dispatcher.call(this, function(self){
-                      return function dispatch(){
-                          return self.dispatch.apply(self, arguments)
-                      }
-                  }(this))
+                  dispatcher.call(this, function dispatch(){
+                      return this.dispatch.apply(this, arguments)
+                  }.bind(this))
+            }
+          , routes: { enumerable: true,
+                get: function(){
+                    return routers[this.uid] ? routers[this.uid].routes : function(){
+                        routers[this.uid] = Object.create(null, {
+                            router: { value: this }
+                          , routes: { value: Object.create(null) }
+                        })
+
+                        return this.routes
+                    }.call(this)
+                }
+
             }
           , addRouteHandler: { enumerable: true,
                 value: function(route, handler, handlers){
-                    !this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
+                    //!this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
-                      return function(self, routes, count, k){
+                    if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
+                      return function(routes, count, k){
                           count = 0
 
                           for ( k in routes ) if ( routes.hasOwnProperty(k) )
                             count += this.addRouteHandler(k, routes[k])
 
                           return count
-                      }(this, arguments[0])
+                      }.call( this, arguments[0] )
 
                     route = _.typeof(route) == "string" ? route : null
                     handler = statics.isRouteHandler(handler) ? handler : null
-                    handlers = this._routes[route]
+                    handlers = this.routes[route]
 
                     if ( !route || !handler )
                       return 0
-                    if ( Array.isArray(handlers) )
+
+                    if ( _.typeof(handlers) == "array" )
                       handlers.push(handler)
-                    else if ( !handlers || handlers === Object.prototype[route] )
-                      this._routes[route] = handler
+                    else if ( !handlers )
+                      this.routes[route] = handler
                     else if ( statics.isRouteHandler(handlers) )
-                      this._routes[route] = [handlers, handler]
+                      this.routes[route] = [handlers, handler]
 
                     return 1
                 }
             }
           , removeRouteHandler: { enumerable: true,
                 value: function(route, handler){
-                    !this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
+                    //!this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
-                      return function(self, routes, count, k){
+                    if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
+                      return function(routes, count, k){
                           count = 0
 
                           for ( k in routes ) if ( routes.hasOwnProperty(k) )
                             count += this.removeRouteHandler(k, routes[k])
 
                           return count
-                      }(this, arguments[0])
+                      }.call(this, arguments[0])
 
                     route = _.typeof(route) == "string" ? route : null
                     handler = statics.isRouteHandler(route) || route == "*" ? route : null
@@ -161,15 +180,15 @@ void function(){ "use strict"
                       return 0
 
                     if ( handlers === handler ) {
-                        delete this._routes[route]
+                        delete this.routes[route]
                         return 1
                     }
 
                     if ( Array.isArray(handlers) )
-                      return function(self, copy, idx, count){
+                      return function(copy, idx, count){
                           if ( handler === "*" ) {
                               count = handlers.length
-                              delete self._routes[route]
+                              delete this.routes[route]
 
                               return count
                           }
@@ -179,13 +198,13 @@ void function(){ "use strict"
                           while ( idx = copy.indexOf(handler) > -1 )
                             copy.splice(idx, 1), count++
 
-                          self._routes[route] = copy
+                          this.routes[route] = copy
 
-                          if ( self._routes[route].length == 0 )
-                            delete self._routes[route]
+                          if ( this.routes[route].length == 0 )
+                            delete this.routes[route]
 
                           return count
-                      }( this, [].concat(handlers) )
+                      }.call( this, [].concat(handlers) )
                 }
             }
           , dispatchRoute: { enumerable: true,
@@ -198,7 +217,7 @@ void function(){ "use strict"
                           copy[keys[0]] = routes[keys.shift()]
 
                         return new Iterator(copy)
-                    }( this._routes || Object.create(null), Object.create(null) )
+                    }( this.routes || Object.create(null), Object.create(null) )
 
                     return function(self, hits, hit, rv){
                         hits = 0
@@ -280,14 +299,18 @@ void function(){ "use strict"
 
           , dispatcher: { enumerable: true,
                 get: function(){
-                    return this._dispatcher || statics.dispatcher
+                    return this._dispatcher || module.exports.Router.dispatcher
                 }
             }
 
           , uid: { enumerable: true, configurable: true,
-                get: function(){
-                    this._uid = UID.uid()
-                    return this._uid
+                get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid()})._uid }
+            }
+
+          , purge: { enumerable: true, configurable: true,
+                value: function(){
+                    EventTarget.prototype.purge.call(this)
+                    delete routers[this.uid]
                 }
             }
 

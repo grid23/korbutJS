@@ -2,6 +2,7 @@ void function(){ "use strict"
 
     var _ = require("./utils")
     var klass = require("./class").class
+    var UID = require("./UID").UID
 
     module.exports.Event = klass(function(statics){
 
@@ -9,7 +10,7 @@ void function(){ "use strict"
             constructor: function(type, detail){
                 type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
                 detail = function(detail){
-                    return detail.length == 1 && _typeof(detail[0]) == Object && detail[0].hasOwnProperty("detail") ? Object.create(detail[0])
+                    return detail.length == 1 && _typeof(detail[0]) == "object" && detail[0].hasOwnProperty("detail") ? Object.create(detail[0])
                          : null
                 }( _.spread(arguments, 1) )
 
@@ -38,78 +39,94 @@ void function(){ "use strict"
     })
 
     module.exports.EventTarget = klass(function(statics){
+        var eventTargets = Object.create(null)
 
         Object.defineProperties(statics, {
-            "isEventListener": { enumerable: true,
+            isEventListener: { enumerable: true,
                 value: function(o){
                     return o && (typeof o == "function" || typeof o.handleEvent == "function")
                 }
             }
+          , getByUid: { enumerable: true,
+                value: function(uid){ return eventTargets[uid] ? eventTargets[uid].view : void 0 }
+            }
         })
 
         return {
-            addEventListener: { enumerable: true,
-                value: function(type, handler, handlers){
-                    !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
+            events: { enumerable: true,
+                get: function(){
+                    return eventTargets[this.uid] ? eventTargets[this.uid].events : function(){
+                        eventTargets[this.uid] = Object.create(null, {
+                            view: { value: this }
+                          , events: { value: Object.create(null) }
+                        })
 
-                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
-                      return function(self, events, count, k){
+                        return this.events
+                    }.call(this)
+                }
+            }
+          , addEventListener: { enumerable: true,
+                value: function(type, handler, handlers){
+                    //!this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
+
+                    if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
+                      return function(events, count, k){
                           count = 0
 
                           for ( k in events ) if ( events.hasOwnProperty(k) )
-                            count += self.addEventListener(k, events[k])
+                            count += this.addEventListener(k, events[k])
 
                           return count
-                      }( this, arguments[0] )
+                      }.call( this, arguments[0] )
 
                     type = _.typeof(type) == "string" ? type : null
                     handler = statics.isEventListener(handler) ? handler : null
-                    handlers = this._events[type]
+                    handlers = this.events[type]
 
                     if ( !type || !handler )
                       return 0
 
-                    if ( Array.isArray(handlers) )
+                    if ( _.typeof(handlers) == "array" )
                       handlers.push(handler)
-                    else if ( !handlers || handlers === Object.prototype[type] )
-                      this._events[type] = handler
+                    else if ( !handlers )
+                      this.events[type] = handler
                     else if ( statics.isEventListener(handlers) )
-                      this._events[type] = [handlers, handler]
+                      this.events[type] = [handlers, handler]
 
                     return 1
                 }
             }
           , removeEventListener: { enumerable: true,
                 value: function(type, handler, handlers){
-                    !this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
+                    //!this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
 
-                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == Object )
-                      return function(self, events, count, k){
+                    if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == "object" )
+                      return function(events, count, k){
                           count = 0
 
                           for ( k in events ) if ( events.hasOwnProperty(k) )
-                            count += self.removeEventListener(k, events[k])
+                            count += this.removeEventListener(k, events[k])
 
                           return count
-                      }( this, arguments[0] )
+                      }.call( this, arguments[0] )
 
                     type = _.typeof(type) == "string" ? type : null
                     handler = statics.isEventListener(type) || type == "*" ? type : null
-                    handlers = this._events[type]
+                    handlers = this.events[type]
 
                     if ( !type || !handler || !handlers )
                       return 0
 
                     if ( handlers === handler ) {
-                        delete this._events[type]
+                        delete this.events[type]
                         return 1
                     }
 
                     if ( Array.isArray(handlers) )
-                      return function(self, copy, idx, count){
+                      return function(copy, idx, count){
                           if ( handler === "*" ) {
                               count = handlers.length
-                              delete self._events[type]
+                              delete this.events[type]
 
                               return count
                           }
@@ -119,15 +136,16 @@ void function(){ "use strict"
                           while ( idx = copy.indexOf(handler) > -1 )
                             copy.splice(idx, 1), count++
 
-                          self._events[type] = copy
+                          this.events[type] = copy
 
-                          if ( self._events[type].length == 0 )
-                            delete self._events[type]
+                          if ( this.events[type].length == 0 )
+                            delete this.events[type]
 
                           return count
-                      }( this, [].concat(handlers) )
+                      }.call( this, [].concat(handlers) )
                 }
             }
+
           , listeners: { enumerable: true,
                 value: function(events, cb){
                     events = _.spread(arguments)
@@ -162,7 +180,7 @@ void function(){ "use strict"
           , dispatchEvent: { enumerable: true,
                 value: function(event, handlers, count){
                     event = module.exports.Event.isImplementedBy(event) ? event : module.exports.Event.create.apply(null, arguments)
-                    handlers = (this._events||{})[event.type]
+                    handlers = (this.events||{})[event.type]
                     count = 0
 
                     if ( event.type == "error" && !handlers )
@@ -189,11 +207,11 @@ void function(){ "use strict"
             }
 
           , uid: { enumerable: true, configurable: true,
-                get: function(){
-                    if ( !this._uid )
-                      this._uid = UID.uid()
-                    return this._uid
-                }
+                get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
+            }
+
+          , purge: { enumerable: true, configurable: true,
+                value: function(){ delete eventTargets[this.uid] }
             }
         }
     })
