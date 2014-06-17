@@ -147,7 +147,7 @@ void function(){ "use strict"
 
                             if ( vars.length ) {
                                 onupdate = function(e, str, hit, i, l, value){
-                                    str = rawKey
+                                    str = rawValue
 
                                     for ( i = 0, l = e.keys.length; i < l; i++ )
                                       if ( vars.indexOf(e.keys[i]) != -1 ) {

@@ -43,6 +43,8 @@ void function(){ "use strict"
     })
 
     module.exports.Stylesheet = klass(function(statics){
+        var stylesheets = Object.create(null)
+
         var BLOB_COMPAT = function(blob, url){
                 try {
                     blob = new Blob([""], { type: "text/plain" })
@@ -58,13 +60,16 @@ void function(){ "use strict"
             }()
 
         Object.defineProperties(statics, {
-            "isLocalFile": { enumerable: true,
+            isLocalFile: { enumerable: true,
                 value: function(a){
                     return function(path){
                         a.href = path
                         return a.domain === location.domain
                     }
                 }( document.createElement("a") )
+            }
+          , getByUid: function(uid){
+                return stylesheets[uid] ? stylesheets[uid].stylesheet : void 0
             }
         })
 
@@ -87,7 +92,6 @@ void function(){ "use strict"
                           blob = new Blob(rules, { type: "text/css" })
                           url = URL.createObjectURL(blob)
 
-                          console.log(this.uid, url)
                           node = ZenParser.parse("link#$id[rel=stylesheet][href=$href]", { id: this.uid, href: url }).tree.childNodes[0]
                         }
                         else
@@ -103,7 +107,9 @@ void function(){ "use strict"
                     return node
                 }.call(this, args.pop())
 
-                this.readyDFD = new Promise(function(resolve, reject, start){
+                stylesheets[this.uid] = { stylesheet: this, readyDFD: null, sheet: null }
+
+                stylesheets[this.uid].readyDFD = new Promise(function(resolve, reject, start){
                     function wait(){
                         if ( !node.sheet )
                           if ( Date.now() - start > 5000 )
@@ -118,7 +124,7 @@ void function(){ "use strict"
 
                     wait()
                 }).then(function(sheet){
-                    this.sheet = sheet
+                    stylesheets[this.uid].sheet = sheet
 
                     if ( !blob )
                       while ( rules.length )
@@ -170,7 +176,7 @@ void function(){ "use strict"
 
           , uid: { enumerable: true, configurable: true,
                 get: function(){
-                    return this._uid ? this._uid : Object.defineProperty(this, "_uid", { value: UID.uid() })
+                    return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid
                 }
             }
         }
