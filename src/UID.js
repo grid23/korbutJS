@@ -5,21 +5,18 @@ void function(){ "use strict"
 
     module.exports.UID = klass(function(statics){
         var CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-        var MAP = "Kxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+        var MAP = "K-xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
         var RADIX = 16
         var REGEXP = /[xy]/g
+        var generators = Object.create(null)
 
         Object.defineProperties(statics, {
             uid: { enumerable: true,
-                value: function(map, radix, date, regexp){
-                      map = _.typeof(this.map) == "string" ? this.map : MAP
-                      radix = _.typeof(this.radix) == "number" ? this.radix : RADIX
-                      regexp = _.typeof(this.regexp) == "regexp" ? this.regexp : REGEXP
+                value: function(date){
                       date = Date.now()
 
-
-                    return map.replace(regexp, function(c, r){
-                        r = (date + Math.random()*radix)%radix |0
+                    return MAP.replace(REGEXP, function(c, r){
+                        r = (date + Math.random()*RADIX)%RADIX |0
 
                         if ( c === "y")
                           r = (r & 0x3)|0x8
@@ -32,24 +29,47 @@ void function(){ "use strict"
 
         return {
             constructor: function(dict){
-                dict = dict && _.typeof(dict) == Object ? dict : {}
+                dict = dict && _.typeof(dict) == "object" ? dict : {}
 
-                _.typeof(dict.map) == "string" && Object.defineProperty(this, "_map", { value: dict.map })
-                _.typeof(dict.radix) == "number" && Object.defineProperty(this, "_map", { value: dict.number })
+                generators[this.uid] = {
+                    map: _.typeof(dict.map) == "string" ? dict.map : MAP
+                  , radix: _.typeof(dict.radix) == "number" ? dict.radix : RADIX
+                  , regexp: _.typeof(dict.regexp) == "regexp" ? dict.regexp : REGEXP
+                }
             }
           , generate: { enumerable: true,
-                value: function(){
-                    return statics.uid.call(this)
+                value: function(date){
+                      date = Date.now()
+
+                    return this.map.replace(this.regexp, function(c, r){
+                        r = (date + Math.random()*this.radix)%this.radix |0
+
+                        if ( c === "y")
+                          r = (r & 0x3)|0x8
+
+                        return CHARS[r]
+                    }.bind(this))
                 }
             }
           , map: { enumerable: true,
                 get: function(){
-                    return this._map || MAP
+                    return generators[this.uid].map
                 }
             }
           , radix: { enumerable: true,
                 get: function(){
-                    return this._radix || RADIX
+                    return generators[this.uid].radix
+                }
+            }
+          , regexp: { enumerable: true,
+                get: function(){
+                    return generators[this.uid].regexp
+                }
+            }
+
+          , uid: { enumerable: true, configurable: true,
+                get: function(){
+                    return this._uid || Object.defineProperty(this, "_uid", { value: module.exports.UID.uid() })._uid
                 }
             }
         }

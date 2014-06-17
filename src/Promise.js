@@ -3,8 +3,11 @@ void function(){ "use strict"
     var _ = require("./utils")
     var klass = require("./class").class
     var Iterator = require("./Iterator").Iterator
+    var UID = require("./UID").UID
 
     module.exports.Promise = klass(function(statics){
+        var promises = Object.create(null)
+
         Object.defineProperties(statics, {
             all: { enumerable: true,
                 value: function(){
@@ -84,24 +87,31 @@ void function(){ "use strict"
                     })
                 }
             }
+          , getByUid: { enumerable: true,
+                value: function(uid){
+                    return promises[uid] ? promises[uid].promise : void 0
+                }
+            }
         })
 
         return {
-            constructor: function(resolver, resolution){
+            constructor: function(resolver){
                 if ( typeof resolver !== "function" )
                   throw new TypeError("Constructor korbut.Promise requires a resolver function as argument 0.")
 
-                resolution = { key: "pending", value: null }
-                Object.defineProperty(this, "_state", { get: function(){ return resolution } })
+                promises[this.uid] = {
+                    promise: this
+                  , state: { key: "pending", value: null }
+                }
 
                 resolver(resolve.bind(this), reject.bind(this))
 
                 function resolve(v, handlers){
                     resolve = reject = function(){}
 
-                    resolution.key = "resolved"
-                    resolution.value = v
-                    Object.freeze(resolution)
+                    promises[this.uid].state.key = "resolved"
+                    promises[this.uid].state.value = v
+                    Object.freeze(promises[this.uid].state)
 
                     handlers = Array.isArray(this._onresolve) ? [].concat(this._onresolve) : []
                       while ( handlers.length )
@@ -111,9 +121,9 @@ void function(){ "use strict"
                 function reject(r, handlers){
                     resolve = reject = function(){}
 
-                    resolution.key = "rejected"
-                    resolution.value = r
-                    Object.freeze(resolution)
+                    promises[this.uid].state.key = "rejected"
+                    promises[this.uid].state.value = r
+                    Object.freeze(promises[this.uid].state)
 
                     handlers = Array.isArray(this._onreject) ? [].concat(this._onreject) : []
                       while ( handlers.length )
@@ -159,7 +169,7 @@ void function(){ "use strict"
                           else if ( hasResolved )
                             return new module.exports.Promise(function(resolve, reject, rv){
                                 try {
-                                    rv = typeof onresolve == "function" ? onresolve(self._state.value) : null
+                                    rv = typeof onresolve == "function" ? onresolve(promises[self.uid].state.value) : null
                                 } catch(e) {
                                     reject(e)
                                     return
@@ -173,7 +183,7 @@ void function(){ "use strict"
                           else if ( hasRejected )
                             return new module.exports.Promise(function(resolve, reject, rv){
                                 try {
-                                    rv = typeof onreject == "function" ? onreject(self._state.value) : null
+                                    rv = typeof onreject == "function" ? onreject(promises[self.uid].state.value) : null
                                 } catch(e) {
                                     reject(e)
                                     return
@@ -183,7 +193,7 @@ void function(){ "use strict"
                                   rv.then(function(v){ resolve(v) }, function(r){ reject(r) })
                                 else resolve(rv)
                             })
-                    }(this, this._state.key == "resolved", this._state.key == "rejected" )
+                    }(this, promises[this.uid].state.key == "resolved", promises[this.uid].state.key == "rejected" )
                 }
             }
           , catch: { enumerable: true,
@@ -198,9 +208,14 @@ void function(){ "use strict"
                     }( this )
                 }
             }
+          , uid: { enumerable: true, configurable: true,
+                get: function(){
+                    return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid
+                }
+            }
           , state: { enumerable: true, configurable: true,
                 get: function(){
-                    return (this._state||{}).key
+                    return promises[this.uid].state.key
                 }
             }
         }
