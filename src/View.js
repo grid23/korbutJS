@@ -6,6 +6,7 @@ void function(){ "use strict"
     var Iterator = require("./Iterator").Iterator
     var Model = require("./Model").Model
     var UID = require("./UID").UID
+    var SInternalAnimationManager = require("./SInternalAnimationManager").SInternalAnimationManager
 
     module.exports.ZenParser = klass(function(statics){
         var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
@@ -221,7 +222,7 @@ void function(){ "use strict"
                                 input.update.push(onupdate)
                                 onupdate({keys: vars})
                             } else
-                              node.nodeValue = rawTextContent
+                              node.nodeValue = rawTextContent||" "
                         }
 
                         textContent.enclosing_glyph = "}"
@@ -335,8 +336,10 @@ void function(){ "use strict"
                 if ( input.update )
                   input.data.addEventListener("update", function(sequence, l){
                       return function(e, i){
-                          for ( i = 0; i < l; i++ )
-                            sequence[i](e)
+                          _.requestAnimationFrame(function(){
+                              for ( i = 0; i < l; i++ )
+                                sequence[i](e)
+                          })
                       }
                   }(input.update, input.update.length))
 
@@ -368,7 +371,6 @@ void function(){ "use strict"
           , parse: { enumerable: true,
                 value: function(data, stream, input, output){
 
-                    console.log(module.exports.View.isImplementedBy(data), data.model)
                     data = module.exports.View.isImplementedBy(data) ? data.model
                          : Model.isImplementedBy(data) ? data
                          : "string, object".indexOf(_.typeof(data)) != -1 ? new Model(data)

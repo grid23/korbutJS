@@ -47,4 +47,22 @@ void function(){ "use strict"
         }
     }
 
+    module.exports.requestAnimationFrame = function(cb){
+        return (  window.requestAnimationFrame
+               || window.webkitRequestAnimationFrame
+               || window.mozRequestAnimationFrame
+               || window.oRequestAnimationFrame
+               || function(cb){ return setTimeout(function(){ cb( Date.now() ) }, 4) }
+               )(cb)
+    }
+
+    module.exports.cancelAnimationFrame = function(id){
+        return (  window.cancelAnimationFrame
+               || window.webkitCancelAnimationFrame
+               || window.mozCancelAnimationFrame
+               || window.oCancelAnimationFrame
+               || clearTimeout
+               )(id)
+    }
+
 }()
