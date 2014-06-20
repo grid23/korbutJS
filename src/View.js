@@ -6,7 +6,7 @@ void function(){ "use strict"
     var Iterator = require("./Iterator").Iterator
     var Model = require("./Model").Model
     var UID = require("./UID").UID
-    var SInternalAnimationManager = require("./SInternalAnimationManager").SInternalAnimationManager
+    var sInternalAnimationManager = new (require("./SInternalAnimationManager").SInternalAnimationManager)
 
     module.exports.ZenParser = klass(function(statics){
         var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
@@ -63,7 +63,9 @@ void function(){ "use strict"
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
-                                node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
+                                _.requestAnimationFrame(function(){
+                                    node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
+                                })
                             }
 
                             input.update.push(onupdate)
@@ -114,8 +116,10 @@ void function(){ "use strict"
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
 
-                                    set(node, str, lastValue)
-                                    lastValue = str
+                                    _.requestAnimationFrame(function(){
+                                        set(node, str, lastValue)
+                                        lastValue = str
+                                    })
                                 }
                                 input.update.push(onupdate)
                                 onupdate({keys: vars})
@@ -163,8 +167,9 @@ void function(){ "use strict"
                                         if ( value !== void 0 && value !== null )
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
-
-                                    node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str))
+                                    _.requestAnimationFrame(function(){
+                                        node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str))
+                                    })
                                 }
                                 input.update.push(onupdate)
                                 onupdate({keys: vars})
@@ -217,7 +222,9 @@ void function(){ "use strict"
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
 
-                                    node.nodeValue = str
+                                    _.requestAnimationFrame(function(){
+                                        node.nodeValue = str
+                                    })
                                 }
                                 input.update.push(onupdate)
                                 onupdate({keys: vars})
@@ -335,11 +342,15 @@ void function(){ "use strict"
 
                 if ( input.update )
                   input.data.addEventListener("update", function(sequence, l){
-                      return function(e, i){
-                          _.requestAnimationFrame(function(){
-                              for ( i = 0; i < l; i++ )
-                                sequence[i](e)
-                          })
+                      return function(e, fns){
+                          fns = [].concat(sequence)
+
+                          while ( fns.length )
+                            void function(fn){
+                                //sInternalAnimationManager.queue(function(){
+                                    fn(e)
+                                //})
+                            }( fns.shift() )
                       }
                   }(input.update, input.update.length))
 

@@ -143,5 +143,7 @@ void function(_){ "use strict"
                 }
             }
         })
+
+      return G
     }
 }( require("./utils") )
