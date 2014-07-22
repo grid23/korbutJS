@@ -2,12 +2,8 @@ void function(karma, path){
 
     karma.server.start({
         basePath: ''
-      , frameworks: ['mocha']
-      , files: [
-          './bower_components/chai/chai.js',
-          './dist/korbut.js',
-          './specs/**/*.js'
-        ]
+      , frameworks: ["mocha", "chai"]
+      , files: [ "./dist/korbut.js", "./specs/**/*.js" ]
       , exclude: []
       , preprocessors: {}
       , reporters: ['progress']

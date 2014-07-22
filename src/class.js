@@ -15,23 +15,19 @@ void function(_){ "use strict"
                   : function(){}
             delete descriptors.constructor
 
-            try {
-                return { prototype: Object.create(null, descriptors) }
-            } catch(e) {
-                keys = Object.keys(descriptors)
-                while ( keys.length )
-                  void function(key){
-                      descriptors[key] = descriptors[key].constructor == Object
-                                         && ( descriptors[key].hasOwnProperty("value")
-                                              || descriptors[key].hasOwnProperty("get")
-                                              || descriptors[key].hasOwnProperty("set") )
-                                       ? descriptors[key]
-                                       : { configurable: true, enumerable: true, writable: true,
-                                           value: descriptors[key] }
-                  }( keys.shift() )
+            keys = Object.keys(descriptors)
+            while ( keys.length )
+              void function(key){
+                  descriptors[key] = descriptors[key].constructor == Object
+                                     && ( descriptors[key].hasOwnProperty("value")
+                                          || descriptors[key].hasOwnProperty("get")
+                                          || descriptors[key].hasOwnProperty("set") )
+                                   ? descriptors[key]
+                                   : { configurable: true, enumerable: true, writable: true,
+                                       value: descriptors[key] }
+              }( keys.shift() )
 
-                return { prototype: Object.create(null, descriptors) }
-            }
+            return { prototype: Object.create(null, descriptors) }
         }( args[args.length-1] )
 
         while ( args.length )
@@ -79,17 +75,20 @@ void function(_){ "use strict"
 
         !Class.hasOwnProperty("isImplementedBy") && Object.defineProperty(Class, "isImplementedBy", {
             enumerable: true,
-            value: function(o, prototype, k){
+            value: function(o, prototype, keys, i, l){
                 if ( !o )
                   return false
 
                 prototype = o && typeof o.constructor == "function" ? o.constructor.prototype : null
 
-                if ( o instanceof Class )
+                if ( o instanceof Class || Class.prototype === prototype )
                   return true
 
-                for ( k in Class.prototype )
-                  if ( k != "constructor" && function(o, c, err){
+                keys = Object.getOwnPropertyNames(Class.prototype)
+                l = keys.length
+
+                for ( i = 0; i < l; i++ )
+                  if ( keys[i] != "constructor" && function(o, c, err){
                       err = !o || !c ? true : false
 
                       if ( o )
@@ -106,15 +105,18 @@ void function(_){ "use strict"
                         }
 
                       return err
-                  }( Object.getOwnPropertyDescriptor(prototype, k), Object.getOwnPropertyDescriptor(Class.prototype, k) ) ) return false
+                  }( Object.getOwnPropertyDescriptor(prototype, keys[i]), Object.getOwnPropertyDescriptor(Class.prototype, keys[i]) ) ) return false
+
                 return true
             }
         })
 
-        !Class.hasOwnProperty("extend") && Object.defineProperty(Class, "implementsOn", {
+        !Class.hasOwnProperty("implementsOn") && Object.defineProperty(Class, "implementsOn", {
             enumerable: true,
             value: function(o, prototype, properties){
-                prototype = _.typeof(o) == "function" ? o.prototype : {}
+                prototype = _.typeof(o) == "function" ? o.prototype
+                          : _.typeof(o) == "object" ? o
+                          : function(){ throw new TypeError() }()
                 properties = Object.getOwnPropertyNames(Class.prototype)
 
                 while ( properties.length )

@@ -6,7 +6,6 @@ void function(){ "use strict"
     var Iterator = require("./Iterator").Iterator
     var Model = require("./Model").Model
     var UID = require("./UID").UID
-    var sInternalAnimationManager = new (require("./SInternalAnimationManager").SInternalAnimationManager)
 
     module.exports.ZenParser = klass(function(statics){
         var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")

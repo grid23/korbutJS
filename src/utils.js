@@ -11,8 +11,8 @@ void function(){ "use strict"
     }( /\s*\[native code\]\s*/i )
 
     module.exports.spread = function(slice){
-        return function(o, i){
-            return slice.call(o, i)
+        return function(o, i, l){
+            return slice.call(o, i, l)
         }
     }( Array.prototype.slice )
 

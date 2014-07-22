@@ -15,7 +15,10 @@ void function(karma, path, child_process, q, child){
             process.stdout.write(data)
         })
 
+
+
         setTimeout(function(){
+            console.log(child)
             dfd.resolve()
         }, 2500)
 
