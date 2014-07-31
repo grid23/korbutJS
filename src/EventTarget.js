@@ -2,6 +2,7 @@ void function(){ "use strict"
 
     var _ = require("./utils")
     var klass = require("./class").class
+    var Iterator = require("./Iterator").Iterator
     var UID = require("./UID").UID
 
     module.exports.Event = klass(function(statics){
@@ -10,9 +11,15 @@ void function(){ "use strict"
             constructor: function(type, detail){
                 type = _.typeof(type) == "string" ? type : function(){ throw new Error("Event.type") }() //TODO
                 detail = function(detail){
-                    return detail.length == 1 && _typeof(detail[0]) == "object" && detail[0].hasOwnProperty("detail") ? Object.create(detail[0])
+                    return detail.length == 1 && _.typeof(detail[0]) == "object" && _.typeof(detail[0]) == "object" ? function(o, t, k){
+                              while ( k.length ) Object.defineProperty( t, k[0], Object.getOwnPropertyDescriptor(o, k.shift()) )
+                              return t
+                           }( detail[0].detail, Object.create({}), Object.getOwnPropertyNames(detail[0].detail) )
+                         : detail.length > 0 && _.typeof(detail) == "array" ? [].concat(detail)
+                         : detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) > -1 ? null
+                         : detail.length == 1 ? detail[0]
                          : null
-                }( _.spread(arguments, 1) )
+                }( _.spread(arguments, 1))
 
                 this.type = type
                 this.detail = detail
@@ -44,11 +51,11 @@ void function(){ "use strict"
         Object.defineProperties(statics, {
             isEventListener: { enumerable: true,
                 value: function(o){
-                    return o && (typeof o == "function" || typeof o.handleEvent == "function")
+                    return !!o && (typeof o == "function" || typeof o.handleEvent == "function")
                 }
             }
           , getByUid: { enumerable: true,
-                value: function(uid){ return eventTargets[uid] ? eventTargets[uid].view : void 0 }
+                value: function(uid){ return eventTargets[uid] ? eventTargets[uid].eventTarget : void 0 }
             }
         })
 
@@ -57,7 +64,7 @@ void function(){ "use strict"
                 get: function(){
                     return eventTargets[this.uid] ? eventTargets[this.uid].events : function(){
                         eventTargets[this.uid] = Object.create(null, {
-                            view: { value: this }
+                            eventTarget: { value: this }
                           , events: { value: Object.create(null) }
                         })
 
@@ -207,11 +214,19 @@ void function(){ "use strict"
             }
 
           , uid: { enumerable: true, configurable: true,
-                get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
+                get: function(){ return this._uid || function(){
+                          eventTargets[ Object.defineProperty(this, "_uid", { value: UID.uid() })._uid ] = Object.create(null, {
+                              eventTarget: { value: this }
+                            , events: { value: Object.create(null) }
+                          })
+
+                          return this.uid
+                      }.call(this)
+                }
             }
 
           , purge: { enumerable: true, configurable: true,
-                value: function(){ delete eventTargets[this.uid] }
+                value: function(){ if ( eventTargets[this.uid] ) delete eventTargets[this.uid].events }
             }
         }
     })

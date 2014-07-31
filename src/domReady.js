@@ -3,6 +3,7 @@ void function(){ "use strict"
     var Promise = require("./Promise").Promise
     var klass = require("./class").class
     var Event = require("./EventTarget").Event
+    
     var DomReadyEvent = klass(Event, {
             constructor: function(){
                 Event.call(this, "domReady")
@@ -45,7 +46,7 @@ void function(){ "use strict"
               return
             ready = true
 
-            setTimeout(resolve, 4, new DomReadyEvent())
+            setTimeout(resolve, 4, new DomReadyEvent)
         }
 
         function isready(){

@@ -8,7 +8,7 @@ void function(){ "use strict"
 
         return {
             constructor: function(){
-
+                return this
             }
         }
     })

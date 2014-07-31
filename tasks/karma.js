@@ -18,7 +18,6 @@ void function(karma, path, child_process, q, child){
 
 
         setTimeout(function(){
-            console.log(child)
             dfd.resolve()
         }, 2500)
 

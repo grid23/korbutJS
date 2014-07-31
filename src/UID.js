@@ -5,7 +5,7 @@ void function(){ "use strict"
 
     module.exports.UID = klass(function(statics){
         var CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-        var MAP = "K-xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+        var MAP = "Fxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
         var RADIX = 16
         var REGEXP = /[xy]/g
         var generators = Object.create(null)

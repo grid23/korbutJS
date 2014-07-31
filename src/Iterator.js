@@ -11,7 +11,7 @@ void function(){ "use strict"
                         Object.keys(o)
                         return true
                     } catch(e){
-                        return o.hasOwnProperty("length")
+                        return !!o && Object.prototype.hasOwnProperty.call(o, "length")
                     }
 
                     return false
@@ -20,6 +20,17 @@ void function(){ "use strict"
           , iterate: { enumerable: true,
                 value: function(o, rv, i, l, lead, trail){
                     o = o || Object.create(null)
+
+                    if ( o.constructor === Object && o.hasOwnProperty(length) )
+                      try {
+                          rv = Array.prototype.slice.call(o)
+
+                          for ( i = 0; l < o.length; i++ )
+                            if ( !rv.hasOwnProperty(l) )
+                              throw error
+
+                          o = rv
+                      } catch(e) {}
 
                     try {
                         return Object.keys(o)
@@ -30,7 +41,6 @@ void function(){ "use strict"
                           for ( i = 0, l = o.length; i < l; i++ ) {
                               lead = o.charCodeAt(i)
                               trail = o.charCodeAt(i<l-1?i+1:"")
-
                               rv.push( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF ? o[i]+o[++i] : o[i] )
                           }
 
@@ -87,7 +97,7 @@ void function(){ "use strict"
                 }
             }
           , length: { enumerable: true,
-                value: function(){
+                get: function(){
                     return this._range.length
                 }
             }
