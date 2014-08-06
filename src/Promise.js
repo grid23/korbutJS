@@ -10,13 +10,13 @@ void function(){ "use strict"
 
         Object.defineProperties(statics, {
             all: { enumerable: true,
-                value: function(){
+                value: function(promises){
                     if ( !Iterator.iterable(promises) )
                       throw new TypeError("korbut.Promise.race requires an iterable object as argument 0.")
 
                     return new module.exports.Promise(function(resolve, reject, iterator, length, value){
                         iterator = new Iterator(promises)
-                        length = promises.length()
+                        length = promises.length
                         value = []
 
                         function onresolve(idx){
