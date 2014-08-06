@@ -43,6 +43,5 @@ void function(){ "use strict"
       , Serializer: { enumerable: true, value: require("./Serializer").Serializer }
     })
 
-    window.korbut = korbut
-
+    module.exports = window.korbut = korbut
 }()

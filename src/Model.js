@@ -5,6 +5,7 @@ void function(){ "use strict"
     var EventTarget = require("./EventTarget").EventTarget
     var Event = require("./EventTarget").Event
     var Iterator = require("./Iterator").Iterator
+    var Promise = require("./Promise").Promise
     var UID = require("./UID").UID
     var Serializer = require("./Serializer").Serializer
 
@@ -71,6 +72,53 @@ void function(){ "use strict"
           , getByUid: { enumerable: true,
                 value: function(uid){
                     return collections[uid] ? collections[uid].collection : void 0
+                }
+            }
+          , CSVtoCollection: { enumerable: true,
+                value: function(csv, callback){
+                    csv = (_.typeof(csv) == "string" ? csv.trim() : "").split(/\n|\r/)
+                    callback = _.typeof(callback) == "function" ? callback : null
+
+                    return new Promise(function(resolve, reject, collection, props, i, l){
+                        function onresolve(d){
+                            resolve(d)
+                            if ( callback )
+                              callback(null, d)
+                        }
+
+                        function onerror(e){
+                            reject(e)
+                            if ( callback )
+                              callback(e, null)
+                        }
+
+                        collection = new module.exports.Collection
+                        props = (csv.shift()||"").split(",")
+
+                        for ( i = 0, l = props.length; i < l; i++ )
+                          props[i] = props[i].trim()
+
+                        function partial(pcsv){
+                              pcsv = csv.splice(0, Math.min(100, csv.length))
+
+                              while ( pcsv.length )
+                                void function(data, model){
+                                    model = new module.exports.Model
+
+                                    for ( i = 0; i < l; i++ )
+                                        model.setItem(props[i], data[i])
+
+                                    collection.addModel(model)
+                                }( (pcsv.shift()||"").split(",") )
+
+                              if ( csv.length )
+                                setTimeout(partial, 4)
+                              else
+                                resolve(collection)
+                        }
+                        partial()
+
+                    })
                 }
             }
         })
