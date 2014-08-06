@@ -7,44 +7,62 @@ void function(){ "use strict"
     var UID = require("./UID").UID
 
     module.exports.Route = klass(function(statics){
+        var routes = Object.create(null)
 
         return {
-            constructor: function(path, detail){
+            constructor: function(path, dict, detail){
                 path = _.typeof(path) == "string" ? path : function(){ throw new Error("Route.path") }() //TODO
-                detail = function(detail){
-                    return !detail.length || (detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) != -1 ) ? null
-                         : detail.length == 1 && _.typeof(detail[0]) == "object" && detail[0].hasOwnProperty("detail") ? detail[0].detail
-                         : detail.length == 1 ? detail[0]
-                         : detail
-                }( _.spread(arguments, 1) )
+                dict = _.typeof(dict) == "object" ? dict : {}
 
-                Object.defineProperties(this, {
-                    "_path": { value: path }
-                  , "_detail": { value: Object.create(detail) }
-                  , "_timestamp": { value: Date.now() }
-                  , "_matches": { value: {} }
+                detail = function(detail){
+                    return detail.length == 1 && _.typeof(detail[0]) == "object" && _.typeof(detail[0].detail) == "object" ? function(o, t, k){
+                              while ( k.length ) Object.defineProperty( t, k[0], Object.getOwnPropertyDescriptor(o, k.shift()) )
+                              return t
+                           }( detail[0].detail, Object.create({}), Object.getOwnPropertyNames(detail[0].detail) )
+                         : detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) > -1 ? null
+                         : detail.length == 1 ? detail[0]
+                         : detail.length > 0 ? [].concat(detail)
+                         : null
+                }( _.spread(arguments, 1))
+
+                routes[this.uid] = Object.create(null, {
+                    path: { value: path }
+                  , detail: { value: detail }
+                  , timestamp: { value: Date.now() }
+                  , matches: { value: {} }
+                  , request: { value: dict.request||{} }
+                  , response: { value: dict.response||{} }
                 })
             }
 
           , path: { enumerable: true,
                 get: function(){
-                    return this._path
+                    return routes[this.uid].path
                 }
             }
           , timestamp: { enumerable: true,
                 get: function(){
-                    return this._timestamp || 0
+                    return routes[this.uid].timestamp
                 }
             }
           , detail: { enumerable: true,
-                get: function(){
-                    return this._detail
-                }
+                get: function(){ return routes[this.uid].detail }
+            }
+          , request: { enumerable: true,
+                get: function(){ return routes[this.uid].request }
+            }
+          , response: { enumerable: true,
+                get: function(){ return routes[this.uid].response }
             }
           , matches: { enumerable: true,
-                get: function(){
-                    return this._matches
-                }
+                get: function(){ return routes[this.uid].matches }
+            }
+
+          , uid: { enumerable: true, configurable: true,
+                get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
+            }
+          , purge: { enumerable: true, configurable: true,
+                value: function(){ delete routes[this.uid] }
             }
         }
     })
@@ -53,15 +71,15 @@ void function(){ "use strict"
         var routers = Object.create(null)
 
         Object.defineProperties(statics, {
-            getByUid: function(uid){
-                return routers[uid] ? routers[uid].router : void 0
+            getByUid: { enumerable: true,
+                value: function(uid){ return routers[uid] ? routers[uid].router : void 0 }
             }
           , dispatcher: { enumerable: true,
                 value: function(cache){
                     function getRule(str, regexp, assignments, split){
                         if ( !cache[str] )
                           if ( str.indexOf(":") == -1 )
-                            cache[str] = new RegExp(str)
+                            cache[str] = new RegExp("^"+str+"$")
                           else {
                             assignments = []
                             regexp = []
@@ -76,7 +94,7 @@ void function(){ "use strict"
                                     regexp.push(part)
                               }( split.shift() )
 
-                            cache[str] = new RegExp(regexp.join("\\\/"))
+                            cache[str] = new RegExp("^"+regexp.join("\\\/")+"$")
                             cache[str].assignments = assignments
                           }
 
@@ -84,8 +102,8 @@ void function(){ "use strict"
                     }
 
                     return function(route, path, rule, match){
-                        rule = getRule(route.path)
-                        match = path.match(rule)
+                        rule = getRule(path)
+                        match = route.path.match(rule)
 
                         if ( !match )
                           return false
@@ -95,14 +113,16 @@ void function(){ "use strict"
 
                         return function(i, l){
                             for ( ; i < l; i++ )
-                              route._matches[rule.assignments[i]] = match[i+1]
+                              route.matches[rule.assignments[i]] = match[i+1]
+
+                            return route
                         }(0, rule.assignments.length)
                     }
                 }( Object.create(null) )
             }
           , "isRouteHandler": { enumerable: true,
                 value: function(o){
-                    return o && (typeof o == "function" || typeof o.handleRoute == "function")
+                    return !!o && (typeof o == "function" || typeof o.handleRoute == "function")
                 }
             }
         })
@@ -113,19 +133,19 @@ void function(){ "use strict"
                   dispatcher.call(this, function dispatch(){
                       return this.dispatch.apply(this, arguments)
                   }.bind(this))
+
+                routers[this.uid] = Object.create(null, {
+                    router: { value: this }
+                  , routes: { value: Object.create(null) }
+                  , Route: { value: this.constructor.prototype._Route || module.exports.Route }
+                })
+
+            }
+          , Route: { enumerable: true,
+                get: function(){ return routers[this.uid].Route }
             }
           , routes: { enumerable: true,
-                get: function(){
-                    return routers[this.uid] ? routers[this.uid].routes : function(){
-                        routers[this.uid] = Object.create(null, {
-                            router: { value: this }
-                          , routes: { value: Object.create(null) }
-                        })
-
-                        return this.routes
-                    }.call(this)
-                }
-
+                get: function(){ return routers[this.uid].routes }
             }
           , addRouteHandler: { enumerable: true,
                 value: function(route, handler, handlers){
@@ -209,7 +229,7 @@ void function(){ "use strict"
             }
           , dispatchRoute: { enumerable: true,
                 value: function(route, iterator){
-                    route = module.exports.Route.isImplementedBy(route) ? route : module.exports.Route.create.apply(null, arguments)
+                    route = module.exports.Route.isImplementedBy(route) ? route : this.Route.create.apply(null, arguments)
                     iterator = function(routes, copy, keys){
                         keys = Object.keys(routes).sort()
 
@@ -255,7 +275,7 @@ void function(){ "use strict"
                               return hits
 
                             hit = iterator.current.key === "*" ? true
-                                : self.dispatcher.call(this, route, iterator.current.key)
+                                : !!self.dispatcher.call(this, route, iterator.current.key)
 
                             if ( !hit )
                               return next()
@@ -304,7 +324,7 @@ void function(){ "use strict"
             }
 
           , uid: { enumerable: true, configurable: true,
-                get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid()})._uid }
+                get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
             }
 
           , purge: { enumerable: true, configurable: true,

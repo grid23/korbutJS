@@ -3,6 +3,7 @@ describe("korbut.Event", function(){
         var a = new korbut.Event("foo")
         var b = new korbut.Event("foo", { detail: { bar: "bar" }})
         var c = new korbut.Event("foo", "foo", "bar")
+        var d = new korbut.Event("foo", 1)
 
         it("should return a korbut.Event instance", function(){
             chai.expect(korbut.Event.isImplementedBy(a)).to.be.true
@@ -14,6 +15,8 @@ describe("korbut.Event", function(){
             chai.expect(b.type).to.be.equal("foo")
             chai.expect(a.detail).to.be.null
             chai.expect(b.detail.bar).to.be.equal("bar")
+            chai.expect(c.detail).to.be.eql(["foo", "bar"])
+            chai.expect(d.detail).to.be.equal(1)
         })
     })
 })
@@ -33,6 +36,7 @@ describe("korbut.EventTarget", function(){
     describe("#isEventListener()", function(){
         it("should return true|false whether the passed argument is a valid event handler", function(){
             chai.expect(korbut.EventTarget.isEventListener(function(){})).to.be.true
+            chai.expect(korbut.EventTarget.isEventListener({ handleEvent: function(){} })).to.be.true
             chai.expect(korbut.EventTarget.isEventListener({ handler: function(){} })).to.be.false
             chai.expect(korbut.EventTarget.isEventListener(null)).to.be.false
             chai.expect(korbut.EventTarget.isEventListener("foo")).to.be.false
@@ -42,7 +46,7 @@ describe("korbut.EventTarget", function(){
 
     describe("#getByUid()", function(){
         it("should return a eventTarget object corresponding to the passed uid", function(){
-            chai.expect(korbut.EventTarget.isImplementedBy( korbut.EventTarget.getByUid(uid) )).to.be.true
+            chai.expect(korbut.EventTarget.getByUid(uid)).to.be.equal(b)
         })
     })
 
@@ -62,7 +66,7 @@ describe("korbut.EventTarget", function(){
                 chai.expect(Object.prototype.hasOwnProperty.call(a.events, "foo")).to.be.true
             })
 
-            it("should set that key value as a single function when its the first handler", function(){
+            it("should set that key value as a single function when it's the first handler", function(){
                 chai.expect(a.events.foo).to.be.a("function")
                 chai.expect(a.events.foo).to.be.equal(onfoo)
             })
@@ -72,6 +76,12 @@ describe("korbut.EventTarget", function(){
                 chai.expect(a.events.foo).to.be.a("array")
             })
 
+        })
+
+        describe("(handlerDict)", function(){
+            it ("should return the number of registered handler", function(){
+                chai.expect(a.addEventListener({fu: function(){}, biz: function(){}})).to.be.equal(2)
+            })
         })
 
         describe("(eventType, handlerObject)", function(){
@@ -87,7 +97,7 @@ describe("korbut.EventTarget", function(){
 
             it("should set that key value as a single handleEvent object when its the first handler", function(){
                 chai.expect(a.events.bar).to.be.eql({ handleEvent: onbar })
-                chai.expect(a.events.bar).to.be.equal(onbar)
+                chai.expect(a.events.bar.handleEvent).to.be.equal(onbar)
             })
 
             it("should set that key to an array of handlers, when more handlers are added", function(){
@@ -98,29 +108,20 @@ describe("korbut.EventTarget", function(){
     })
 
     describe("->removeEventListener", function(){
-        var a = new korbut.EventTarget
-        a
-
-        describe("(eventType, handler)", function(){
-
-        })
-
-        describe("(eventType, handler)", function(){
-
+        it("todo", function(){
+            throw Error
         })
     })
 
     describe("::events", function(){
-
+        it("todo", function(){
+            throw Error
+        })
     })
 
     describe("->dispatchEvent", function(){
-        describe("(eventObject)", function(){
-
-        })
-
-        describe("(eventType, ...details)", function(){
-
+        it("todo", function(){
+            throw Error
         })
     })
 

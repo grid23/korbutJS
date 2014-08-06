@@ -12,6 +12,7 @@ void function(karma, path){
       , autoWatch: false
       , browsers: []
       , singleRun: false
+      , logLevel: "ERROR"
     })
 
 }( require("karma"), require("path") )
