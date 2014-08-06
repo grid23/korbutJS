@@ -247,7 +247,7 @@ void function(){ "use strict"
                               if ( iteration.key !== "*" )
                                 hits++
 
-                              rv = iteration.value.call(null, route, next, hits)
+                              rv = (iteration.value.handleRoute||iteration.value).call(null, route, next, hits)
                               return _.typeof(rv) !== "undefined" ? rv : hits
                             } else if ( Array.isArray(iteration.value) )
                                 return function(handlers, _next){
