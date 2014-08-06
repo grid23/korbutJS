@@ -7,6 +7,28 @@ void function(){ "use strict"
     var Model = require("./Model").Model
     var UID = require("./UID").UID
 
+    module.exports.requestAnimationFrame = function(fn){
+        fn = module.exports.native(window.requestAnimationFrame) ? window.requestAnimationFrame
+                                  : window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame
+                                 || window.msRequestAnimationFrame || window.oRequestAnimationFrame
+                                 || function(fn){
+                                        return setTimeout(function(){
+                                            fn(Date.now())
+                                        }, 4)
+                                    }
+
+        return function(handler){ return fn(handler) }
+    }()
+
+    module.exports.cancelAnimationFrame = function(fn){
+        fn = module.exports.native(window.cancelAnimationFrame) ? window.cancelAnimationFrame
+                                 : window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame
+                                || window.msCancelAnimationFrame || window.oCancelAnimationFame
+                                || function(id){ clearTimeout(id) }
+
+        return function(id){ return fn(id) }
+    }()
+
     module.exports.ZenParser = klass(function(statics){
         var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
 
@@ -62,7 +84,7 @@ void function(){ "use strict"
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
-                                _.requestAnimationFrame(function(){
+                                module.exports.requestAnimationFrame(function(){
                                     node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
                                 })
                             }
@@ -115,7 +137,7 @@ void function(){ "use strict"
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
 
-                                    _.requestAnimationFrame(function(){
+                                    module.exports.requestAnimationFrame(function(){
                                         set(node, str, lastValue)
                                         lastValue = str
                                     })
@@ -166,7 +188,7 @@ void function(){ "use strict"
                                         if ( value !== void 0 && value !== null )
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
-                                    _.requestAnimationFrame(function(){
+                                    module.exports.requestAnimationFrame(function(){
                                         node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str))
                                     })
                                 }
@@ -221,7 +243,7 @@ void function(){ "use strict"
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
 
-                                    _.requestAnimationFrame(function(){
+                                    module.exports.requestAnimationFrame(function(){
                                         node.nodeValue = str
                                     })
                                 }
