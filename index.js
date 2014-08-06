@@ -1,20 +1,20 @@
 module.exports = {
-    utils = require("./src/utils")
-  , class = require("./src/class").class
+    utils: require("./src/utils")
+  , class: require("./src/class").class
 
-  , Iterator = require("./Iterator").Iterator
+  , Iterator: require("./src/Iterator").Iterator
 
-  , UID = require("./src/UID").UID
-  , Serializer = require("./src/Serializer")
+  , UID: require("./src/UID").UID
+  , Serializer: require("./src/Serializer")
 
-  , Promise = require("./src/Promise").Promise
+  , Promise: require("./src/Promise").Promise
 
-  , EventTarget = require("./src/EventTarget").EventTarget
-  , Event = require("./src/Event").Event
+  , EventTarget: require("./src/EventTarget").EventTarget
+  , Event: require("./src/EventTarget").Event
 
-  , Router = require("./src/Router").Router
-  , Route = require("./src/Route").Route
+  , Router: require("./src/Router").Router
+  , Route: require("./src/Router").Route
 
-  , Model = require("./src/Model").Model
-  , Collection = require("./src/Collection").Collection
+  , Model: require("./src/Model").Model
+  , Collection: require("./src/Model").Collection
 }
