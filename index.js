@@ -1,6 +1,7 @@
 module.exports = {
     utils: require("./src/utils")
   , class: require("./src/class").class
+  , singleton: require("./src/class").singleton
 
   , Iterator: require("./src/Iterator").Iterator
 

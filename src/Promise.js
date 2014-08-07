@@ -42,7 +42,9 @@ void function(){ "use strict"
             }
           , cast: { enumerable: true,
                 value: function(v){
-                    return new module.exports.Promise(function(resolve){ resolve(v) })
+                    if ( !module.exports.Promise.isImplementedBy(v) )
+                      return new module.exports.Promise(function(resolve){ resolve(_.typeof(v)=="function"?v():v) })
+                    return v
                 }
             }
           , race: { enumerable: true,

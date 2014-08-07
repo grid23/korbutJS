@@ -108,7 +108,12 @@ void function(){ "use strict"
                     return this._current
                 }
             }
+          , purge: { enumerable: true, configurable: true,
+                value: function(){
+                    return
+                }
+            }
         }
     })
-    
+
 }()

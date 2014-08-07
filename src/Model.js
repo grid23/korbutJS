@@ -99,25 +99,28 @@ void function(){ "use strict"
                           props[i] = props[i].trim()
 
                         function partial(pcsv){
-                              pcsv = csv.splice(0, Math.min(100, csv.length))
+                              try {
+                                  pcsv = csv.splice(0, Math.min(100, csv.length))
 
-                              while ( pcsv.length )
-                                void function(data, model){
-                                    model = new module.exports.Model
+                                  while ( pcsv.length )
+                                    void function(data, model){
+                                        model = new module.exports.Model
 
-                                    for ( i = 0; i < l; i++ )
-                                        model.setItem(props[i], data[i])
+                                        for ( i = 0; i < l; i++ )
+                                            model.setItem(props[i], data[i])
 
-                                    collection.addModel(model)
-                                }( (pcsv.shift()||"").split(",") )
+                                        collection.addModel(model)
+                                    }( (pcsv.shift()||"").split(",") )
+                              } catch(e) {
+                                  onreject(e)
+                              }
 
                               if ( csv.length )
                                 setTimeout(partial, 4)
                               else
-                                resolve(collection)
+                                onresolve(collection)
                         }
                         partial()
-
                     })
                 }
             }
