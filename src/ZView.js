@@ -6,6 +6,7 @@ void function(){ "use strict"
     var Iterator = require("./Iterator").Iterator
     var Model = require("./Model").Model
     var UID = require("./UID").UID
+    var requestAnimationFrame = require("./Animation").requestAnimationFrame
 
     module.exports.ZenParser = klass(function(statics){
         var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
@@ -62,7 +63,7 @@ void function(){ "use strict"
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
-                                module.exports.requestAnimationFrame(function(){
+                                requestAnimationFrame(function(){
                                     node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
                                 })
                             }
@@ -115,7 +116,7 @@ void function(){ "use strict"
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
 
-                                    module.exports.requestAnimationFrame(function(){
+                                    requestAnimationFrame(function(){
                                         set(node, str, lastValue)
                                         lastValue = str
                                     })
@@ -166,7 +167,7 @@ void function(){ "use strict"
                                         if ( value !== void 0 && value !== null )
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
-                                    module.exports.requestAnimationFrame(function(){
+                                    requestAnimationFrame(function(){
                                         node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str))
                                     })
                                 }
@@ -221,7 +222,7 @@ void function(){ "use strict"
                                           str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                       }
 
-                                    module.exports.requestAnimationFrame(function(){
+                                    requestAnimationFrame(function(){
                                         node.nodeValue = str
                                     })
                                 }
@@ -381,7 +382,7 @@ void function(){ "use strict"
           , parse: { enumerable: true,
                 value: function(data, stream, input, output){
 
-                    data = module.exports.View.isImplementedBy(data) ? data.model
+                    data = module.exports.ZView.isImplementedBy(data) ? data.model
                          : Model.isImplementedBy(data) ? data
                          : "string, object".indexOf(_.typeof(data)) != -1 ? new Model(data)
                          : new Model
@@ -401,12 +402,12 @@ void function(){ "use strict"
         }
     })
 
-    module.exports.View = klass(EventTarget, function(statics){
+    module.exports.ZView = klass(EventTarget, function(statics){
         var views = Object.create(null)
 
         Object.defineProperties(statics, {
             getByUid: function(uid){
-                return views[uid]
+                return views[uid].view
             }
         })
 
@@ -427,12 +428,14 @@ void function(){ "use strict"
                       }(iterator.current.value))
 
               }(instance.queryAll(iterator.current.key), new Iterator(iterator.current.value))
-
-
         }
 
         return {
             constructor: function(args, handler, data, dict, expression, buffer, events){
+                views[this.uid] = Object.create(null)
+                views[this.uid].view = this
+                views[this.uid].Model = this.constructor.prototype._Model || Model
+
                 args = _.spread(arguments)
                 handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
                 data = Model.isImplementedBy(args[args.length-1]) ? args.pop()
@@ -443,7 +446,6 @@ void function(){ "use strict"
                      : _.typeof(args[args.length-1]) == "object" ? args.pop()
                      : {}
 
-                views[this.uid] = Object.create(null)
                 views[this.uid].model = data
                 views[this.uid].template = _.typeof(dict.template) == "string" ? dict.template : ""
                 buffer = new this.Template(this.template).parse(this)
@@ -454,13 +456,13 @@ void function(){ "use strict"
                 _.typeof(dict.events) == "object" && addEventListeners(this, dict.events)
             }
           , template: { enumerable: true,
-                get: function(){ return views[this.uid] ? views[this.uid].template : (this.constructor.call(this), this.template)}
+                get: function(){ return views[this.uid].template }
             }
           , fragment: { enumerable: true,
-                get: function(){ return views[this.uid] ? views[this.uid].fragment : (this.constructor.call(this), this.fragment) }
+                get: function(){ return views[this.uid].fragment }
             }
           , vars: { enumerable: true,
-                get: function(){ return views[this.uid] ? views[this.uid].vars : (this.constructor.call(this), this.vars) }
+                get: function(){ return views[this.uid].var }
             }
           , root: { enumerable: true,
                 get: function(root){
@@ -483,14 +485,16 @@ void function(){ "use strict"
                     return []
                 }
             }
+            /*
           , clone: { enumerable: true,
                 value: function(){
                     return new this.constructor({ template: this.template }, (this.constructor.call(this), this.model))
                 }
             }
+            */
 
           , model: { enumerable: true,
-                get: function(){ return views[this.uid] ? views[this.uid].model : void 0 }
+                get: function(){ views[this.uid].model }
             }
           , uid: { enumerable: true, configurable: true,
                 get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
@@ -518,10 +522,7 @@ void function(){ "use strict"
             }
 
           , Model: { enumerable: true,
-                get: function(){ return this._Model || Model }
-            }
-          , Template: { enumerable: true,
-                get: function(){ return this._Template || module.exports.ZenParser }
+                get: function(){ return views[this.uid].Model }
             }
         }
 

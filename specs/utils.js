@@ -78,16 +78,4 @@ describe("korbut.utils", function(){
         })
     })
 
-    describe("#requestAnimationFrame", function(){
-        it("should...", function(){
-            throw Error
-        })
-    })
-
-    describe("#cancelAnimationFrame", function(){
-        it("should...", function(){
-            throw Error
-        })
-    })
-
 })

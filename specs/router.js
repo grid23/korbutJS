@@ -5,6 +5,9 @@ describe("korbut.Route", function(){
         var b = new korbut.Route("/foo", { detail: { bar:  "bar" } })
         var c = new korbut.Route("foo", "foo", "bar")
         var d = new korbut.Route("foo", 1)
+        var e = new korbut.Route("foo", { request: { foo:"bar" } })
+        var f = new korbut.Route("foo", { response: { foo:"bar" } })
+        var g = new korbut.Route("foo", { request: { foo:"bar" }, response: { foo:"bar" } })
 
         it("should return a korbut.Route instance", function(){
             chai.expect(korbut.Route.isImplementedBy(a)).to.be.true
@@ -20,43 +23,14 @@ describe("korbut.Route", function(){
             chai.expect(c.detail).to.be.eql(["foo", "bar"])
             chai.expect(d.detail).to.be.equal(1)
         })
-    })
 
-    describe("| extending", function(){
-        var A = korbut.Route.extend({
-                constructor: function(type, request, response){
-                    korbut.Route.call(this, type)
-
-                    this.request = request
-                    this.response = response
-                }
-              , request: { enumerable: true,
-                    get: function(){
-                        return this._request
-                    }
-                  , set: function(v){
-                          this._request = v
-                    }
-                }
-              , response: { enumerable: true,
-                    get: function(){
-                        return this._response
-                    }
-                  , set: function(v){
-                          this._response = v
-                    }
-                }
-            })
-        function request(){}
-        function response(){}
-        var a = new A("/foo", request, response)
-
-        it ("should work... :)", function(){
-            chai.expect(a.path).to.be.equal("/foo")
-            chai.expect(a.request).to.be.a("function")
-            chai.expect(a.response).to.be.a("function")
-            chai.expect(a.request).to.be.equal(request)
-            chai.expect(a.response).to.be.equal(response)
+        it("should define request and response properties in a valid way", function(){
+            chai.expect(e.request.foo).to.be.equal("bar")
+            chai.expect(e.response).to.be.a("object")
+            chai.expect(f.request).to.be.a("object")
+            chai.expect(f.response.foo).to.be.equal("bar")
+            chai.expect(g.request.foo).to.be.equal("bar")
+            chai.expect(g.response.foo).to.be.equal("bar")
         })
     })
 
@@ -223,8 +197,14 @@ describe("korbut.Router", function(){
                 return [ route.matches.foo, route.matches.biz ]
             })
 
+            a.addRouteHandler("/:fu(fr|en)/foo", function(route){
+                return route.matches.fu
+            })
+
             chai.expect(a.dispatchRoute("/foo/stuff")).to.be.equal("stuff")
             chai.expect(a.dispatchRoute("/bar/abc/def")).to.be.eql(["abc", "def"])
+            chai.expect(a.dispatchRoute("/fr/foo")).to.be.equal("fr")
+            chai.expect(a.dispatchRoute("/en/foo")).to.be.equal("en")
         })
 
     })
