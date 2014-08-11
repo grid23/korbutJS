@@ -86,11 +86,18 @@ void function(){ "use strict"
                             split = str.split("/")
 
                             while ( split.length )
-                              void function(part){
-                                  if ( part[0] === ":" )
-                                    assignments.push(part.slice(1)),
-                                    regexp.push("([^\\\/]*)")
-                                  else
+                              void function(part, match){
+                                  if ( part[0] === ":" ) {
+
+                                    if ( match = part.match(/^:(\w+)(\(.*\))$/), match ) {
+                                      assignments.push(match[1])
+                                      regexp.push(match[2])
+                                    } else {
+                                      assignments.push(part.slice(1)),
+                                      regexp.push("([^\\\/]*)")
+                                    }
+
+                                  } else
                                     regexp.push(part)
                               }( split.shift() )
 
@@ -108,7 +115,7 @@ void function(){ "use strict"
                         if ( !match )
                           return false
 
-                        if ( match.length == 1 )
+                        if ( match.length == 1 || !rule.assignments )
                           return true
 
                         return function(i, l){
