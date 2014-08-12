@@ -12,6 +12,8 @@ void function(){ "use strict"
       , class: { enumerable: true, value: require("./class").class }
       , singleton: { enumerable: true, value: require("./class").singleton }
 
+      , domReady: { enumerable: true, value: domReady }
+
       , Iterator: { enumerable: true, value: require("./Iterator").Iterator }
 
       , EventTarget: { enumerable: true, value: require("./EventTarget").EventTarget }

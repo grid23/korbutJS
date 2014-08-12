@@ -431,24 +431,25 @@ void function(){ "use strict"
         }
 
         return {
-            constructor: function(args, handler, data, dict, expression, buffer, events){
+            constructor: function(args, handler, model, dict, expression, buffer, events){
                 views[this.uid] = Object.create(null)
                 views[this.uid].view = this
                 views[this.uid].Model = this.constructor.prototype._Model || Model
 
                 args = _.spread(arguments)
                 handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
-                data = Model.isImplementedBy(args[args.length-1]) ? args.pop()
-                     : args.length > 1 && "string, object".indexOf(_.typeof(args[args.length-1])) != -1 ? new this.Model(args.pop())
-                     : new this.Model
 
-                dict = _.typeof(args[args.length-1]) == "string" ? { template: args.pop() }
-                     : _.typeof(args[args.length-1]) == "object" ? args.pop()
-                     : {}
+                dict = _.typeof(args[0]) == "string" ? { template: args.shift() }
+                     : _.typeof(args[0]) == "object" && _.typeof(args[0].template) == "string" ? args.shift()
+                     : { template: "" }
 
-                views[this.uid].model = data
-                views[this.uid].template = _.typeof(dict.template) == "string" ? dict.template : ""
-                buffer = new this.Template(this.template).parse(this)
+                model = Model.isImplementedBy(args[args.length-1]) ? args.pop()
+                     : "string, object".indexOf(_.typeof(args[args.length-1])) != -1 ? new views[this.uid].Model(args.pop())
+                     : new views[this.uid].Model
+
+                views[this.uid].model = model
+                views[this.uid].template = _.typeof(this.constructor.prototype._template) == "string" ? this.constructor.prototype._template : dict.template
+                buffer = new module.exports.ZenParser(views[this.uid].template).parse(this)
                 views[this.uid].fragment = buffer.tree
                 views[this.uid].vars = buffer.vars
 
@@ -462,7 +463,7 @@ void function(){ "use strict"
                 get: function(){ return views[this.uid].fragment }
             }
           , vars: { enumerable: true,
-                get: function(){ return views[this.uid].var }
+                get: function(){ return views[this.uid].vars }
             }
           , root: { enumerable: true,
                 get: function(root){
@@ -494,7 +495,7 @@ void function(){ "use strict"
             */
 
           , model: { enumerable: true,
-                get: function(){ views[this.uid].model }
+                get: function(){ return views[this.uid].model }
             }
           , uid: { enumerable: true, configurable: true,
                 get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }

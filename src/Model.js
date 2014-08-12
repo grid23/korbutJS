@@ -536,18 +536,7 @@ void function(){ "use strict"
                       this.hooks[key] = handler
                 }
             }
-          , flatten: { enumerable: true,
-                value: function(o, iterator){
-                    o = {}
-                    iterator = new Iterator(this.data)
 
-                    while ( !iterator.next().done )
-                      o[iterator.current.key] = o[iterator.current.value]
-
-                    return o
-                }
-
-            }
           , serialize: { enumerable: true,
                 value: function(serializer){
                     return Serializer.isImplementedBy(serializer) ? serializer.serialize(this.data)

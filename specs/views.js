@@ -37,7 +37,10 @@ describe("korbut.Template", function(){
 describe("korbut.View", function(){
     var T = korbut.Template.extend({
             render: function(data){
-                return "<div><span data-k-ref=foo>"+data.foo+"</span></div><div><span data-k-ref=foo>"+data.foo+"</span></div>"
+                //console.log(data)
+                data = data || {}
+                return "<div><span data-k-ref=foo>"+data.foo+"</span></div><div><span data-k-ref=foo>"+data.foo+"</span></div>\
+                "
             }
         })
     var V = korbut.View.extend({
@@ -51,6 +54,16 @@ describe("korbut.View", function(){
         it('should return a valid instance', function(){
             chai.expect(korbut.View.isImplementedBy(new V({foo:"bar"}))).to.be.true
         })
+
+        it("should return a valid dom subtree", function(){
+            var a = new V({foo:"bar"})
+            var b = new V
+
+            chai.expect(a.root.length).to.be.equal(2)
+            chai.expect(a.queryAll("root").length).to.be.equal(2)
+            chai.expect(a.queryAll("foo").length).to.be.equal(2)
+            chai.expect(a.query("foo").textContent).to.be.equal("bar")
+        })
     })
 
     describe("#getByUid()", function(){
@@ -60,10 +73,6 @@ describe("korbut.View", function(){
 
             chai.expect(korbut.View.getByUid(uid)).to.be.equal(v)
         })
-    })
-
-    describe("=>query", function(){
-
     })
 
 })

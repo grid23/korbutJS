@@ -73,13 +73,13 @@ void function(){
                 args = _.spread(arguments)
                 handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
 
-                model = Model.isImplementedBy(args[args.length-1]) ? args.pop()
-                     : args.length > 1 && "string, object".indexOf(_.typeof(args[args.length-1])) != -1 ? new this.Model(args.pop())
-                     : new views[this.uid].Model
-
-                dict = views[this.uid].Template.isImplementedBy(args[args.length-1]) ? { template: args.pop() }
-                     : _.typeof(args[args.length-1]) == "object" && views[this.uid].Template.isImplementedBy(args[args.length-1].template) ? args.pop()
+                dict = views[this.uid].Template.isImplementedBy(args[0]) ? { template: args.shift() }
+                     : _.typeof(args[0]) == "object" && views[this.uid].Template.isImplementedBy(args[0].template) ? args.shift()
                      : { template: new views[this.uid].Template }
+
+                model = Model.isImplementedBy(args[args.length-1]) ? args.pop()
+                     : "string, object".indexOf(_.typeof(args[args.length-1])) != -1 ? new views[this.uid].Model(args.pop())
+                     : new views[this.uid].Model
 
                 if ( !views[this.uid].Template.isImplementedBy(dict.template) )
                   throw new TypeError("invalid template")
@@ -88,11 +88,16 @@ void function(){
                 views[this.uid].template = dict.template
 
                 buffer = document.createElement("div")
-                buffer.innerHTML = dict.template.render(model.flatten())
+                buffer.innerHTML = dict.template.render(model.data)
                 while ( buffer.childNodes.length )
-                  captureNodes(views[this.uid].vars, buffer.childNodes[0]),
-                  (views[this.uid].vars.root = views[this.uid].vars.root || []).push(buffer.childNodes[0]),
-                  views[this.uid].fragment.appendChild(buffer.childNodes[0])
+                  void function(child){
+                      if ( child.nodeType !== Node.ELEMENT_NODE )
+                        return buffer.removeChild(child)
+
+                      captureNodes(views[this.uid].vars, child)
+                      void (views[this.uid].vars.root = views[this.uid].vars.root || []).push(child)
+                      views[this.uid].fragment.appendChild(child)
+                  }.call(this, buffer.childNodes[0] )
                 buffer = null
 
                 _.typeof(this.constructor.prototype._DOMEvents) == "object" && addEventListeners(this, this._DOMEvents)
@@ -124,14 +129,14 @@ void function(){
             }
 
           , query: { enumerable: true,
-                value: function(){
+                value: function(query){
                     if ( this.vars.hasOwnProperty(query) )
                       return this.vars[query][0]
                     return null
                 }
             }
           , queryAll: { enumerable: true,
-                value: function(){
+                value: function(query){
                     if ( this.vars.hasOwnProperty(query) )
                       return [].concat(this.vars[query])
                     return []
