@@ -1,33 +1,38 @@
-void function(browserify, fs, path, q, main, dest){ "use strict"
-    main = path.join(__dirname, "../src/index.js")
-    dest = path.join(__dirname, "../dist/korbut.js")
+"use strict"
 
-    module.exports.browserify = function(dfd){
-        dfd = q.defer()
+var browserify = require("browserify")
+var fs = require("fs")
+var path = require("path")
+var q = require("q")
+var main, dest
 
-        browserify(main).bundle(function(err, buffer){
-            if ( err )
-              return dfd.reject(err)
+main = path.join(__dirname, "../src/index.js")
+dest = path.join(__dirname, "../dist/korbut.js")
 
-            fs.exists(path.dirname(dest), function onexists(exists){
-                if ( !exists )
-                  fs.mkdir(path.dirname(dest), function(err){
-                      if ( err )
-                        return dfd.reject(err)
+module.exports.browserify = function(dfd){
+    dfd = q.defer()
 
-                      onexists(true)
-                  })
+    browserify(main).bundle(function(err, buffer){
+        if ( err )
+          return dfd.reject(err)
 
-                fs.writeFile(dest, buffer, "utf8", function(err){
-                    if ( err )
-                      return dfd.reject(err)
+        fs.exists(path.dirname(dest), function onexists(exists){
+            if ( !exists )
+              fs.mkdir(path.dirname(dest), function(err){
+                  if ( err )
+                    return dfd.reject(err)
 
-                    dfd.resolve()
-                })
+                  onexists(true)
+              })
+
+            fs.writeFile(dest, buffer, "utf8", function(err){
+                if ( err )
+                  return dfd.reject(err)
+
+                dfd.resolve()
             })
         })
+    })
 
-        return dfd.promise
-    }
-
-}( require("browserify"), require("fs"), require("path"), require("q") )
+    return dfd.promise
+}

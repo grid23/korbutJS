@@ -1,151 +1,152 @@
-void function(_){ "use strict"
+"use strict"
 
-    module.exports.class = function(args, statics, Class, prototype, k){
-        args = _.spread(arguments)
-        statics = Object.create(null)
-        prototype = Object.create({})
+var _ = require("./utils")
 
-        args[args.length-1] = function getDescriptors(descriptors, keys, i, l){
-            if ( _.typeof(descriptors) == "function" )
-              return getDescriptors( descriptors.call(null, statics) )
+module.exports.class = function(args, statics, Class, prototype, k){
+    args = _.spread(arguments)
+    statics = Object.create(null)
+    prototype = Object.create({})
 
-            descriptors.constructor = descriptors.hasOwnProperty("constructor") ? descriptors.constructor : function(){}
-            Class = _.typeof(descriptors.constructor) == "function" && !_.native(descriptors.constructor) ? descriptors.constructor
-                  : _.typeof(descriptors.constructor.value) == "function" && !_.native(descriptors.constructor.value) ? descriptors.constructor.value
-                  : function(){}
-            delete descriptors.constructor
+    args[args.length-1] = function getDescriptors(descriptors, keys, i, l){
+        if ( _.typeof(descriptors) == "function" )
+          return getDescriptors( descriptors.call(null, statics) )
 
-            keys = Object.keys(descriptors)
-            while ( keys.length )
-              void function(key){
-                  descriptors[key] = descriptors[key].constructor == Object
-                                     && ( descriptors[key].hasOwnProperty("value")
-                                          || descriptors[key].hasOwnProperty("get")
-                                          || descriptors[key].hasOwnProperty("set") )
-                                   ? descriptors[key]
-                                   : { configurable: true, enumerable: true, writable: true,
-                                       value: descriptors[key] }
-              }( keys.shift() )
+        descriptors.constructor = descriptors.hasOwnProperty("constructor") ? descriptors.constructor : function(){}
+        Class = _.typeof(descriptors.constructor) == "function" && !_.native(descriptors.constructor) ? descriptors.constructor
+              : _.typeof(descriptors.constructor.value) == "function" && !_.native(descriptors.constructor.value) ? descriptors.constructor.value
+              : function(){}
+        delete descriptors.constructor
 
-            return { prototype: Object.create(null, descriptors) }
-        }( args[args.length-1] )
+        keys = Object.keys(descriptors)
+        while ( keys.length )
+          void function(key){
+              descriptors[key] = descriptors[key].constructor == Object
+                                 && ( descriptors[key].hasOwnProperty("value")
+                                      || descriptors[key].hasOwnProperty("get")
+                                      || descriptors[key].hasOwnProperty("set") )
+                               ? descriptors[key]
+                               : { configurable: true, enumerable: true, writable: true,
+                                   value: descriptors[key] }
+          }( keys.shift() )
 
-        while ( args.length )
-          void function(Super, propertyNames){
-              try {
-                  propertyNames = Object.getOwnPropertyNames(Super.prototype)
-              } catch(e){
-                  propertyNames = []
-              }
+        return { prototype: Object.create(null, descriptors) }
+    }( args[args.length-1] )
 
-              while ( propertyNames.length )
-                void function(property, descriptor){
-                    Object.defineProperty(prototype, property, descriptor)
-                }( propertyNames[0], Object.getOwnPropertyDescriptor(Super.prototype, propertyNames.shift()) )
-          }( args.shift() )
-        Object.defineProperty(prototype, "constructor", { value: Class, configurable: true, enumerable: true })
+    while ( args.length )
+      void function(Super, propertyNames){
+          try {
+              propertyNames = Object.getOwnPropertyNames(Super.prototype)
+          } catch(e){
+              propertyNames = []
+          }
 
-        Class.prototype = prototype
+          while ( propertyNames.length )
+            void function(property, descriptor){
+                Object.defineProperty(prototype, property, descriptor)
+            }( propertyNames[0], Object.getOwnPropertyDescriptor(Super.prototype, propertyNames.shift()) )
+      }( args.shift() )
+    Object.defineProperty(prototype, "constructor", { value: Class, configurable: true, enumerable: true })
 
-        void function(properties){
+    Class.prototype = prototype
+
+    void function(properties){
+        while ( properties.length )
+          Object.defineProperty(Class, properties[0], Object.getOwnPropertyDescriptor(statics, properties.shift()))
+    }( Object.getOwnPropertyNames(statics) )
+
+    !Class.hasOwnProperty("create") && Object.defineProperty(Class, "create", {
+        enumerable: true,
+        value: function(args){
+            args = _.spread(arguments)
+
+            function F(){
+                return Class.apply(this, args)
+            }
+            F.prototype = Class.prototype
+
+            return new F
+        }
+    })
+
+    !Class.hasOwnProperty("extend") && Object.defineProperty(Class, "extend", {
+        enumerable: true,
+        value: function(){
+            return module.exports.class.apply(null, [Class].concat(_.spread(arguments)))
+        }
+    })
+
+    !Class.hasOwnProperty("isImplementedBy") && Object.defineProperty(Class, "isImplementedBy", {
+        enumerable: true,
+        value: function(o, prototype, keys, i, l){
+            if ( !o )
+              return false
+
+            prototype = o && typeof o.constructor == "function" ? o.constructor.prototype : null
+
+            if ( o instanceof Class || Class.prototype === prototype )
+              return true
+
+            keys = Object.getOwnPropertyNames(Class.prototype)
+            l = keys.length
+
+            for ( i = 0; i < l; i++ )
+              if ( keys[i] != "constructor" && function(o, c, err){
+                  err = !o || !c ? true : false
+
+                  if ( o )
+                    if ( c.configurable ) {
+                      if ( c.hasOwnProperty("value") && typeof o.value != typeof c.value )
+                        err = true
+                    } else {
+                      if ( c.hasOwnProperty("value") && o.value !== c.value )
+                        err = true
+                      if ( c.hasOwnProperty("get") && o.get !== c.get )
+                        err = true
+                      if ( c.hasOwnProperty("set") && o.set !== c.set )
+                        err = true
+                    }
+
+                  return err
+              }( Object.getOwnPropertyDescriptor(prototype, keys[i]), Object.getOwnPropertyDescriptor(Class.prototype, keys[i]) ) ) return false
+
+            return true
+        }
+    })
+
+    !Class.hasOwnProperty("implementsOn") && Object.defineProperty(Class, "implementsOn", {
+        enumerable: true,
+        value: function(o, prototype, properties){
+            prototype = _.typeof(o) == "function" ? o.prototype
+                      : _.typeof(o) == "object" ? o
+                      : function(){ throw new TypeError() }()
+            properties = Object.getOwnPropertyNames(Class.prototype)
+
             while ( properties.length )
-              Object.defineProperty(Class, properties[0], Object.getOwnPropertyDescriptor(statics, properties.shift()))
-        }( Object.getOwnPropertyNames(statics) )
+              Object.defineProperty(prototype, properties[0], Object.getOwnPropertyDescriptor(Class.prototype, properties.shift()))
 
-        !Class.hasOwnProperty("create") && Object.defineProperty(Class, "create", {
-            enumerable: true,
-            value: function(args){
-                args = _.spread(arguments)
+            Class.apply(this, _.spread(arguments, 1))
+        }
+    })
 
-                function F(){
-                    return Class.apply(this, args)
-                }
-                F.prototype = Class.prototype
+    return Class
+}
 
-                return new F
+module.exports.singleton = function(F, G){
+    F = module.exports.class.apply(null, arguments)
+    G = module.exports.class.call(null, F, function(statics, k){
+        for ( k in F )
+          statics[k] = F[k]
+
+        return {
+            constructor: function(){
+                if ( G.instance )
+                  return G.instance
+                G.instance = this
+
+                return F.apply(this, arguments)
             }
-        })
+        }
+    })
 
-        !Class.hasOwnProperty("extend") && Object.defineProperty(Class, "extend", {
-            enumerable: true,
-            value: function(){
-                return module.exports.class.apply(null, [Class].concat(_.spread(arguments)))
-            }
-        })
-
-        !Class.hasOwnProperty("isImplementedBy") && Object.defineProperty(Class, "isImplementedBy", {
-            enumerable: true,
-            value: function(o, prototype, keys, i, l){
-                if ( !o )
-                  return false
-
-                prototype = o && typeof o.constructor == "function" ? o.constructor.prototype : null
-
-                if ( o instanceof Class || Class.prototype === prototype )
-                  return true
-
-                keys = Object.getOwnPropertyNames(Class.prototype)
-                l = keys.length
-
-                for ( i = 0; i < l; i++ )
-                  if ( keys[i] != "constructor" && function(o, c, err){
-                      err = !o || !c ? true : false
-
-                      if ( o )
-                        if ( c.configurable ) {
-                          if ( c.hasOwnProperty("value") && typeof o.value != typeof c.value )
-                            err = true
-                        } else {
-                          if ( c.hasOwnProperty("value") && o.value !== c.value )
-                            err = true
-                          if ( c.hasOwnProperty("get") && o.get !== c.get )
-                            err = true
-                          if ( c.hasOwnProperty("set") && o.set !== c.set )
-                            err = true
-                        }
-
-                      return err
-                  }( Object.getOwnPropertyDescriptor(prototype, keys[i]), Object.getOwnPropertyDescriptor(Class.prototype, keys[i]) ) ) return false
-
-                return true
-            }
-        })
-
-        !Class.hasOwnProperty("implementsOn") && Object.defineProperty(Class, "implementsOn", {
-            enumerable: true,
-            value: function(o, prototype, properties){
-                prototype = _.typeof(o) == "function" ? o.prototype
-                          : _.typeof(o) == "object" ? o
-                          : function(){ throw new TypeError() }()
-                properties = Object.getOwnPropertyNames(Class.prototype)
-
-                while ( properties.length )
-                  Object.defineProperty(prototype, properties[0], Object.getOwnPropertyDescriptor(Class.prototype, properties.shift()))
-
-                Class.apply(this, _.spread(arguments, 1))
-            }
-        })
-
-        return Class
-    }
-
-    module.exports.singleton = function(F, G){
-        F = module.exports.class.apply(null, arguments)
-        G = module.exports.class.call(null, F, function(statics, k){
-            for ( k in F )
-              statics[k] = F[k]
-
-            return {
-                constructor: function(){
-                    if ( G.instance )
-                      return G.instance
-                    G.instance = this
-
-                    return F.apply(this, arguments)
-                }
-            }
-        })
-
-      return G
-    }
-}( require("./utils") )
+  return G
+}

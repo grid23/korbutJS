@@ -1,24 +1,22 @@
-void function(){ "use strict"
+"use strict"
 
-    var _ = require("./utils")
-    var klass = require("./class").class
+var _ = require("./utils")
+var klass = require("./class").class
 
-    module.exports.Matrix = klass(function(statics){
+module.exports.Matrix = klass(function(statics){
 
-        return {
-            constructor: function(){
+    return {
+        constructor: function(){
 
-            }
         }
-    })
+    }
+})
 
-    module.exports.ClientRect = klass(function(statics){
+module.exports.ClientRect = klass(function(statics){
 
-        return {
-            constructor: function(){
+    return {
+        constructor: function(){
 
-            }
         }
-    })
-
-}()
+    }
+})

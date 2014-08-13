@@ -1,3 +1,5 @@
+"use strict"
+
 if ( typeof window != "undefined" && typeof document != "undefined" )
   module.exports = require("./src/index.js")
 else
