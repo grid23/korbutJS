@@ -186,9 +186,7 @@ module.exports.Router = klass(EventTarget, function(statics){
             }
         }
       , removeRouteHandler: { enumerable: true,
-            value: function(route, handler){
-                //!this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
-
+            value: function(route, handler, handlers){
                 if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
                   return function(routes, count, k){
                       count = 0
@@ -200,7 +198,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                   }.call(this, arguments[0])
 
                 route = _.typeof(route) == "string" ? route : null
-                handler = statics.isRouteHandler(route) || route == "*" ? route : null
+                handler = (statics.isRouteHandler(handler) || handler == "*") ? handler : null
                 handlers = this.routes[route]
 
                 if ( !route || !handler || !handlers )
@@ -211,7 +209,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                     return 1
                 }
 
-                if ( Array.isArray(handlers) )
+                if ( _.typeof(handlers) == "array" )
                   return function(copy, idx, count){
                       if ( handler === "*" ) {
                           count = handlers.length

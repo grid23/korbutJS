@@ -108,8 +108,6 @@ module.exports.EventTarget = klass(function(statics){
         }
       , removeEventListener: { enumerable: true,
             value: function(type, handler, handlers){
-                //!this._events && Object.defineProperty(this, "_events", { value: Object.create(null) })
-
                 if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == "object" )
                   return function(events, count, k){
                       count = 0
@@ -121,7 +119,7 @@ module.exports.EventTarget = klass(function(statics){
                   }.call( this, arguments[0] )
 
                 type = _.typeof(type) == "string" ? type : null
-                handler = statics.isEventListener(type) || type == "*" ? type : null
+                handler = (statics.isEventListener(handler) || handler == "*") ? handler : null
                 handlers = this.events[type]
 
                 if ( !type || !handler || !handlers )
@@ -132,7 +130,7 @@ module.exports.EventTarget = klass(function(statics){
                     return 1
                 }
 
-                if ( Array.isArray(handlers) )
+                if ( _.typeof(handlers) == "array" )
                   return function(copy, idx, count){
                       if ( handler === "*" ) {
                           count = handlers.length
