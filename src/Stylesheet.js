@@ -6,7 +6,7 @@ var Iterator = require("./Iterator").Iterator
 var EventTarget = require("./EventTarget").EventTarget
 var UID = require("./UID").UID
 var Promise = require("./Promise").Promise
-var ZenParser = require("./View").ZenParser
+var ZenParser = require("./ZView").ZenParser
 var domReady = require("./domReady")
 
 module.exports.CSSStyleDeclaration = klass(function(statics){

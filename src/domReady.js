@@ -50,13 +50,11 @@ module.exports = new Promise(function(resolve, reject, ready){
     }
 
     function isready(){
-        return "interactive,complete".indexOf(document.readyState) != -1
+        return "interactive,complete".indexOf(document.readyState) != -1 ? (onready(), true) : false
     }
 
-    if ( isready() )
-      onready()
-    else
-        window.addEventListener("DOMContentLoaded", onready, true),
-        window.addEventListener("load", onready, true),
-        document.addEventListener("readystatechange", isready, true)
+    if ( !isready() )
+      window.addEventListener("DOMContentLoaded", onready, true),
+      window.addEventListener("load", onready, true),
+      document.addEventListener("readystatechange", isready, true)
 })
