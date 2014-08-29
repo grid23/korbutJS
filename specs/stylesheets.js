@@ -23,5 +23,6 @@ describe("stylesheets", function(){
                 chai.expect(ss.deleteRule()).to.be.equal(0)
             })
         })
+
     })
 })
