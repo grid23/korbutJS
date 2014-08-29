@@ -33,7 +33,9 @@ Object.defineProperties(korbut, {
   , Template: { enumerable: true, value: require("./View").Template}
   , ZView: { enumerable: true, value: require("./ZView").ZView}
   , ZenParser: { enumerable: true, value: require("./ZView").ZenParser }
+  
   , Stylesheet: { enumerable: true, value: require("./Stylesheet").Stylesheet }
+
   , Transition: { enumerable: true, value: require("./Transition").Transition }
   , Animation: { enumerable: true, value: require("./Animation").Animation }
   , ClientRect: { enumerable: true, value: require("./ClientRect").ClientRect }

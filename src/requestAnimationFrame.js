@@ -1,8 +1,6 @@
 "use strict"
 
 var _ = require("./utils")
-var klass = require("./class").class
-var Stylesheet = require("./Stylesheet").Stylesheet
 
 module.exports.requestAnimationFrame = function(fn){
     fn = _.native(window.requestAnimationFrame) ? window.requestAnimationFrame
@@ -25,12 +23,3 @@ module.exports.cancelAnimationFrame = function(fn){
 
     return function(id){ return fn(id) }
 }()
-
-module.exports.Animation = klass(function(statics){
-
-    return {
-        constructor: function(){
-
-        }
-    }
-})

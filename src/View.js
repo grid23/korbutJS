@@ -20,7 +20,7 @@ module.exports.View = klass(EventTarget, function(statics){
     Object.defineProperties(statics, {
         getByUid: { enumerable: true,
             value: function(uid){
-                return views[uid].view
+                return views[uid] ? views[uid].view : void 0
             }
         }
     })

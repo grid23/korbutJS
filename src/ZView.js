@@ -6,12 +6,13 @@ var EventTarget = require("./EventTarget").EventTarget
 var Iterator = require("./Iterator").Iterator
 var Model = require("./Model").Model
 var UID = require("./UID").UID
-var requestAnimationFrame = require("./Animation").requestAnimationFrame
+//var requestAnimationFrame = require("./Animation").requestAnimationFrame
+
 
 module.exports.ZenParser = klass(function(statics){
     var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
 
-    var rtemplatevars = /\$([^$\W]*)/g
+    var rtemplatevars = /\$([^$\s]*)/g
     var templateVarGlyph = "\\$"
 
     var traversals = Object.create(null, {
@@ -407,7 +408,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
 
     Object.defineProperties(statics, {
         getByUid: function(uid){
-            return views[uid].view
+            return views[uid] ? views[uid].view : void 0
         }
     })
 

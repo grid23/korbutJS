@@ -97,7 +97,7 @@ module.exports.Promise = klass(function(statics){
     })
 
     return {
-        constructor: function(resolver){
+        constructor: function(resolver, resolved){
             if ( typeof resolver !== "function" )
               throw new TypeError("Constructor korbut.Promise requires a resolver function as argument 0.")
 
@@ -109,7 +109,8 @@ module.exports.Promise = klass(function(statics){
             resolver(resolve.bind(this), reject.bind(this))
 
             function resolve(v, handlers){
-                resolve = reject = function(){}
+                if ( resolved ) return
+                resolved = true
 
                 promises[this.uid].state.key = "resolved"
                 promises[this.uid].state.value = v
@@ -121,7 +122,8 @@ module.exports.Promise = klass(function(statics){
             }
 
             function reject(r, handlers){
-                resolve = reject = function(){}
+                if ( resolved ) return
+                resolved = true
 
                 promises[this.uid].state.key = "rejected"
                 promises[this.uid].state.value = r
