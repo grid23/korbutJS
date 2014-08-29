@@ -58,7 +58,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
             args = _.spread(arguments)
             rules = _.typeof(args[args.length-1]) == "array" ? args.pop().slice(0) : [""]
-            dict = _.typeof(args[args.length-1]) == "object" ? args.pop() : {}
+            dict = _.typeof(args[args.length-1]) == "object" ? args.pop() : { node: args.pop() }
 
             node = function(node){
                 if ( node && node.nodeType == Node.ELEMENT_NODE )
