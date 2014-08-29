@@ -10,6 +10,7 @@ var views = require("./ZView")
 var ZenParser = views.ZenParser
 var domReady = require("./domReady")
 var requestAnimationFrame = require("./requestAnimationFrame").requestAnimationFrame
+var isSameDomain = require("./isSameDomain").isSameDomain
 
 module.exports.CSSRule = klass(function(statics){
 
@@ -38,15 +39,10 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
     Object.defineProperties(statics, {
         isLocalFile: { enumerable: true,
-            value: function(a){
-                return function(path){
-                    a.href = path
-                    return a.hostname === location.hostname
-                }
-            }( document.createElement("a") )
+            value: isSameDomain
         }
       , getByUid: function(uid){
-            return stylesheets[uid] ? stylesheets[uid].stylesheet : void 0
+            return stylesheets[uid] ? stylesheets[uid].instance : void 0
         }
     })
 
