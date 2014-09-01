@@ -94,6 +94,15 @@ module.exports.Promise = klass(function(statics){
                 return promises[uid] ? promises[uid].promise : void 0
             }
         }
+      , PENDING: { enumerable: true,
+            value: "pending"
+        }
+      , RESOLVED: { enumerable: true,
+            value: "resolved"
+        }
+      , REJECTED: { enumerable: true,
+            value: "rejected"
+        }
     })
 
     return {
@@ -103,7 +112,7 @@ module.exports.Promise = klass(function(statics){
 
             promises[this.uid] = {
                 promise: this
-              , state: { key: "pending", value: null }
+              , state: { key: this.PENDING, value: null }
             }
 
             resolver(resolve.bind(this), reject.bind(this))
@@ -112,7 +121,7 @@ module.exports.Promise = klass(function(statics){
                 if ( resolved ) return
                 resolved = true
 
-                promises[this.uid].state.key = "resolved"
+                promises[this.uid].state.key = this.RESOLVED
                 promises[this.uid].state.value = v
                 Object.freeze(promises[this.uid].state)
 
@@ -125,7 +134,7 @@ module.exports.Promise = klass(function(statics){
                 if ( resolved ) return
                 resolved = true
 
-                promises[this.uid].state.key = "rejected"
+                promises[this.uid].state.key = this.REJECTED
                 promises[this.uid].state.value = r
                 Object.freeze(promises[this.uid].state)
 
@@ -197,7 +206,7 @@ module.exports.Promise = klass(function(statics){
                               rv.then(function(v){ resolve(v) }, function(r){ reject(r) })
                             else resolve(rv)
                         })
-                }(this, promises[this.uid].state.key == "resolved", promises[this.uid].state.key == "rejected" )
+                }(this, promises[this.uid].state.key == this.RESOLVED, promises[this.uid].state.key == this.REJECTED )
             }
         }
       , catch: { enumerable: true,
@@ -212,6 +221,23 @@ module.exports.Promise = klass(function(statics){
                 }( this )
             }
         }
+
+      , PENDING: { enumerable: true,
+            get: function(){
+                return module.exports.Promise.PENDING
+            }
+        }
+      , RESOLVED: { enumerable: true,
+            get: function(){
+                return module.exports.Promise.RESOLVED
+            }
+        }
+      , REJECTED: { enumerable: true,
+            get: function(){
+                return module.exports.Promise.REJECTED
+            }
+        }
+
       , uid: { enumerable: true, configurable: true,
             get: function(){
                 return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid
