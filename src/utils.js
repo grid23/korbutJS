@@ -24,7 +24,7 @@ module.exports.typeof = function(toString){
         ntypeof = typeof o
 
         return ntypeof != "object" ? ntypeof
-             : o.constructor && !module.exports.native(o.constructor) ? "instance"
+             : o && o.constructor && !module.exports.native(o.constructor) ? "instance"
              : toString.call(o).slice(8, -1).toLowerCase()
     }
 }( Object.prototype.toString )
