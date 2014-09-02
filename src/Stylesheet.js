@@ -100,6 +100,11 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
                 return rules[this.uid].dummy.style.cssText
             }
         }
+      , toString: { enumerable: true,
+            value: function(){
+                return [this.selectorText, "{", this.cssText, "}"].join("")
+            }
+        }
 
       , uid: { enumerable: true, configurable: true,
             get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
@@ -251,7 +256,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                       stylesheets[this.uid].rules[idx] = cssRule
                       rv.push(cssRule)
 
-                      stylesheets[this.uid].sheet.insertRule([cssRule.selectorText, "{", cssRule.cssText, "}"].join(""), idx)
+                      stylesheets[this.uid].sheet.insertRule(cssRule.toString(), idx)
 
                       cssRule.addEventListener("csstextupdate", function(e, idx){
                           if ( idx = stylesheets[this.uid].rules.indexOf(e.cssRule), idx != -1 )
