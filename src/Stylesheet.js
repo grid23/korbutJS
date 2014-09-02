@@ -3,58 +3,101 @@
 var _ = require("./utils")
 var klass = require("./class").class
 var UID = require("./UID").UID
+var Event = require("./EventTarget").Event
 var EventTarget = require("./EventTarget").EventTarget
 var Iterator = require("./Iterator").Iterator
 var Promise = require("./Promise").Promise
-var views = require("./ZView")
-var ZenParser = views.ZenParser
+var ZenParser = require("./ZView").ZenParser
+var Serializer = require("./Serializer").Serializer
 var domReady = require("./domReady")
 var requestAnimationFrame = require("./requestAnimationFrame").requestAnimationFrame
 var isSameDomain = require("./isSameDomain").isSameDomain
 
+module.exports.CssTextUpdateEvent = klass(Event, {
+    constructor: function(cssRule){
+        Event.call(this, "csstextupdate")
+
+        this.cssRule = cssRule
+        this.selectorText = cssRule.selectorText
+        this.cssText = cssRule.cssText
+    }
+  , selectorText: { enumerable: true,
+        get: function(){ return this._selectorText }
+      , set: function(v){ !this._cssText && Object.defineProperty(this, "_selectorText", { value: v }) }
+    }
+  , cssText: { enumerable: true,
+        get: function(){ return this._cssText }
+      , set: function(v){ !this._cssText && Object.defineProperty(this, "_cssText", { value: v }) }
+    }
+  , cssRule: { enumerable: true,
+        get: function(){ return this._cssRule }
+      , set: function(v){ !this._cssText && Object.defineProperty(this, "_cssRule", { value: v }) }
+    }
+})
+
 module.exports.CSSRule = klass(EventTarget, function(statics){
     var rules = Object.create(null)
+    var serializer = new Serializer({ delimiter: ":", separator: ";" })
+    var rcssparse = /(?:\s|$)*(\S*)(?:\s|$)*{(.*)}(?:\s|$)*/
+
+    Object.defineProperties(statics, {
+        serializeCssText: { enumerable: true,
+            value: function(o){
+                return serializer.serialize(o)
+            }
+        }
+      , objectifyCssText: { enumerable: true,
+            value: function(str){
+                return serializer.objectify(str)
+            }
+        }
+    })
 
     return {
-        constructor: function(selectorText, cssText){
+        constructor: function(selectorText, cssText, fromstr, dummy, args){
+            args = _.spread(arguments)
+            dummy = document.createElement("div")
+
+            selectorText = _.typeof(args[0]) == "string" && isNaN(+args[0]) ? args.shift()
+                         : (fromstr = true, args.shift(), (rcssparse.exec(args[0])||[])[1]||"")
+
+            cssText = dummy.style.cssText = fromstr ? (rcssparse.exec(args.pop())||[])[2]||""
+                    : _.typeof(args[args.length-1]) == "string" ? args.pop()
+                    : _.typeof(args[args.length-1]) == "object" ? module.exports.CSSRule.serializeCssText(args.pop())
+                    : ""
+
             rules[this.uid] = Object.create(null, {
                 instance: { value: this }
-              , dummy: { value: document.createElement("div") }
-              , selectorText: { writable: true, value: ""}
+              , dummy: { value: dummy }
+              , selectorText: { writable: true, value: selectorText}
+              , cssText: { writable: true, value: cssText }
             })
-
-            console.log("cssRule(", selectorText, cssText, ")")
         }
 
       , getProperty: { enumerable: true,
             value: function(){
-
+                return CSSStyleDeclaration.prototype.getPropertyValue.apply(rules[this.uid].dummy.style, arguments)
             }
         }
       , setProperty: { enumerable: true,
-            value: function(){
+            value: function(o, n){
+                o = rules[this.uid].dummy.style.cssText
+                CSSStyleDeclaration.prototype.setProperty.apply(rules[this.uid].dummy.style, arguments)
+                n = rules[this.uid].dummy.style.cssText
 
+                if ( o !== n )
+                  this.dispatchEvent(new module.exports.CssTextUpdateEvent(this))
             }
         }
-      , propertyPriority: { enumerable: true,
-            value: function(){
 
-            }
-        }
       , selectorText: { enumerable: true,
             get: function(){
-
-            }
-          , set: function(v){
-
+                return rules[this.uid].selectorText
             }
         }
       , cssText: { enumerable: true,
             get: function(){
-
-            }
-          , set: function(v){
-
+                return rules[this.uid].dummy.style.cssText
             }
         }
 
@@ -186,7 +229,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                 args = _.spread(arguments)
                 cb = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
-                iterator = new Iterator(args.length>1?args:args[0]||[])
+                iterator = new Iterator( (args.length>1 || module.exports.CSSRule.isImplementedBy(args[0])) ? args : args[0]||[])
                 rv = []
 
                 while ( !iterator.next().done )
@@ -201,18 +244,20 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                           return
                       }
 
-                      cssRule = module.exports.CSSRule.isImplementedBy(iteration.value) ? cssRule
+                      cssRule = module.exports.CSSRule.isImplementedBy(iteration.value) ? iteration.value
                               : new module.exports.CSSRule(iteration.key, iteration.value)
 
                       idx = stylesheets[this.uid].sheet.cssRules.length
                       stylesheets[this.uid].rules[idx] = cssRule
                       rv.push(cssRule)
 
-                      //stylesheets[this.uid].sheet.insertRule(cssRule.cssText, idx)
-                      return
-                      cssRule.addEventListener("oncsstextupdate", function(e, idx){
-                          while ( idx = stylesheets[this.uid].rules.indexof(e.cssRule), idx != -1 )
-                            stylesheets[this.uid].sheet.cssRules[idx].style.cssText = e.cssText
+                      stylesheets[this.uid].sheet.insertRule([cssRule.selectorText, "{", cssRule.cssText, "}"].join(""), idx)
+
+                      cssRule.addEventListener("csstextupdate", function(e, idx){
+                          if ( idx = stylesheets[this.uid].rules.indexOf(e.cssRule), idx != -1 )
+                            requestAnimationFrame(function(){
+                                stylesheets[this.uid].sheet.cssRules[idx].style.cssText = e.cssText
+                            }.bind(this))
                       }.bind(this))
                   }.call(this, iterator.current)
 

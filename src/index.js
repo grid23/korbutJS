@@ -33,7 +33,8 @@ Object.defineProperties(korbut, {
   , Template: { enumerable: true, value: require("./View").Template}
   , ZView: { enumerable: true, value: require("./ZView").ZView}
   , ZenParser: { enumerable: true, value: require("./ZView").ZenParser }
-  
+
+  , CSSRule: { enumerable: true, value: require("./Stylesheet").CSSRule }
   , Stylesheet: { enumerable: true, value: require("./Stylesheet").Stylesheet }
 
   , Transition: { enumerable: true, value: require("./Transition").Transition }

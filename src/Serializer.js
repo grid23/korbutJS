@@ -3,8 +3,10 @@
 var _ = require("./utils")
 var klass = require("./class").class
 var Iterator = require("./Iterator").Iterator
+var UID = require("./UID").UID
 
 module.exports.Serializer = klass(function(statics){
+    var serializers = Object.create(null)
     var DELIMITER = "="
     var SEPARATOR = "&"
     var rspacetoplus = /%20/g
@@ -50,14 +52,17 @@ module.exports.Serializer = klass(function(statics){
 
     return {
         constructor: function(dict){
-            dict = dict && _.typeof(dict) == Object ? dict : {}
+            dict = dict && _.typeof(dict) == "object" ? dict : {}
 
-            _.typeof(dict.delimiter) == "string" && Object.defineProperty(this, "_delimiter", { value: dict.delimiter })
-            _.typeof(dict.separator) == "string" && Object.defineProperty(this, "_separator", { value: dict.separator })
+            serializers[this.uid] = Object.create(null, {
+                instance: { value: this }
+              , delimiter: { value: _.typeof(dict.delimiter) == "string" ? dict.delimiter : DELIMITER }
+              , separator: { value: _.typeof(dict.separator) == "string" ? dict.separator : SEPARATOR }
+            })
         }
       , serialize: { enumerable: true,
             value: function(o){
-                return statics.serialize.call(this, o)
+                return module.exports.Serializer.serialize.apply(this, [o])
             }
         }
       , objectify: { enumerable: true,
@@ -67,12 +72,21 @@ module.exports.Serializer = klass(function(statics){
         }
       , delimiter: { enumerable: true,
             get: function(){
-                return this._delimiter || DELIMITER
+                return serializers[this.uid].delimiter
             }
         }
       , separator: { enumerable: true,
             get: function(){
-                return this._separator || SEPARATOR
+                return serializers[this.uid].separator
+            }
+        }
+
+      , uid: { enumerable: true, configurable: true,
+            get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
+        }
+      , purge: { enumerable: true, configurable: true,
+            value: function(){
+                delete serializer[this.uid]
             }
         }
     }

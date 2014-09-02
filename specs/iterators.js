@@ -129,7 +129,7 @@ describe("korbut.Iterator", function(){
 
         describe("->current", function(){
             it("should return an object with the current iteration data", function(){
-                o = a.current
+                var o = a.current
                 chai.expect(o.index).to.be.equal(1)
                 chai.expect(o.done).to.be.false
                 chai.expect(o.key).to.be.equal("1")
