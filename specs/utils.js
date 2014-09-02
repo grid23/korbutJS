@@ -34,10 +34,10 @@ describe("korbut.utils", function(){
             chai.expect(_.typeof(C)).to.equal("function")
         })
 
-        it("should return object for objects ({}) and instances", function(){
+        it("should return object for objects ({}) and instance for instances", function(){
             var C = korbut.class({})
             var c = new C
-            chai.expect(_.typeof(c)).to.equal("object")
+            chai.expect(_.typeof(c)).to.equal("instance")
             chai.expect(_.typeof({})).to.equal("object")
         })
 

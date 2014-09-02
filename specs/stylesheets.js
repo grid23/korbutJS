@@ -19,8 +19,8 @@ describe("stylesheets", function(){
             })
 
             it("should not allow to add/delete a rule on external file", function(){
-                chai.expect(ss.insertRule()).to.be.equal(0)
-                chai.expect(ss.deleteRule()).to.be.equal(0)
+                chai.expect(ss.insertRule()).to.be.equal(null)
+                chai.expect(ss.deleteRule()).to.be.equal(null)
             })
         })
 

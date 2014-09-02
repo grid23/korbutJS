@@ -23,8 +23,8 @@ module.exports.typeof = function(toString){
 
         ntypeof = typeof o
 
-        return ntypeof == "object" && o.constructor && o.constructor == Object ? "object"
-             : ntypeof == "object" && o.constructor ? "instance"
+        return ntypeof != "object" ? ntypeof
+             : o.constructor && !module.exports.native(o.constructor) ? "instance"
              : toString.call(o).slice(8, -1).toLowerCase()
     }
 }( Object.prototype.toString )
