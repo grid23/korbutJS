@@ -12,7 +12,7 @@ module.exports.Promise = klass(function(statics){
         all: { enumerable: true,
             value: function(promises){
                 if ( !Iterator.iterable(promises) )
-                  throw new TypeError("korbut.Promise.race requires an iterable object as argument 0.")
+                  throw new TypeError("korbut.Promise.all requires an iterable object as argument 0.")
 
                 return new module.exports.Promise(function(resolve, reject, iterator, length, value){
                     iterator = new Iterator(promises)
