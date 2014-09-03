@@ -480,7 +480,11 @@ module.exports.Model = klass(EventTarget, function(statics){
                   }.call(this, new Iterator(nvalue))
 
                 if ( _.typeof(nvalue) == "array" )
-                  nvalue = [].concat(nvalue)
+                  return function(iterator, length){
+                      while ( iterator.next(), !iterator.current.done )
+                        this.setItem(key + "." + iterator.current.key, iterator.current.value)
+                      this.setItem(key+"."+"length", length)
+                  }.call(this, new Iterator(nvalue), nvalue.length)
 
                 if ( nvalue == void 0 && this.data[key] )
                   removed = true,
