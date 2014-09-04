@@ -19,7 +19,6 @@ Object.defineProperties(korbut, {
   , EventTarget: { enumerable: true, value: require("./EventTarget").EventTarget }
   , Event: { enumerable: true, value: require("./EventTarget").Event }
 
-  , CustomEvent: { enumerable: true, value: require("./CustomEvent").CustomEvent }
   , PointerEvent: { enumerable: true, value: require("./PointerEvent").PointerEvent }
 
   , Promise: { enumerable: true, value: require("./Promise").Promise }

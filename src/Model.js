@@ -543,7 +543,8 @@ module.exports.Model = klass(EventTarget, function(statics){
 
       , serialize: { enumerable: true,
             value: function(serializer){
-                return Serializer.isImplementedBy(serializer) ? serializer.serialize(this.data)
+                console.log(this.serializer.serialize(this.data))
+                return serializer && Serializer.isImplementedBy(serializer) ? serializer.serialize(this.data)
                      : this.serializer.serialize(this.data)
             }
         }
