@@ -227,7 +227,7 @@ module.exports.EventTarget = klass(function(statics){
         }
 
       , purge: { enumerable: true, configurable: true,
-            value: function(){ if ( eventTargets[this.uid] ) delete eventTargets[this.uid].events }
+            value: function(){ delete eventTargets[this.uid] }
         }
     }
 })
