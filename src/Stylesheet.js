@@ -58,7 +58,8 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
             args = _.spread(arguments)
             dummy = document.createElement("div")
 
-            selectorText = _.typeof(args[0]) == "string" && isNaN(+args[0]) ? args.shift()
+            selectorText = args.length > 1 && _.typeof(args[0]) == "string" && isNaN(+args[0]) ? args.shift()
+                         : args.length == 1 && _.typeof(args[0]) == "string" ? (fromstr = true, (rcssparse.exec(args[0])||[])[1]||"")
                          : (fromstr = true, args.shift(), (rcssparse.exec(args[0])||[])[1]||"")
 
             cssText = dummy.style.cssText = fromstr ? (rcssparse.exec(args.pop())||[])[2]||""
@@ -138,8 +139,10 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
         isLocalFile: { enumerable: true,
             value: isSameDomain
         }
-      , getByUid: function(uid){
-            return stylesheets[uid] ? stylesheets[uid].instance : void 0
+      , getByUid: { enumerable: true,
+            value: function(uid){
+                return stylesheets[uid] ? stylesheets[uid].instance : void 0
+            }
         }
     })
 
@@ -154,7 +157,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
             rules = _.typeof(args[args.length-1]) == "array" ? [].concat(args.pop()) : []
             dict = _.typeof(args[args.length-1]) == "object" ? args.pop() : { node: args.pop() }
 
-            node = function(node){
+            node = stylesheets[this.uid].node = function(node){
                 if ( node && node.nodeType == Node.ELEMENT_NODE )
                   if ( node.nodeName == "STYLE" )
                     return node
@@ -179,7 +182,16 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                     domReady.then(function(e){
                         e.nodes.head.appendChild(node)
+
+                        requestAnimationFrame(function(){ // let a frame for the browser to digest things, glups
+                            if ( !!dict.disabled )
+                              node.disabled = true
+                        })
                     })
+
+                    if ( dict.media )
+                      node.setAttribute("media", dict.media)
+
 
                     return node
                 }.call(this, _.typeof(node))
@@ -196,12 +208,6 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                         return setTimeout(wait.bind(this), 4)
 
                     stylesheets[this.uid].sheet = node.sheet
-
-                    if ( dict.media )
-                      this.media = dict.media
-
-                    if ( !!dict.disabled )
-                      this.disable()
 
                     if ( !blob && stylesheets[this.uid].writable )
                         this.insertRule(rules)
@@ -234,7 +240,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                 args = _.spread(arguments)
                 cb = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
-                iterator = new Iterator( (args.length>1 || module.exports.CSSRule.isImplementedBy(args[0])) ? args : args[0]||[])
+                iterator = new Iterator( (args.length>1 || module.exports.CSSRule.isImplementedBy(args[0])) || _.typeof(args[0]) == "string" ? args : args[0]||[])
                 rv = []
 
                 while ( !iterator.next().done )
@@ -306,6 +312,9 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
       , enable: { enumerable: true,
             value: function(rv){
+                if ( stylesheets[this.uid].node.hasAttribute("disabled") )
+                  stylesheets[this.uid].node.removeAttribute("disabled")
+
                 stylesheets[this.uid].dfd.then(function(){
                     if ( stylesheets[this.uid].sheet.disabled )
                       stylesheets[this.uid].sheet.disabled = false,
@@ -333,12 +342,18 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
             }
           , set: function(v){
                 v = _.typeof(v) == "string" ? v : Object.prototype.toString(v)
+                stylesheets[this.uid].node.setAttribute("media", v)
                 stylesheets[this.uid].dfd.then(function(){
                     stylesheets[this.uid].sheet.media.mediaText = v
                 }.bind(this))
             }
         }
 
+      , node: { enumerable: true,
+            get: function(){
+                return stylesheets[this.uid].node
+            }
+        }
       , sheet: { enumerable: true,
             get: function(){
                 return stylesheets[this.uid].sheet
