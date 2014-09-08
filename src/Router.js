@@ -135,18 +135,20 @@ module.exports.Router = klass(EventTarget, function(statics){
     })
 
     return {
-        constructor: function(dispatcher){
-            if ( typeof dispatcher == "function" )
-              dispatcher.call(this, function dispatch(){
-                  return this.dispatch.apply(this, arguments)
-              }.bind(this))
-
+        constructor: function(routes, dispatcher){
             routers[this.uid] = Object.create(null, {
                 router: { value: this }
               , routes: { value: Object.create(null) }
               , Route: { value: this.constructor.prototype._Route || module.exports.Route }
             })
 
+            if ( _.typeof(routes) == "object" )
+              this.addRouteHandler(routes)
+
+            if ( typeof dispatcher == "function" )
+              dispatcher.call(this, function dispatch(){
+                  return this.dispatch.apply(this, arguments)
+              }.bind(this))
         }
       , Route: { enumerable: true,
             get: function(){ return routers[this.uid].Route }

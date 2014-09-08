@@ -24,6 +24,45 @@ module.exports.Service = klass(function(statics){
       , getByUid: function(uid){
             return stylesheets[uid] ? stylesheets[uid].instance : void 0
         }
+      , createCollectionFromService: { enumerable: true,
+            value: function(){
+
+            }
+        }
+      , createModelFromService: { enumerable: true,
+            value: function(dict, cb, args, services, iterator){
+                args = _.spread(arguments)
+                cb = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
+
+                services = []
+
+                iterator = new Iterator(args)
+                while ( !iterator.next().done )
+                  void function(service, index){
+                      service = module.exports.Service.isImplementedBy(service) ? service
+                              : new module.exports.Service(service)
+                      index = services.length
+                      services.push(service.request(function(err, status, request){
+                          try {
+                              services[index] = JSON.parse(request.responseText)
+                          } catch(e){}
+                      }))
+                  }( iterator.current.value )
+
+                return Promise.all(services).then(function(model, i, l){
+                    model = new Model
+
+                    for ( i = 0, l = services.length; i < l; i++ )
+                      model.setItem(services[i])
+
+                    cb(null, model)
+                    return model
+                }, function(e){
+                    cb(e, null)
+                    return e
+                })
+            }
+        }
     })
 
     return {

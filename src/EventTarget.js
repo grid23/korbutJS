@@ -226,6 +226,7 @@ module.exports.EventTarget = klass(function(statics){
             }
         }
 
+
       , purge: { enumerable: true, configurable: true,
             value: function(){ delete eventTargets[this.uid] }
         }
