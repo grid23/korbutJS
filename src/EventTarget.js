@@ -187,7 +187,7 @@ module.exports.EventTarget = klass(function(statics){
 
       , dispatchEvent: { enumerable: true,
             value: function(event, handlers, count){
-                event = module.exports.Event.isImplementedBy(event) ? event : this._Event.create.apply(null, arguments)
+                event = module.exports.Event.isImplementedBy(event) ? event : this.Event.create.apply(null, arguments)
                 handlers = (this.events||{})[event.type]
                 count = 0
 

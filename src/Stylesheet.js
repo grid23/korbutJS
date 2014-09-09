@@ -157,6 +157,9 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
             rules = _.typeof(args[args.length-1]) == "array" ? [].concat(args.pop()) : []
             dict = _.typeof(args[args.length-1]) == "object" ? args.pop() : { node: args.pop() }
 
+            if ( _.typeof(dict.uid) == "string" )
+              Object.defineProperty(this, "_uid", { value: dict.uid })
+
             node = stylesheets[this.uid].node = function(node){
                 if ( node && node.nodeType == Node.ELEMENT_NODE )
                   if ( node.nodeName == "STYLE" )

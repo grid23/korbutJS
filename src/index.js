@@ -38,6 +38,8 @@ Object.defineProperties(korbut, {
 
   , Transition: { enumerable: true, value: require("./Transition").Transition }
   , Animation: { enumerable: true, value: require("./Animation").Animation }
+  , Point: { enumerable: true, value: require("./ClientRect").Point }
+  , Matrix: { enumerable: true, value: require("./ClientRect").Matrix }
   , ClientRect: { enumerable: true, value: require("./ClientRect").ClientRect }
 
   , Model: { enumerable: true, value: require("./Model").Model }

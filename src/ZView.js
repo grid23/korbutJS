@@ -519,7 +519,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
                 if ( what.model )
                   this.model.purge()
 
-                delete views[this.uid]
+                delete views[this.uid].view
             }
         }
 
