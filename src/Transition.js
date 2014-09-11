@@ -2,12 +2,97 @@
 
 var _ = require("./utils")
 var klass = require("./class").class
+var UID = require("./UID").UID
 var Iterator = require("./Iterator").Iterator
 var Stylesheet = require("./Stylesheet").Stylesheet
+var CSSRule = require("./Stylesheet").CSSRule
+
+var cssProperties = window.getComputedStyle(document.createElement("div"))
+
+module.exports.CSSHook = klass(function(statics){
+    var hooks = Object.create(null)
+
+    Object.defineProperties(statics, {
+        testProperty: { enumerable: true,
+            value: function(property, value){
+                return hooks[property] && hooks[property].instance.test(value)
+            }
+        }
+      , getByProperty: { enumerable: true,
+            value: function(property){
+                return hooks[property].instance
+            }
+        }
+      , getByUid: { enumerable: true,
+            value: function(uid){
+                return hooks[uid].intance
+            }
+        }
+    })
+
+    return {
+        constructor: function(property, handler, args){
+            args = _.spread(arguments)
+            handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : function(property, value){ return { property: property, value: value } }
+            property = _.typeof(args[args.length-1]) == "string" ? args.pop() : Object.prototype.toString.call(args.pop())
+
+            hooks[this.uid] = hooks[property] = Object.create(null, {
+                instance: { value: this }
+              , property: { value: property }
+              , handler: { value: handler }
+            })
+        }
+      , test: { enumerable: true,
+            value: function(value, hooked){
+                value = _.typeof(value) == "string" ? value : Object.prototype.toString.call(value)
+
+                hooked = hooks[this.uid].handler(value)
+                hooked = _.typeof(hooked) == "object" && hooked.hasOwnProperty("value") ? hooked
+                       : _.typeof(hooked) == "string" ? { value: hooked }
+                       : { value: value }
+
+                hooked.property = hooked.property || this.property
+                hooked.originalProperty = hooked.originalProperty || this.property
+
+                return hooked
+            }
+        }
+
+      , property: { enumerable: true,
+            get: function(){
+                return hooks[this.uid].property
+            }
+        }
+      , handler: { enumerable: true,
+            get: function(){
+                return hooks[this.uid].handler
+            }
+        }
+
+      , uid: { enumerable: true, configurable: true,
+            get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
+        }
+      , purge: { enumerable: true, configurable: true,
+            value: function(){
+                delete hooks[this.uid].instance
+            }
+        }
+    }
+})
+
+new module.exports.CSSHook("transform", function(prop){
+    if ( cssProperties.getPropertyValue("transform") != void 0 )
+      return function(value){
+          return { property: "transform", value: value }
+      }
+    else
+      return function(value){
+          return { property: "-webkit-transform", value: value }
+      }
+}())
 
 module.exports.Transition = klass(function(statics){
     var transitions = Object.create(null)
-    var cssProperties = window.getComputedStyle(document.createElement("div"))
 
     Object.defineProperties(statics, {
         NONE: { enumerable: true, value: 0 }
@@ -23,26 +108,9 @@ module.exports.Transition = klass(function(statics){
             value: "TransitionEvent" in window ? "transitionend" : "WebKitTransitionEvent" in window ? "webkitTransitionEnd" : null
         }
       , stylesheet: { enumerable: true,
-            value: new Stylesheet//({ uid: "korbut-transFX" })
-        }
-      , addHook: { enumerable: true,
-            value: function(){
-
-            }
+            value: new Stylesheet({ uid: "korbut-transFX" })
         }
     })
-
-    var hooks = Object.create(null)
-    function hook(key, value){
-        if ( _.typeof(hooks[key]) == "function" )
-          return hooks[key](value)
-
-        return {
-            key: key
-          , originalKey: key
-          , value: value
-        }
-    }
 
     function filterCSSProperties(properties, filtered, cssText, rv, iterator){
         filtered = []
@@ -52,7 +120,6 @@ module.exports.Transition = klass(function(statics){
 
         while ( !iterator.next().done )
           void function(key, value, hooked){
-              hooked = hook(key, value)
 
           }( iterator.current.key, iterator.current.value )
     }

@@ -107,7 +107,7 @@ module.exports.EventTarget = klass(function(statics){
             }
         }
       , removeEventListener: { enumerable: true,
-            value: function(type, handler, handlers){
+            value: function(type, handler, handlers, count, copy){
                 if ( arguments.length == 1 && arguments[0] && _.typeof(arguments[0]) == "object" )
                   return function(events, count, k){
                       count = 0
@@ -121,36 +121,39 @@ module.exports.EventTarget = klass(function(statics){
                 type = _.typeof(type) == "string" ? type : null
                 handler = (statics.isEventListener(handler) || handler == "*") ? handler : null
                 handlers = this.events[type]
+                count = 0
 
                 if ( !type || !handler || !handlers )
                   return 0
 
-                if ( handlers === handler ) {
+                if ( handler === "*" ) {
+                  count = _.typeof(handlers) == "array" ? handlers.length : !!handlers ? 1 : 0
+
+                  delete this.events[type]
+                  return count
+                }
+                else if ( handlers === handler ) {
                     delete this.events[type]
                     return 1
                 }
+                else if ( _.typeof(handlers) == "array" ) {
+                  copy = [].concat(handlers)
 
-                if ( _.typeof(handlers) == "array" )
-                  return function(copy, idx, count){
-                      if ( handler === "*" ) {
-                          count = handlers.length
-                          delete this.events[type]
+                  void function seek(i, l){
+                      for ( i = 0, l = copy.length; i < l; i++ )
+                        if ( copy[i] === handler ) {
+                            copy.splice(i, 1), count += 1
+                            return seek()
+                        }
+                  }.call(this)
 
-                          return count
-                      }
+                  this.events[type] = copy
 
-                      count = 0
+                  if ( this.events[type].length == 0 )
+                    delete this.events[type]
+                }
 
-                      while ( idx = copy.indexOf(handler) > -1 )
-                        copy.splice(idx, 1), count++
-
-                      this.events[type] = copy
-
-                      if ( this.events[type].length == 0 )
-                        delete this.events[type]
-
-                      return count
-                  }.call( this, [].concat(handlers) )
+                return count
             }
         }
 

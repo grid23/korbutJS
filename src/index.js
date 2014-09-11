@@ -36,6 +36,7 @@ Object.defineProperties(korbut, {
   , CSSRule: { enumerable: true, value: require("./Stylesheet").CSSRule }
   , Stylesheet: { enumerable: true, value: require("./Stylesheet").Stylesheet }
 
+  , CSSHook: { enumerable: true, value: require("./Transition").CSSHook }
   , Transition: { enumerable: true, value: require("./Transition").Transition }
   , Animation: { enumerable: true, value: require("./Animation").Animation }
   , Point: { enumerable: true, value: require("./ClientRect").Point }

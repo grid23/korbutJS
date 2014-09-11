@@ -188,7 +188,7 @@ module.exports.Router = klass(EventTarget, function(statics){
             }
         }
       , removeRouteHandler: { enumerable: true,
-            value: function(route, handler, handlers){
+            value: function(route, handler, handlers, count, copy){
                 if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
                   return function(routes, count, k){
                       count = 0
@@ -202,36 +202,39 @@ module.exports.Router = klass(EventTarget, function(statics){
                 route = _.typeof(route) == "string" ? route : null
                 handler = (statics.isRouteHandler(handler) || handler == "*") ? handler : null
                 handlers = this.routes[route]
+                count = 0
 
                 if ( !route || !handler || !handlers )
                   return 0
 
-                if ( handlers === handler ) {
+                if ( handler === "*" ) {
+                  count = _.typeof(handlers) == "array" ? handlers.length : !!handlers ? 1 : 0
+
+                  delete this.routes[route]
+                  return count
+                }
+                else if ( handlers === handler ) {
                     delete this.routes[route]
                     return 1
                 }
+                else if ( _.typeof(handlers) == "array" ) {
+                  copy = [].concat(handlers)
 
-                if ( _.typeof(handlers) == "array" )
-                  return function(copy, idx, count){
-                      if ( handler === "*" ) {
-                          count = handlers.length
-                          delete this.routes[route]
+                  void function seek(i, l){
+                      for ( i = 0, l = copy.length; i < l; i++ )
+                        if ( copy[i] === handler ) {
+                            copy.splice(i, 1), count += 1
+                            return seek()
+                        }
+                  }.call(this)
 
-                          return count
-                      }
+                  this.routes[route] = copy
 
-                      count = 0
+                  if ( this.routes[route].length == 0 )
+                    delete this.routes[route]
+                }
 
-                      while ( idx = copy.indexOf(handler) > -1 )
-                        copy.splice(idx, 1), count++
-
-                      this.routes[route] = copy
-
-                      if ( this.routes[route].length == 0 )
-                        delete this.routes[route]
-
-                      return count
-                  }.call( this, [].concat(handlers) )
+                return count
             }
         }
       , dispatchRoute: { enumerable: true,

@@ -25,12 +25,13 @@ module.exports.View = klass(EventTarget, function(statics){
         }
     })
 
-    function captureNodes(vars, root, ref, i, l){
+    function captureNodes(vars, root, refs, i, l){
         if ( !root || root.nodeType != Node.ELEMENT_NODE )
           return
 
-        if ( ref = root.getAttribute("data-k-ref"), ref && ref.length )
-          (vars[ref] = vars[ref] || []).push(root)
+        if ( refs = (root.getAttribute("data-k-ref")||"").split(" "), refs.length )
+          while ( refs.length )
+            (vars[refs[0]] = vars[refs.shift()] || []).push(root)
 
         if ( autoVars.indexOf(root.nodeName) != -1 )
           (vars[root.nodeName.toLowerCase()] = vars[root.nodeName.toLowerCase()] || []).push(root)
