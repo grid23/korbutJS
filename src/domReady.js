@@ -46,7 +46,9 @@ module.exports = new Promise(function(resolve, reject, ready){
           return
         ready = true
 
-        setTimeout(resolve, 4, new DomReadyEvent)
+        setTimeout(function(){
+            resolve(new DomReadyEvent)
+        }, 4)
     }
 
     function isready(){

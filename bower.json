@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 {"name":"korbutJS","version":"0.0.0-1410860489593","licence":"WTFPL2","repository":{"type":"git","url":"https://github.com/grid23/korbutJS.git"},"author":"grid23 <hello@grid23.net>","devDependencies":{}}
+=======
+{"name":"korbutJS","version":"0.0.0-1410782856734","licence":"WTFPL2","repository":{"type":"git","url":"https://github.com/grid23/korbutJS.git"},"author":"grid23 <hello@grid23.net>","devDependencies":{}}
+>>>>>>> FETCH_HEAD
