@@ -1,5 +1,1 @@
-<<<<<<< HEAD
 {"name":"korbutJS","version":"0.0.0-1410860489593","repository":{"type":"git","url":"git://github.com/grid23/korbutJS.git"},"licence":"WTFPL2","author":"grid23 <hello@grid23.net>","main":"./index.js","dependencies":{},"devDependencies":{"browserify":"^3.32.1","gulp":"^3.5.6","karma":"^0.12.17","karma-mocha":"^0.1.4","karma-chai":"^0.1.0","uglify-js":"^2.4.13","q":"^1.0.0"}}
-=======
-{"name":"korbutJS","version":"0.0.0-1410782856734","repository":{"type":"git","url":"git://github.com/grid23/korbutJS.git"},"licence":"WTFPL2","author":"grid23 <hello@grid23.net>","main":"./index.js","dependencies":{},"devDependencies":{"browserify":"^3.32.1","gulp":"^3.5.6","karma":"^0.12.17","karma-mocha":"^0.1.4","karma-chai":"^0.1.0","uglify-js":"^2.4.13","q":"^1.0.0"}}
->>>>>>> FETCH_HEAD
