@@ -403,6 +403,18 @@ module.exports.Model = klass(EventTarget, function(statics){
         }
     }
 
+    function setRaw(obj, key, value, path){
+        path = key.split(".")
+        key = path.pop()
+
+        while ( path.length )
+          void function(key){
+              obj = ( obj[key] = obj[key] || {} )
+          }( path.shift() )
+
+        obj[key] = value
+    }
+
     Object.defineProperties(statics, {
         serializer: { enumerable: true,
             value: new Serializer
@@ -416,6 +428,14 @@ module.exports.Model = klass(EventTarget, function(statics){
 
     return {
         constructor: function(){
+            models[this.uid] = Object.create(null, {
+                model: { value: this }
+              , data: { value: Object.create(null) }
+              , export: { value: {} }
+              , hooks: { value: Object.create(null) }
+              , update: { value: { keys: [], timer: null } }
+            })
+
             if ( this.constructor.prototype._hooks )
               this.setHook(this.constructor.prototype._hooks )
 
@@ -427,15 +447,12 @@ module.exports.Model = klass(EventTarget, function(statics){
         }
       , data: { enumerable: true,
             get: function(){
-                return models[this.uid] ? models[this.uid].data : function(){
-                    models[this.uid] = Object.create(null, {
-                        model: { value: this }
-                      , data: { value: Object.create(null) }
-                      , hooks: { value: Object.create(null) }
-                      , update: {value: { keys: [], timer: null } }
-                    })
-                    return this.data
-                }.call(this)
+                return models[this.uid].data
+            }
+        }
+      , raw: { enumerable: true,
+            get: function(){
+                return models[this.uid].export
             }
         }
       , hooks: { enumerable: true,
@@ -475,12 +492,16 @@ module.exports.Model = klass(EventTarget, function(statics){
 
                 if ( _.typeof(nvalue) == "object" )
                   return function(iterator){
+                      setRaw(this.raw, key, {})
+
                       while ( iterator.next(), !iterator.current.done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
                   }.call(this, new Iterator(nvalue))
 
                 if ( _.typeof(nvalue) == "array" )
                   return function(iterator, length){
+                      setRaw(this.raw, key, {})
+
                       while ( iterator.next(), !iterator.current.done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
                       this.setItem(key+"."+"length", length)
@@ -493,6 +514,7 @@ module.exports.Model = klass(EventTarget, function(statics){
                   if ( !this.data[key] )
                     added = true
 
+                  setRaw(this.raw, key, nvalue)
                   this.data[key] = nvalue
                 }
 
@@ -543,7 +565,6 @@ module.exports.Model = klass(EventTarget, function(statics){
 
       , serialize: { enumerable: true,
             value: function(serializer){
-                console.log(this.serializer.serialize(this.data))
                 return serializer && Serializer.isImplementedBy(serializer) ? serializer.serialize(this.data)
                      : this.serializer.serialize(this.data)
             }
