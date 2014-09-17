@@ -88,7 +88,7 @@ module.exports.View = klass(EventTarget, function(statics){
             views[this.uid].template = dict.template
 
             buffer = document.createElement("div")
-            buffer.innerHTML = dict.template.render(model.data)
+            buffer.innerHTML = dict.template.render(model.raw)
             while ( buffer.childNodes.length )
               void function(child){
                   if ( child.nodeType !== Node.ELEMENT_NODE )
