@@ -492,17 +492,13 @@ module.exports.Model = klass(EventTarget, function(statics){
 
                 if ( _.typeof(nvalue) == "object" )
                   return function(iterator){
-                      setRaw(this.raw, key, {})
-
                       while ( iterator.next(), !iterator.current.done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
                   }.call(this, new Iterator(nvalue))
 
                 if ( _.typeof(nvalue) == "array" )
                   return function(iterator, length){
-                      setRaw(this.raw, key, {})
-
-                      while ( iterator.next(), !iterator.current.done )
+                      while ( !iterator.next().done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
                       this.setItem(key+"."+"length", length)
                   }.call(this, new Iterator(nvalue), nvalue.length)
