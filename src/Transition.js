@@ -179,25 +179,37 @@ module.exports.Transition = klass(function(statics){
 
         return {
             propsToAnimate: propsToAnimate
+          , classname: selectorText
           , cssRule: new CSSRule(selectorText, module.exports.Transition.CSS_TRANSITION_PROPERTY+ ": " + cssText.join(", "))
         }
     }
 
     return {
-        constructor: function(node, properties, args, created){
+        constructor: function(node, properties, args, created, exists){
             args = _.spread(arguments)
             properties = _.typeof(args[args.length-1]) == "object" ? args.pop() : {}
             node = args[args.length-1] && args[args.length-1].nodeType == Node.ELEMENT_NODE ? args.pop() : document.createElement("div")
-            created = createCSSRule("."+this.uid, properties)
+
+            if ( _.typeof(properties.classname) == "string" )
+              exists = true,
+              created = {
+                  propsToAnimate: _.typeof(properties.properties) == "array" ? properties.properties : []
+                , classname: properties.classname
+                , cssRule: null
+              }
+            else
+              created = createCSSRule("."+this.uid, properties)
 
             transitions[this.uid] = Object.create(null, {
                 instance: { value: this }
               , node: { value: node }
               , properties: { value: created.propsToAnimate }
+              , classname: { value: created.classname }
               , cssRule: { value: created.cssRule }
             })
 
-            this.stylesheet.insertRule(transitions[this.uid].cssRule)
+            if ( !exists )
+              this.stylesheet.insertRule(transitions[this.uid].cssRule)
         }
 
       , animate: { enumerable: true,
@@ -303,32 +315,37 @@ module.exports.Transition = klass(function(statics){
       , enabled: { enumerable: true,
             get: function(){
                 if ( this.CLASSLIST_COMPAT )
-                  return this.node.classList.contains(this.uid)
+                  return this.node.classList.contains(transitions[this.uid].classname)
                 else
-                  return this.node.className.indexOf(this.uid) > -1
+                  return this.node.className.indexOf(transitions[this.uid].classname) > -1
             }
         }
 
       , enable: { enumerable: true,
             value: function(){
                 if ( this.CLASSLIST_COMPAT )
-                  this.node.classList.add(this.uid)
+                  this.node.classList.add(transitions[this.uid].classname)
                 else
-                  this.node.className += " "+this.uid
+                  this.node.className += " "+transitions[this.uid].classname
             }
         }
       , disable: { enumerable: true,
             value: function(){
                 if ( this.CLASSLIST_COMPAT )
-                  this.node.classList.remove(this.uid)
+                  this.node.classList.remove(transitions[this.uid].classname)
                 else
-                  node.className = node.className.replace(" "+this.uid, "")
+                  node.className = node.className.replace(" "+transitions[this.uid].classname, "")
             }
         }
 
       , cssRule: { enumerable: true,
             get: function(){
                 return transitions[this.uid].cssRule
+            }
+        }
+      , classname: { enumerable: true,
+            get: function(){
+                return transitions[this.uid].classname
             }
         }
       , node: { enumerable: true,
