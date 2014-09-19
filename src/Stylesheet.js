@@ -11,6 +11,7 @@ var ZenParser = require("./ZView").ZenParser
 var Serializer = require("./Serializer").Serializer
 var domReady = require("./domReady")
 var requestAnimationFrame = require("./requestAnimationFrame").requestAnimationFrame
+var cancelRequestAnimationFrame = require("./requestAnimationFrame").cancelRequestAnimationFrame
 var isSameDomain = require("./isSameDomain").isSameDomain
 
 module.exports.CssTextUpdateEvent = klass(Event, {
@@ -317,7 +318,8 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
       , enable: { enumerable: true,
             value: function(){
                 if ( stylesheets[this.uid].sheet )
-                  requestAnimationFrame(function(){
+                  cancelRequestAnimationFrame(stylesheets[this.uid].raf),
+                  stylesheets[this.uid].raf = requestAnimationFrame(function(){
                       stylesheets[this.uid].node.removeAttribute("disabled")
                       stylesheets[this.uid].sheet.disabled = false
                   }.bind(this))
@@ -330,7 +332,8 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
       , disable: { enumerable: true,
             value: function(){
                   if ( stylesheets[this.uid].sheet )
-                    requestAnimationFrame(function(){
+                    cancelRequestAnimationFrame(stylesheets[this.uid].raf),
+                    stylesheets[this.uid].raf = requestAnimationFrame(function(){
                         stylesheets[this.uid].sheet.disabled = true
                     }.bind(this))
                   else
