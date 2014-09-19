@@ -318,10 +318,10 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
       , enable: { enumerable: true,
             value: function(){
                 if ( stylesheets[this.uid].sheet )
-                  cancelAnimationFrame(stylesheets[this.uid].raf),
-                  stylesheets[this.uid].raf = requestAnimationFrame(function(){
+                  requestAnimationFrame(function(){
                       stylesheets[this.uid].node.removeAttribute("disabled")
-                      stylesheets[this.uid].sheet.disabled = false
+                      if ( !stylesheets[this.uid].sheet.disabled )
+                        stylesheets[this.uid].sheet.disabled = false
                   }.bind(this))
                 else
                   stylesheets[this.uid].dfd.then(function(){
@@ -332,9 +332,9 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
       , disable: { enumerable: true,
             value: function(){
                   if ( stylesheets[this.uid].sheet )
-                    cancelAnimationFrame(stylesheets[this.uid].raf),
-                    stylesheets[this.uid].raf = requestAnimationFrame(function(){
-                        stylesheets[this.uid].sheet.disabled = true
+                    requestAnimationFrame(function(){
+                        if ( !stylesheets[this.uid].sheet.disabled )
+                          stylesheets[this.uid].sheet.disabled = true
                     }.bind(this))
                   else
                     stylesheets[this.uid].dfd.then(function(){
