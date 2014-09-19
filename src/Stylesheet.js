@@ -320,7 +320,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                 if ( stylesheets[this.uid].sheet )
                   requestAnimationFrame(function(){
                       stylesheets[this.uid].node.removeAttribute("disabled")
-                      if ( !stylesheets[this.uid].sheet.disabled )
+                      if ( stylesheets[this.uid].sheet.disabled )
                         stylesheets[this.uid].sheet.disabled = false
                   }.bind(this))
                 else
