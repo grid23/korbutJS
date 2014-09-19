@@ -315,26 +315,19 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
         }
 
       , enable: { enumerable: true,
-            value: function(rv){
-                if ( stylesheets[this.uid].node.hasAttribute("disabled") )
-                  stylesheets[this.uid].node.removeAttribute("disabled")
+            value: function(){
+                stylesheets[this.uid].node.removeAttribute("disabled")
 
                 stylesheets[this.uid].dfd.then(function(){
-                    if ( stylesheets[this.uid].sheet.disabled )
-                      stylesheets[this.uid].sheet.disabled = false,
-                      rv = true
+                      stylesheets[this.uid].sheet.disabled = false
                 }.bind(this))
-                return !!rv
             }
         }
       , disable: { enumerable: true,
-            value: function(rv){
+            value: function(){
                 stylesheets[this.uid].dfd.then(function(){
-                    if ( !stylesheets[this.uid].sheet.disabled )
-                      stylesheets[this.uid].sheet.disabled = true,
-                      rv = true
+                      stylesheets[this.uid].sheet.disabled = true
                 }.bind(this))
-                return !!rv
             }
         }
       , media: { enumerable: true,
