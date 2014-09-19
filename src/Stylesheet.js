@@ -316,18 +316,23 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
       , enable: { enumerable: true,
             value: function(){
-                stylesheets[this.uid].node.removeAttribute("disabled")
-
-                stylesheets[this.uid].dfd.then(function(){
-                      stylesheets[this.uid].sheet.disabled = false
-                }.bind(this))
+                if ( stylesheets[this.uid].sheet )
+                  stylesheets[this.uid].node.removeAttribute("disabled"),
+                  stylesheets[this.uid].sheet.disabled = false
+                else
+                  stylesheets[this.uid].dfd.then(function(){
+                      this.enable()
+                  }.bind(this))
             }
         }
       , disable: { enumerable: true,
             value: function(){
-                stylesheets[this.uid].dfd.then(function(){
-                      stylesheets[this.uid].sheet.disabled = true
-                }.bind(this))
+                  if ( stylesheets[this.uid].sheet )
+                    stylesheets[this.uid].sheet.disabled = true
+                  else
+                    stylesheets[this.uid].dfd.then(function(){
+                        this.disable()
+                    }.bind(this))
             }
         }
       , media: { enumerable: true,
