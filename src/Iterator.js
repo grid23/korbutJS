@@ -21,7 +21,7 @@ module.exports.Iterator = klass(function(statics){
             value: function(o, rv, i, l, lead, trail){
                 o = o || Object.create(null)
 
-                if ( o.constructor === Object && o.hasOwnProperty(length) )
+                if ( o.constructor === Object && o.hasOwnProperty("length") )
                   try {
                       rv = Array.prototype.slice.call(o)
 
