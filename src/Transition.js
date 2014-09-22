@@ -180,7 +180,7 @@ module.exports.Transition = klass(function(statics){
         return {
             propsToAnimate: propsToAnimate
           , classname: selectorText
-          , cssRule: new CSSRule(selectorText, module.exports.Transition.CSS_TRANSITION_PROPERTY+ ": " + cssText.join(", "))
+          , cssRule: new CSSRule("."+selectorText, module.exports.Transition.CSS_TRANSITION_PROPERTY+ ": " + cssText.join(", "))
         }
     }
 
@@ -198,7 +198,7 @@ module.exports.Transition = klass(function(statics){
                 , cssRule: null
               }
             else
-              created = createCSSRule("."+this.uid, properties)
+              created = createCSSRule(this.uid, properties)
 
             transitions[this.uid] = Object.create(null, {
                 instance: { value: this }
