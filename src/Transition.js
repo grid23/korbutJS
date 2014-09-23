@@ -7,7 +7,7 @@ var Iterator = require("./Iterator").Iterator
 var Stylesheet = require("./Stylesheet").Stylesheet
 var CSSRule = require("./Stylesheet").CSSRule
 var requestAnimationFrame = require("./requestAnimationFrame").requestAnimationFrame
-
+var Promise = require("./Promise").Promise
 var cssProperties = window.getComputedStyle(document.createElement("div"))
 
 module.exports.CSSHook = klass(function(statics){
@@ -334,7 +334,7 @@ module.exports.Transition = klass(function(statics){
                 if ( this.CLASSLIST_COMPAT )
                   this.node.classList.remove(transitions[this.uid].classname)
                 else
-                  this.node.className = node.className.replace(" "+transitions[this.uid].classname, "")
+                  this.node.className = this.node.className.replace(" "+transitions[this.uid].classname, "")
             }
         }
 
