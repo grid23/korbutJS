@@ -305,8 +305,20 @@ module.exports.Transition = klass(function(statics){
                       }.bind(this))
                   }
                 else
-                  return function(){
+                  return function(args, callback, propsToIte){
+                      new Promise(function(resolve, reject){
+                          args = _.spread(arguments)
+                          callback = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
+                          propsToIte = new Iterator( _.typeof(args[args.length-1]) == "object" ? args.pop() : {} )
 
+                          requestAnimationFrame(function(){
+                              while ( !propsToIte.next().done )
+                                this.node.style.setPoperty(propsToIte.current.key, propsToIte.current.value)
+                          })
+
+                          callback(null)
+                          resolve()
+                      })
                   }
             }()
 
