@@ -128,7 +128,7 @@ module.exports.Transition = klass(function(statics){
                 callback =  _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
                 properties = _.typeof(args[args.length-1]) == "object" ? args.pop() : {}
                 nodes = args.length == 1 && args[0] && args[0].nodeType === Node.ELEMENT_NODE ? [args.pop()]
-                     : args.length == 1 && Iterator.isIteratble(args[0]) ? args.pop()
+                     : args.length == 1 && Iterator.isIterable(args[0]) ? args.pop()
                      : args.length > 1 ? args
                      : []
                 all = []
@@ -334,7 +334,7 @@ module.exports.Transition = klass(function(statics){
                 if ( this.CLASSLIST_COMPAT )
                   this.node.classList.remove(transitions[this.uid].classname)
                 else
-                  node.className = node.className.replace(" "+transitions[this.uid].classname, "")
+                  this.node.className = node.className.replace(" "+transitions[this.uid].classname, "")
             }
         }
 
