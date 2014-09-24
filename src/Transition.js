@@ -310,21 +310,24 @@ module.exports.Transition = klass(function(statics){
                   }
                 else
                   return function(args, callback, propsToIte){
-                      new Promise(function(resolve, reject){
+                      args = _.spread(arguments)
+                      callback = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
+                      propsToIte = new Iterator( _.typeof(args[args.length-1]) == "object" ? args.pop() : {} )
+
+                      return new Promise(function(resolve, reject){
                           args = _.spread(arguments)
                           callback = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
-                          propsToIte = new Iterator( _.typeof(args[args.length-1]) == "object" ? args.pop() : {} )
 
                           requestAnimationFrame(function(){
                               while ( !propsToIte.next().done )
                                 void function(hooked){
-                                    this.node.style.setPoperty(hooked.property, hooked.value)
+                                    this.node.style[hooked.property] = hooked.value
                                 }.call(this, module.exports.CSSHook.testProperty(propsToIte.current.key, propsToIte.current.value))
-                          })
+                          }.bind(this))
 
                           callback(null)
                           resolve()
-                      })
+                      }.bind(this))
                   }
             }()
 
