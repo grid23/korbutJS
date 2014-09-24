@@ -90,6 +90,10 @@ new module.exports.CSSHook("transform", function(prop){
       return function(value){
           return { property: "transform", value: value }
       }
+    else if ( cssProperties.getPropertyValue("-ms-transform") != void 0 )
+      return function(value){
+          return { property: "-ms-transform", value: value }
+      }
     else
       return function(value){
           return { property: "-webkit-transform", value: value }
@@ -313,7 +317,9 @@ module.exports.Transition = klass(function(statics){
 
                           requestAnimationFrame(function(){
                               while ( !propsToIte.next().done )
-                                this.node.style.setPoperty(propsToIte.current.key, propsToIte.current.value)
+                                void function(hooked){
+                                    this.node.style.setPoperty(hooked.property, hooked.value)
+                                }.call(this, module.exports.CSSHook.testProperty(propsToIte.current.key, propsToIte.current.value))
                           })
 
                           callback(null)
