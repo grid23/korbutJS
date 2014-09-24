@@ -90,7 +90,7 @@ new module.exports.CSSHook("transform", function(prop){
       return function(value){
           return { property: "transform", value: value }
       }
-    else if ( cssProperties.getPropertyValue("-ms-transform") != void 0 )
+    else if ( cssProperties["-ms-transform"] != void 0 )
       return function(value){
           return { property: "-ms-transform", value: value }
       }
