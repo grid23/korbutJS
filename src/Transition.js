@@ -55,7 +55,6 @@ module.exports.CSSHook = klass(function(statics){
                 hooked = _.typeof(hooked) == "object" && hooked.hasOwnProperty("value") ? hooked
                        : _.typeof(hooked) == "string" ? { value: hooked }
                        : { value: value }
-
                 hooked.property = hooked.property || this.property
                 hooked.originalProperty = hooked.originalProperty || this.property
 
@@ -85,14 +84,17 @@ module.exports.CSSHook = klass(function(statics){
     }
 })
 
-new module.exports.CSSHook("transform", function(prop){
-    if ( cssProperties.getPropertyValue("transform") != void 0 )
-      return function(value){
-          return { property: "transform", value: value }
-      }
-    else if ( cssProperties["-ms-transform"] != void 0 )
+new module.exports.CSSHook("transform", function(prop, div){
+    div = document.createElement("div")
+    div.style.cssText = "-ms-transform:scale(1,1)"
+
+    if ( div.style.cssText.length )
       return function(value){
           return { property: "-ms-transform", value: value }
+      }
+    else if ( cssProperties.getPropertyValue("transform") != void 0 )
+      return function(value){
+          return { property: "transform", value: value }
       }
     else
       return function(value){
