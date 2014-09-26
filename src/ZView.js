@@ -6,7 +6,7 @@ var EventTarget = require("./EventTarget").EventTarget
 var Iterator = require("./Iterator").Iterator
 var Model = require("./Model").Model
 var UID = require("./UID").UID
-var requestAnimationFrame = require("./requestAnimationFrame").requestAnimationFrame
+var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
 
 
 module.exports.ZenParser = klass(function(statics){

@@ -1,8 +1,4 @@
 "use strict"
 
-module.exports.isSameDomain = function(a){
-    return function(path){
-        a.href = path
-        return a.hostname === location.hostname
-    }
-}( document.createElement("a") )
+console.warn("korbutjs/src/isSameDomain is deprecated, require korbutjs/src/dom-utils/isSameDomain")
+module.exports = require("./dom-utils/isSameDomain")

@@ -10,9 +10,9 @@ var Promise = require("./Promise").Promise
 var ZenParser = require("./ZView").ZenParser
 var Serializer = require("./Serializer").Serializer
 var domReady = require("./domReady")
-var requestAnimationFrame = require("./requestAnimationFrame").requestAnimationFrame
-var cancelAnimationFrame = require("./requestAnimationFrame").cancelAnimationFrame
-var isSameDomain = require("./isSameDomain").isSameDomain
+var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
+var cancelAnimationFrame = require("./dom-utils/requestAnimationFrame").cancelAnimationFrame
+var isSameDomain = require("./dom-utils/isSameDomain").isSameDomain
 
 module.exports.CssTextUpdateEvent = klass(Event, {
     constructor: function(cssRule){
@@ -320,7 +320,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                 if ( stylesheets[this.uid].sheet )
                   requestAnimationFrame(function(){
                       stylesheets[this.uid].node.removeAttribute("disabled")
-                      
+
                       if ( stylesheets[this.uid].sheet.disabled )
                         stylesheets[this.uid].sheet.disabled = false
                   }.bind(this))

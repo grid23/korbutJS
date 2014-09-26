@@ -1,6 +1,6 @@
 "use strict"
 
-var _ = require("./utils")
+var _ = require("../utils")
 
 module.exports.requestAnimationFrame = function(fn){
     fn = _.native(window.requestAnimationFrame) ? window.requestAnimationFrame

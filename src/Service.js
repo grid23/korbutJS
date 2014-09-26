@@ -8,7 +8,7 @@ var Iterator = require("./Iterator").Iterator
 var Promise = require("./Promise").Promise
 var Model = require("./Model").Model
 var Serializer = require("./Serializer").Serializer
-var isSameDomain = require("./isSameDomain").isSameDomain
+var isSameDomain = require("./dom-utils/isSameDomain").isSameDomain
 
 module.exports.Service = klass(function(statics){
     var services = Object.create(null)
