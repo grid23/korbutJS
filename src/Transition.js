@@ -258,7 +258,7 @@ module.exports.Transition = klass(function(statics){
                                           resolve(null)
                                       } else {
                                           callback(error||true)
-                                          reject(error||true)
+                                          resolve(error||true) //tmp
                                       }
 
                                       if ( !alreadyEnabled )
