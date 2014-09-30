@@ -6,6 +6,7 @@ var UID = require("./UID").UID
 var Iterator = require("./Iterator").Iterator
 var Stylesheet = require("./Stylesheet").Stylesheet
 var CSSRule = require("./Stylesheet").CSSRule
+var domReady = require("./domReady")
 var requestAnimationFrame = require("./requestAnimationFrame").requestAnimationFrame
 var Promise = require("./Promise").Promise
 var cssProperties = window.getComputedStyle(document.createElement("div"))
@@ -129,7 +130,7 @@ module.exports.Transition = klass(function(statics){
             value: Element.prototype.hasOwnProperty("classList")
         }
       , animate: { enumerable: true,
-            value: function(nodes, properties, callback, all, output, args, iterator, propsInit, propsTo){
+            value: function(nodes, properties, callback, all, output, args, iterator, propsDict, propsTo){
                 args = _.spread(arguments)
                 callback =  _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
                 properties = _.typeof(args[args.length-1]) == "object" ? args.pop() : {}
@@ -139,13 +140,24 @@ module.exports.Transition = klass(function(statics){
                      : []
                 all = []
 
+                propsDict = {}
+                propsTo = {}
+
+                iterator = new Iterator(properties)
+                while ( !iterator.next().done )
+                  void function(property, value){
+                      propsDict[property] = value.transition || ""
+                      propsTo[property] = value.to || ""
+                  }(iterator.current.key, iterator.current.value)
+
                 iterator = new Iterator(nodes)
+
                 while ( !iterator.next().done  )
                   void function(node){
                       if ( !node || node.nodeType !== Node.ELEMENT_NODE )
                         return
 
-                      all.push(new module.exports.Transition(node, propsInit).animate(propsTo))
+                      all.push(new module.exports.Transition(node, propsDict).animate(propsTo))
                   }(iterator.current.value)
 
                 output = Promise.all(all)
@@ -221,7 +233,7 @@ module.exports.Transition = klass(function(statics){
       , animate: { enumerable: true,
             value: function(){
                 if ( CSS_TRANSITION_COMPAT )
-                  return function(propsToIte, callback, oargs, args, propsTo, propsAnimating, animationId, self, alreadyEnabled){
+                  return function(propsToIte, callback, oargs, args, propsTo, propsAnimating, animationId, self, alreadyEnabled, error){
                       self = this
                       oargs = arguments
                       args = _.spread(arguments)
@@ -232,82 +244,88 @@ module.exports.Transition = klass(function(statics){
                       animationId = UID.uid()
                       alreadyEnabled = !!this.enabled
 
-                      while ( !propsToIte.next().done )
-                        void function(hooked, clone, computedStyles, cloneComputedStyles, curr, next){
-                            computedStyles = getComputedStyle(this.node)
-
-                            clone.style.setProperty("transition", "")
-                            clone.style.setProperty(hooked.property, hooked.value)
-
-                            curr = computedStyles.getPropertyValue(hooked.property)
-                            curr = curr !== "auto" ? curr : "0px"
-
-                            this.node.parentNode.insertBefore(clone, this.node)
-                            cloneComputedStyles = getComputedStyle(clone)
-                            next = cloneComputedStyles.getPropertyValue(hooked.property)
-                            clone.parentNode.removeChild(clone)
-
-                            if ( curr !== next || hooked.force ) {
-                              propsTo.push([hooked.property, next]),
-                              this.node.style.setProperty(hooked.property, curr)
-
-                              if ( this.properties.indexOf(hooked.property) != -1 )
-                                propsAnimating.push(hooked.property)
-                            }
-                        }.call(this, module.exports.CSSHook.testProperty(propsToIte.current.key, propsToIte.current.value), this.node.cloneNode(true))
-
                       return new Promise(function(resolve, reject){
-                          function end(){
-                              return function(){
-                                  this.node.removeEventListener(this.CSS_TRANSITIONEND_EVENT, ontransitionend, true)
+                          domReady.then(function(d){
+                              function end(){
+                                  return function(){
+                                      this.node.removeEventListener(this.CSS_TRANSITIONEND_EVENT, ontransitionend, true)
 
-                                  if ( this.node.getAttribute(this.CUSTOM_DATA) === animationId ) {
-                                      this.node.removeAttribute(this.CUSTOM_DATA)
+                                      if ( this.node.getAttribute(this.CUSTOM_DATA) === animationId && !error ) {
+                                          this.node.removeAttribute(this.CUSTOM_DATA)
+                                          callback(null)
+                                          resolve(null)
+                                      } else {
+                                          callback(error||true)
+                                          reject(error||true)
+                                      }
 
-                                      callback(null)
-                                      resolve()
-                                  } else {
-                                      callback(true)
-                                      reject()
-                                  }
+                                      if ( !alreadyEnabled )
+                                        this.disable()
+                                  }.call(self)
+                              }
 
-                                  this.node.removeAttribute(this.CUSTOM_DATA)
-                                  if ( !alreadyEnabled )
-                                    this.disable()
-                              }.call(self)
-                          }
+                              function ontransitionend(e, idx){
+                                  return function(){
+                                      if ( e.target !== this.node )
+                                        return
 
-                          function ontransitionend(e, idx){
-                              return function(){
-                                  if ( e.target !== this.node )
-                                    return
+                                      if ( idx = propsAnimating.indexOf(e.propertyName), idx != -1 )
+                                        propsAnimating.splice(idx, 1)
 
-                                  if ( idx = propsAnimating.indexOf(e.propertyName), idx != -1 )
-                                    propsAnimating.splice(idx, 1)
+                                      if ( !propsAnimating.length || this.node.getAttribute(this.CUSTOM_DATA) !== animationId )
+                                        end()
+                                  }.call(self)
+                              }
 
-                                  if ( !propsAnimating.length || this.node.getAttribute(this.CUSTOM_DATA) !== animationId )
-                                    end()
-                              }.call(self)
-                          }
+                              try {
+                                  if ( !document.body.contains(this.node) )
+                                    throw new Error("node out of DOM")
 
-                          requestAnimationFrame(function(){
-                              this.node.setAttribute(this.CUSTOM_DATA, animationId)
+                                  while ( !propsToIte.next().done )
+                                    void function(hooked, clone, computedStyles, cloneComputedStyles, curr, next){
+                                        computedStyles = getComputedStyle(this.node)
 
-                              if ( !alreadyEnabled )
-                                this.enable()
+                                        clone.style.setProperty("transition", "")
+                                        clone.style.setProperty(hooked.property, hooked.value)
 
-                              this.node.addEventListener(this.CSS_TRANSITIONEND_EVENT, ontransitionend, true)
+                                        curr = computedStyles.getPropertyValue(hooked.property)
+                                        curr = curr !== "auto" ? curr : "0px"
+
+                                        this.node.parentNode.insertBefore(clone, this.node)
+                                        cloneComputedStyles = getComputedStyle(clone)
+                                        next = cloneComputedStyles.getPropertyValue(hooked.property)
+                                        clone.parentNode.removeChild(clone)
+
+                                        if ( curr !== next || hooked.force ) {
+                                          propsTo.push([hooked.property, next]),
+                                          this.node.style.setProperty(hooked.property, curr)
+
+                                          if ( this.properties.indexOf(hooked.property) != -1 )
+                                            propsAnimating.push(hooked.property)
+                                        }
+                                    }.call(this, module.exports.CSSHook.testProperty(propsToIte.current.key, propsToIte.current.value), this.node.cloneNode(true))
+                              } catch(e){
+                                  error = e
+                                  return end()
+                              }
 
                               requestAnimationFrame(function(){
-                                  while ( propsTo.length )
-                                    this.node.style.setProperty(propsTo[0][0], propsTo.shift()[1])
+                                  this.node.setAttribute(this.CUSTOM_DATA, animationId)
 
-                                  if ( !propsAnimating.length )
-                                    end()
+                                  if ( !alreadyEnabled )
+                                    this.enable()
+
+                                  this.node.addEventListener(this.CSS_TRANSITIONEND_EVENT, ontransitionend, true)
+
+                                  requestAnimationFrame(function(){
+                                      while ( propsTo.length )
+                                        this.node.style.setProperty(propsTo[0][0], propsTo.shift()[1])
+
+                                      if ( !propsAnimating.length )
+                                        end()
+                                  }.bind(this))
                               }.bind(this))
-
                           }.bind(this))
-
                       }.bind(this))
                   }
                 else
@@ -316,19 +334,34 @@ module.exports.Transition = klass(function(statics){
                       callback = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
                       propsToIte = new Iterator( _.typeof(args[args.length-1]) == "object" ? args.pop() : {} )
 
-                      return new Promise(function(resolve, reject){
-                          args = _.spread(arguments)
-                          callback = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
+                      return new Promise(function(resolve, reject, error){
+                          domReady.then(function(d){
+                              function end(){
+                                  if ( error )
+                                    callback(error),
+                                    reject(error)
+                                  else
+                                    callback(null),
+                                    resolve(null)
+                              }
 
-                          requestAnimationFrame(function(){
-                              while ( !propsToIte.next().done )
-                                void function(hooked){
-                                    this.node.style[hooked.property] = hooked.value
-                                }.call(this, module.exports.CSSHook.testProperty(propsToIte.current.key, propsToIte.current.value))
+                              requestAnimationFrame(function(){
+                                  try {
+                                      if ( !document.body.contains(this.node) )
+                                        throw new Error("node out of DOM")
+
+                                      while ( !propsToIte.next().done )
+                                        void function(hooked){
+                                            this.node.style[hooked.property] = hooked.value
+                                        }.call(this, module.exports.CSSHook.testProperty(propsToIte.current.key, propsToIte.current.value))
+
+                                        requestAnimationFrame(end)
+                                  } catch(e){
+                                      error = e
+                                      return end()
+                                  }
+                              }.bind(this))
                           }.bind(this))
-
-                          callback(null)
-                          resolve()
                       }.bind(this))
                   }
             }()
