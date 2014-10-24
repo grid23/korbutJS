@@ -7,7 +7,7 @@ var Iterator = require("./Iterator").Iterator
 var Stylesheet = require("./Stylesheet").Stylesheet
 var CSSRule = require("./Stylesheet").CSSRule
 var domReady = require("./domReady")
-var requestAnimationFrame = require("./requestAnimationFrame").requestAnimationFrame
+var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
 var Promise = require("./Promise").Promise
 var cssProperties = window.getComputedStyle(document.createElement("div"))
 
@@ -89,17 +89,17 @@ new module.exports.CSSHook("transform", function(prop, div){
     div = document.createElement("div")
     div.style.cssText = "-ms-transform:scale(1,1)"
 
-    if ( div.style.cssText.length )
+    if ( div.style.cssText.length && !_.native(window.atob) ) // ie9!
       return function(value){
-          return { property: "-ms-transform", value: value }
+          return { property: "-ms-transform", value: value, force: true }
       }
     else if ( cssProperties.getPropertyValue("transform") != void 0 )
       return function(value){
-          return { property: "transform", value: value }
+          return { property: "transform", value: value, force: true }
       }
     else
       return function(value){
-          return { property: "-webkit-transform", value: value }
+          return { property: "-webkit-transform", value: value, force: true }
       }
 }())
 
@@ -249,12 +249,14 @@ module.exports.Transition = klass(function(statics){
                               function end(){
                                   return function(){
                                       this.node.removeEventListener(this.CSS_TRANSITIONEND_EVENT, ontransitionend, true)
-
                                       if ( this.node.getAttribute(this.CUSTOM_DATA) === animationId && !error ) {
                                           this.node.removeAttribute(this.CUSTOM_DATA)
                                           callback(null)
                                           resolve(null)
                                       } else {
+                                          if ( this.node.getAttribute(this.CUSTOM_DATA) === animationId )
+                                            this.node.removeAttribute(this.CUSTOM_DATA)
+
                                           callback(error||true)
                                           reject(error||true)
                                       }
@@ -272,12 +274,17 @@ module.exports.Transition = klass(function(statics){
                                       if ( idx = propsAnimating.indexOf(e.propertyName), idx != -1 )
                                         propsAnimating.splice(idx, 1)
 
-                                      if ( !propsAnimating.length || this.node.getAttribute(this.CUSTOM_DATA) !== animationId )
+                                      if ( this.node.getAttribute(this.CUSTOM_DATA) !== animationId )
+                                        return error = new Error("a more recent animation finished"), end()
+
+                                      if ( !propsAnimating.length )
                                         end()
                                   }.call(self)
                               }
 
                               try {
+                                  this.node.setAttribute(this.CUSTOM_DATA, animationId)
+
                                   if ( !document.body.contains(this.node) )
                                     throw new Error("node out of DOM")
 
@@ -297,11 +304,13 @@ module.exports.Transition = klass(function(statics){
                                         clone.parentNode.removeChild(clone)
 
                                         if ( curr !== next || hooked.force ) {
-                                          propsTo.push([hooked.property, next]),
                                           this.node.style.setProperty(hooked.property, curr)
+                                          propsTo.push([hooked.property, hooked.force?hooked.value:next])
 
-                                          if ( this.properties.indexOf(hooked.property) != -1 )
-                                            propsAnimating.push(hooked.property)
+                                          if ( curr !== next ) {
+                                            if ( this.properties.indexOf(hooked.property) != -1 )
+                                              propsAnimating.push(hooked.property)
+                                          }
                                         }
                                     }.call(this, module.exports.CSSHook.testProperty(propsToIte.current.key, propsToIte.current.value), this.node.cloneNode(true))
                               } catch(e){
@@ -310,8 +319,6 @@ module.exports.Transition = klass(function(statics){
                               }
 
                               requestAnimationFrame(function(){
-                                  this.node.setAttribute(this.CUSTOM_DATA, animationId)
-
                                   if ( !alreadyEnabled )
                                     this.enable()
 
@@ -322,7 +329,7 @@ module.exports.Transition = klass(function(statics){
                                         this.node.style.setProperty(propsTo[0][0], propsTo.shift()[1])
 
                                       if ( !propsAnimating.length )
-                                        end()
+                                        error = new Error("no properties to animate"), end()
                                   }.bind(this))
                               }.bind(this))
                           }.bind(this))

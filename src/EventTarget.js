@@ -6,6 +6,7 @@ var Iterator = require("./Iterator").Iterator
 var UID = require("./UID").UID
 
 module.exports.Event = klass(function(statics){
+    var events = Object.create(null)
 
     return {
         constructor: function(type, detail){
@@ -21,26 +22,29 @@ module.exports.Event = klass(function(statics){
                      : null
             }( _.spread(arguments, 1))
 
-            this.type = type
-            this.detail = detail
-            this.timestamp = Date.now()
-        }
-      , initEvent: {
-            value: function(){
-                return this.constructor.apply(this, arguments)
-            }
+            events[this.uid] = Object.create(null, {
+                type: { value: type }
+              , detail: { value: detail  }
+              , timestamp: { value: Date.now() }
+            })
         }
       , type: { enumerable: true,
-            get: function(){ return this._type }
-          , set: function(v){ !this._type && Object.defineProperty(this, "_type", { value: v }) }
+            get: function(){ return events[this.uid].type }
         }
       , detail: { enumerable: true,
-            get: function(){ return this._detail }
-          , set: function(v){ this._detail === void 0 && Object.defineProperty(this, "_detail", { value: v }) }
+            get: function(){ return events[this.uid].detail }
         }
       , timestamp: { enumerable: true,
-            get: function(){ return this._timestamp }
-          , set: function(v){ !this._timestamp && Object.defineProperty(this, "_timestamp", { value: v }) }
+            get: function(){ return events[this.uid].timestamp }
+        }
+
+      , uid: { enumerable: true, configurable: true,
+            get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
+        }
+      , purge: { enumerable: true, configurable: true,
+            value: function(){
+                delete events[this.uid]
+            }
         }
     }
 })

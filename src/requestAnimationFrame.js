@@ -2,6 +2,8 @@
 
 var _ = require("./utils")
 
+console.warn("src/requestAnimationFrame.js is deprecated.")
+
 module.exports.requestAnimationFrame = function(fn){
     fn = _.native(window.requestAnimationFrame) ? window.requestAnimationFrame
                               : window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame

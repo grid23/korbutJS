@@ -33,7 +33,12 @@ module.exports.Iterator = klass(function(statics){
                   } catch(e) {}
 
                 try {
-                    return Object.keys(o)
+                    rv = Object.keys(o)
+
+                    if ( Object.prototype.toString.call(o) == "[object String]")
+                      throw new Error()
+
+                    return rv
                 } catch(e) {
                     rv = []
 
