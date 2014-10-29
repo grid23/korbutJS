@@ -13,6 +13,99 @@ var domReady = require("./domReady")
 var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
 var cancelAnimationFrame = require("./dom-utils/requestAnimationFrame").cancelAnimationFrame
 var isSameDomain = require("./dom-utils/isSameDomain").isSameDomain
+var cssProperties = window.getComputedStyle(document.createElement("div"))
+
+module.exports.CSSHook = klass(function(statics){
+    var hooks = Object.create(null)
+
+    Object.defineProperties(statics, {
+        testProperty: { enumerable: true,
+            value: function(property, value){
+                return hooks[property] ? hooks[property].instance.test(value) : {
+                    property: property
+                  , value: value
+                  , originalProperty: property
+                }
+            }
+        }
+      , getByProperty: { enumerable: true,
+            value: function(property){
+                return hooks[property].instance
+            }
+        }
+      , getByUid: { enumerable: true,
+            value: function(uid){
+                return hooks[uid].intance
+            }
+        }
+    })
+
+    return {
+        constructor: function(property, handler, args){
+            args = _.spread(arguments)
+            handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : function(property, value){ return { property: property, value: value } }
+            property = _.typeof(args[args.length-1]) == "string" ? args.pop() : Object.prototype.toString.call(args.pop())
+
+            hooks[this.uid] = hooks[property] = Object.create(null, {
+                instance: { value: this }
+              , property: { value: property }
+              , handler: { value: handler }
+            })
+        }
+      , test: { enumerable: true,
+            value: function(value, hooked){
+                value = _.typeof(value) == "string" ? value : Object.prototype.toString.call(value)
+
+                hooked = hooks[this.uid].handler(value)
+                hooked = _.typeof(hooked) == "object" && hooked.hasOwnProperty("value") ? hooked
+                       : _.typeof(hooked) == "string" ? { value: hooked }
+                       : { value: value }
+                hooked.property = hooked.property || this.property
+                hooked.originalProperty = hooked.originalProperty || this.property
+
+                return hooked
+            }
+        }
+
+      , property: { enumerable: true,
+            get: function(){
+                return hooks[this.uid].property
+            }
+        }
+      , handler: { enumerable: true,
+            get: function(){
+                return hooks[this.uid].handler
+            }
+        }
+
+      , uid: { enumerable: true, configurable: true,
+            get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
+        }
+      , purge: { enumerable: true, configurable: true,
+            value: function(){
+                delete hooks[this.uid].instance
+            }
+        }
+    }
+})
+
+new module.exports.CSSHook("transform", function(prop, div){
+    div = document.createElement("div")
+    div.style.cssText = "-ms-transform:scale(1,1)"
+
+    if ( div.style.cssText.length )
+      return function(value){
+          return { property: "-ms-transform", value: value }
+      }
+    else if ( cssProperties.getPropertyValue("transform") != void 0 )
+      return function(value){
+          return { property: "transform", value: value }
+      }
+    else
+      return function(value){
+          return { property: "-webkit-transform", value: value }
+      }
+}())
 
 module.exports.CssTextUpdateEvent = klass(Event, {
     constructor: function(cssRule){
@@ -39,7 +132,7 @@ module.exports.CssTextUpdateEvent = klass(Event, {
 module.exports.CSSRule = klass(EventTarget, function(statics){
     var rules = Object.create(null)
     var serializer = new Serializer({ delimiter: ":", separator: ";" })
-    var rcssparse = /(?:\s|$)*(\S*)(?:\s|$)*{(.*)}(?:\s|$)*/
+    var rcssparse = /(?:\s|$)*([^{]*)(?:[]\s|$)*{(.*)}(?:\s|$)*/ // TODO make sure this behaves as expected
 
     Object.defineProperties(statics, {
         serializeCssText: { enumerable: true,
@@ -100,6 +193,14 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
       , cssText: { enumerable: true,
             get: function(){
                 return rules[this.uid].dummy.style.cssText
+            }
+          , set: function(v, o){
+                o = rules[this.uid].dummy.style.cssText
+                rules[this.uid].dummy.style.cssText = v
+                n = rules[this.uid].dummy.style.cssText
+
+                if ( o !== n )
+                  this.dispatchEvent(new module.exports.CssTextUpdateEvent(this))
             }
         }
       , toString: { enumerable: true,
@@ -218,6 +319,9 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                           this.insertRule(rules)
 
                         resolve()
+                        requestAnimationFrame(function(){
+                            this.dispatchEvent("ready", stylesheets[this.uid].sheet)
+                        }.bind(this))
                     }.bind(this))
                 }
 
@@ -233,50 +337,53 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                     return null
                 }
 
-                if (stylesheets[this.uid].dfd.state != Promise.RESOLVED ) {
-                  args = arguments
-
-                  stylesheets[this.uid].dfd.then(function(){
-                      module.exports.Stylesheet.prototype.insertRule.apply(this, args)
-                  }.bind(this))
-
-                  return []
-                }
-
                 args = _.spread(arguments)
                 cb = _.typeof(args[args.length-1]) == "function" ? args.pop() : Function.prototype
                 iterator = new Iterator( (args.length>1 || module.exports.CSSRule.isImplementedBy(args[0])) || _.typeof(args[0]) == "string" ? args : args[0]||[])
                 rv = []
 
-                while ( !iterator.next().done )
-                  void function(iteration, cssRule, idx, buff, k){
-                      if ( _.typeof(iteration.value) == "object" ) {
-                          rv.push( module.exports.Stylesheet.prototype.insertRule.call(this, iteration.value) )
-                          return
-                      }
+                function exec(){
+                    while ( !iterator.next().done )
+                      void function(iteration, cssRule, idx, buff, k){
+                          if ( _.typeof(iteration.value) == "object" ) {
+                              rv.push( module.exports.Stylesheet.prototype.insertRule.call(this, iteration.value) )
+                              return
+                          }
 
-                      if ( _.typeof(iteration.value) == "array" ) {
-                          rv.push( module.exports.Stylesheet.prototype.insertRule.apply(this, [iteration.value]) )
-                          return
-                      }
+                          if ( _.typeof(iteration.value) == "array" ) {
+                              rv.push( module.exports.Stylesheet.prototype.insertRule.apply(this, [iteration.value]) )
+                              return
+                          }
 
-                      cssRule = module.exports.CSSRule.isImplementedBy(iteration.value) ? iteration.value
-                              : new module.exports.CSSRule(iteration.key, iteration.value)
+                          cssRule = module.exports.CSSRule.isImplementedBy(iteration.value) ? iteration.value
+                                  : new module.exports.CSSRule(iteration.key, iteration.value)
 
-                      idx = stylesheets[this.uid].sheet.cssRules.length
-                      stylesheets[this.uid].rules[idx] = cssRule
-                      rv.push(cssRule)
+                          idx = stylesheets[this.uid].sheet.cssRules.length
+                          stylesheets[this.uid].rules[idx] = cssRule
+                          rv.push(cssRule)
 
-                      stylesheets[this.uid].sheet.insertRule(cssRule.toString(), idx)
+                          stylesheets[this.uid].sheet.insertRule(cssRule.toString(), idx)
 
-                      cssRule.addEventListener("csstextupdate", function(e, idx){
-                          if ( idx = stylesheets[this.uid].rules.indexOf(e.cssRule), idx != -1 )
-                            requestAnimationFrame(function(){
-                                stylesheets[this.uid].sheet.cssRules[idx].style.cssText = e.cssText
-                            }.bind(this))
-                      }.bind(this))
-                  }.call(this, iterator.current)
+                          cssRule.addEventListener("csstextupdate", function(e, idx){
+                              if ( idx = stylesheets[this.uid].rules.indexOf(e.cssRule), idx != -1 )
+                                requestAnimationFrame(function(){
+                                    stylesheets[this.uid].sheet.cssRules[idx].style.cssText = e.cssText
+                                }.bind(this))
+                          }.bind(this))
+                      }.call(this, iterator.current)
+                }
 
+                if (stylesheets[this.uid].dfd.state != Promise.RESOLVED ) {
+                  args = arguments
+
+                  stylesheets[this.uid].dfd.then(function(){
+                      exec.call(this)
+                  }.bind(this))
+
+                  return rv
+                }
+
+                exec.call(this)
                 cb.apply(this, [].concat(null, rv))
                 return rv.length > 1 ? rv : rv[0]
             }
@@ -367,6 +474,11 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
       , sheet: { enumerable: true,
             get: function(){
                 return stylesheets[this.uid].sheet
+            }
+        }
+      , ready: { enumerable: true,
+            get: function(){
+                return stylesheets[this.uid].dfd.state === Promise.RESOLVED
             }
         }
 
