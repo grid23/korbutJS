@@ -28,6 +28,33 @@ module.exports.CSSHook = klass(function(statics){
                 }
             }
         }
+      , testCssText: { enumerable: true,
+            value: function(cssText, pairs, rv){
+                try {
+                    pairs = (_.typeof(cssText) == "string" ? cssText : "").split(";")
+                    rv = []
+
+                    while ( pairs.length )
+                      void function(pair, idx, key, value, hooked){
+                          idx = pair.search(":")
+
+                          if ( idx == -1 )
+                            return
+
+                          key = pair.split(":")[0].trim()
+                          value = pair.slice(idx+1).trim()
+                          hooked = module.exports.CSSHook.testProperty(key, value)
+
+                          rv.push( [hooked.property, ":", hooked.value].join("") )
+                      }( pairs.shift().trim() )
+
+                    return rv.join(";")
+                } catch(e) {
+                    console.error(e)
+                    return cssText
+                }
+            }
+        }
       , getByProperty: { enumerable: true,
             value: function(property){
                 return hooks[property].instance
@@ -107,6 +134,30 @@ new module.exports.CSSHook("transform", function(prop, div){
       }
 }())
 
+new module.exports.CSSHook("transition", function(props, prop, div){
+    props = ["transform"]
+
+    div = document.createElement("div")
+    div.style.cssText = "-ms-transform:scale(1,1)"
+
+    if ( div.style.cssText.length )
+      return function(value, i, l){
+          for ( i = 0, l = props.length; i < l; i++)
+            value = value.replace(new RegExp("( |^)"+props[i], "g"), " -ms-"+props[i])
+          return { property: "transition", value: value.trim() }
+      }
+    else if ( cssProperties.getPropertyValue("transform") != void 0 )
+      return function(value){
+          return { property: "transition", value: value }
+      }
+    else
+      return function(value, i, l){
+          for ( i = 0, l = props.length; i < l; i++)
+            value = value.replace(new RegExp("( |^)"+props[i], "g"), " -webkit-"+props[i])
+          return { property: "transition", value: value.trim() }
+      }
+}())
+
 module.exports.CssTextUpdateEvent = klass(Event, {
     constructor: function(cssRule){
         Event.call(this, "csstextupdate")
@@ -156,10 +207,11 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
                          : args.length == 1 && _.typeof(args[0]) == "string" ? (fromstr = true, (rcssparse.exec(args[0])||[])[1]||"")
                          : (fromstr = true, args.shift(), (rcssparse.exec(args[0])||[])[1]||"")
 
-            cssText = dummy.style.cssText = fromstr ? (rcssparse.exec(args.pop())||[])[2]||""
+            cssText = module.exports.CSSHook.testCssText( dummy.style.cssText = fromstr ? (rcssparse.exec(args.pop())||[])[2]||""
                     : _.typeof(args[args.length-1]) == "string" ? args.pop()
                     : _.typeof(args[args.length-1]) == "object" ? module.exports.CSSRule.serializeCssText(args.pop())
-                    : ""
+                    : "" )
+
 
             rules[this.uid] = Object.create(null, {
                 instance: { value: this }
@@ -175,9 +227,12 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
             }
         }
       , setProperty: { enumerable: true,
-            value: function(o, n){
+            value: function(prop, value, o, n, hooked){
+                prop = _.typeof(prop) == "string" ? prop : ""
+                value = _.typeof(value) == "string" ? value : ""
                 o = rules[this.uid].dummy.style.cssText
-                CSSStyleDeclaration.prototype.setProperty.apply(rules[this.uid].dummy.style, arguments)
+                hooked = module.exports.CSSHook.testProperty(prop, value)
+                CSSStyleDeclaration.prototype.setProperty.call(rules[this.uid].dummy.style, hooked.property, hooked.value)
                 n = rules[this.uid].dummy.style.cssText
 
                 if ( o !== n )
@@ -196,7 +251,7 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
             }
           , set: function(v, o){
                 o = rules[this.uid].dummy.style.cssText
-                rules[this.uid].dummy.style.cssText = v
+                rules[this.uid].dummy.style.cssText = module.exports.CSSHook.testCssText(v)
                 n = rules[this.uid].dummy.style.cssText
 
                 if ( o !== n )
