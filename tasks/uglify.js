@@ -78,6 +78,7 @@ module.exports.uglify = function(dfd, compressor, reserved, ast){
             if ( options.mangle )
               ast.mangle_names({ except: reserved })
         } catch(err) {
+            console.log(err)
             return dfd.reject(err)
         }
 

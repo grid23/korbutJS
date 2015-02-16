@@ -8,7 +8,6 @@ var Model = require("./Model").Model
 var UID = require("./UID").UID
 var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
 
-
 module.exports.ZenParser = klass(function(statics){
     var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
 
@@ -56,7 +55,7 @@ module.exports.ZenParser = klass(function(statics){
                                   break
                               }
 
-                            if ( hit )
+                            if ( hit ) {
                               for ( i = 0, l = vars.length; i < l; i++ ) {
                                 value = model.getItem(vars[i])
 
@@ -64,9 +63,10 @@ module.exports.ZenParser = klass(function(statics){
                                   str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                               }
 
-                            requestAnimationFrame(function(){
-                                node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
-                            })
+                              requestAnimationFrame(function(){
+                                  node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
+                              })
+                            }
                         }
 
                         input.update.push(onupdate)
@@ -109,7 +109,7 @@ module.exports.ZenParser = klass(function(statics){
                                       break
                                   }
 
-                                if ( hit )
+                                if ( hit ) {
                                   for ( i = 0, l = vars.length; i < l; i++ ) {
                                     value = model.getItem(vars[i])
 
@@ -117,10 +117,11 @@ module.exports.ZenParser = klass(function(statics){
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
-                                requestAnimationFrame(function(){
-                                    set(node, str, lastValue)
-                                    lastValue = str
-                                })
+                                  requestAnimationFrame(function(){
+                                      set(node, str, lastValue)
+                                      lastValue = str
+                                  })
+                                }
                             }
                             input.update.push(onupdate)
                             onupdate({keys: vars})
@@ -161,16 +162,18 @@ module.exports.ZenParser = klass(function(statics){
                                       break
                                   }
 
-                                if ( hit )
+                                if ( hit ) {
                                   for ( i = 0, l = vars.length; i < l; i++ ) {
                                     value = model.getItem(vars[i])
 
                                     if ( value !== void 0 && value !== null )
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
-                                requestAnimationFrame(function(){
-                                    node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str))
-                                })
+
+                                  requestAnimationFrame(function(){
+                                      node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str))
+                                  })
+                                }
                             }
                             input.update.push(onupdate)
                             onupdate({keys: vars})
@@ -215,7 +218,7 @@ module.exports.ZenParser = klass(function(statics){
                                       break
                                   }
 
-                                if ( hit )
+                                if ( hit ) {
                                   for ( i = 0, l = vars.length; i < l; i++ ) {
                                     value = model.getItem(vars[i])
 
@@ -223,9 +226,10 @@ module.exports.ZenParser = klass(function(statics){
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
-                                requestAnimationFrame(function(){
-                                    node.nodeValue = str
-                                })
+                                  requestAnimationFrame(function(){
+                                      node.nodeValue = str
+                                  })
+                                }
                             }
                             input.update.push(onupdate)
                             onupdate({keys: vars})
