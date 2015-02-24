@@ -446,7 +446,7 @@ module.exports.Transition = klass(function(statics){
         }
       , purge: { enumerable: true, configurable: true,
             value: function(){
-                delete transitions[this.uid].instance
+                delete transitions[this.uid]
             }
         }
 
