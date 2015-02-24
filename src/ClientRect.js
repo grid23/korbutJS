@@ -196,8 +196,8 @@ module.exports.ClientRect = klass(function(statics){
             value: function(e){
                 var offsetX, offsetY
 
-                offsetX = window.pageXOffset || window.scrollX || document.documentElement.scrollLeft || docBody.scrollLeft || 0
-                offsetY = window.pageYOffset || window.scrollY || document.documentElement.scrollTop || docBody.scrollTop || 0
+                offsetX = window.pageXOffset || window.scrollX || document.documentElement.scrollLeft || document.body.scrollLeft || 0
+                offsetY = window.pageYOffset || window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
 
                 return {
                     left: (typeof e.pageX != "undefined" ? e.pageX : typeof e.clientX != "undefined" ? e.clientX + offsetX : 0)
@@ -215,7 +215,7 @@ module.exports.ClientRect = klass(function(statics){
         constructor: function(dict, args){
             args = _.spread(arguments)
             dict = _.typeof(args[args.length-1]) == "object" && args[args.length-1].node && args[args.length-1].node.nodeType == Node.ELEMENT_NODE  ? args.pop()
-                 : args[args.length-1] && args[args.length-1].node && args[args.length-1].node.nodeType == Node.ELEMENT_NODE ? { node: args.pop() }
+                 : args[args.length-1] && args[args.length-1] && args[args.length-1].nodeType == Node.ELEMENT_NODE ? { node: args.pop() }
                  : { node: document.documentElement }
 
             rects[this.uid] = Object.create(null, {
@@ -234,7 +234,7 @@ module.exports.ClientRect = klass(function(statics){
                           : this.cardinalPointReference
 
                 refNode = args[args.length-1] && args[args.length-1].nodeType == Node.ELEMENT_NODE ? args.pop() : null
-                refEvent = !refNode && args[args.length-1] && _.typeof(args[args.length-1].constructor) == "function" && args[args.length-1].constructor.prototype.hasOwnProperty("preventDefault") ? args.pop() : null
+                refEvent = !refNode && args[args.length-1] && (typeof args[args.length-1].pageX == "number" || typeof args[args.length-1].clientX == "number") ? args.pop() : null
                 refOrigin = !refNode && !refEvent && module.exports.Point.isImplementedBy(args[args.length-1]) ? args.pop()
                           : !refNode && !refEvent && args[args.length-1] && _.typeof(args[args.length-1]).x == "number" && _.typeof(args[args.length-1]).y == "number" ? args.pop()
                           : new module.exports.Point(0, 0)
@@ -252,7 +252,7 @@ module.exports.ClientRect = klass(function(statics){
                     if ( !refCPoint )
                       resolve( new module.exports.Matrix(ncr, new module.exports.Point(rcr.left, rcr.top)) )
                     else
-                      new module.exports.ClientRect(refNode||refEvent||docBody).compute(function(matrix){
+                      new module.exports.ClientRect(refNode||refEvent||document.body).compute(function(matrix){
                           resolve( new module.exports.Matrix(ncr, matrix[refCPoint].call(matrix)) )
                       })
                 }.bind(this)).then(function(matrix){
