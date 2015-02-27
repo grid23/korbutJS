@@ -11,7 +11,7 @@ else
     , Iterator: require("./src/Iterator").Iterator
 
     , UID: require("./src/UID").UID
-    , Serializer: require("./src/Serializer")
+    , Serializer: require("./src/Serializer").Serializer
 
     , Promise: require("./src/Promise").Promise
 
