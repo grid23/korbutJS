@@ -29,9 +29,9 @@ describe("korbut.Transition", function(){
         return a().then(b).then(c).then(d)
     }
 
-    setTimeout(function(){
-        x().then(x)
-    }, 2000)
+    window.addEventListener("click", function(e){
+        x()
+    })
 
     describe("| instantiation", function(){
         it("should return a korbut.Event instance", function(){

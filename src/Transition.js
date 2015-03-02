@@ -326,7 +326,8 @@ module.exports.Transition = klass(function(statics){
                                         this.node.style.setProperty(propsTo[0][0], propsTo.shift()[1])
 
                                       if ( !propsAnimating.length )
-                                        error = new Error("no properties to animate"), end()
+                                        end()
+                                        //error = new Error("no properties to animate"), end()
                                   }.bind(this))
                               }.bind(this))
                           }.bind(this))
