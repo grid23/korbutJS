@@ -278,7 +278,14 @@ module.exports.Router = klass(EventTarget, function(statics){
                             }( [].concat(iteration.value) )
                     }
 
-                    function next(){
+                    function next(counts){
+                        if ( counts && _.typeof(counts) == "boolean" ){
+                            if ( !counts && iterator.current.key !== "*" )
+                              hits--
+                            else if ( counts && iterator.current.key == "*" )
+                              hits++
+                        }
+
                         iterator.next()
 
                         if ( iterator.current.done == true )

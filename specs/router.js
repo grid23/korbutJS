@@ -148,6 +148,14 @@ describe("korbut.Router", function(){
             next()
         }
 
+        function doescount(route, next){
+            next(true)
+        }
+
+        function doesnotcount(route, next){
+            next(false)
+        }
+
         a.addRouteHandler({
             "/foo": onfoo
           , "/bar": onbar
@@ -156,9 +164,11 @@ describe("korbut.Router", function(){
         b.addRouteHandler("*", simpleNext)
         b.addRouteHandler("*", simpleNext)
         b.addRouteHandler("*", simpleNext)
+        b.addRouteHandler("*", doescount)
         b.addRouteHandler("whatever", simpleNext)
         b.addRouteHandler("whatever", simpleNext)
         b.addRouteHandler("whatever", simpleNext)
+        b.addRouteHandler("whatever", doesnotcount)
 
         a.addRouteHandler("/foo", onfoo2)
 
@@ -173,7 +183,7 @@ describe("korbut.Router", function(){
             chai.expect(fooyield).to.be.equal("foo2")
             chai.expect(baryield).to.be.equal("bar")
             chai.expect(simplenextfired).to.be.equal(6)
-            chai.expect(byield).to.be.equal(3) //"*" don't count
+            chai.expect(byield).to.be.equal(4) //"*" don't count
         })
 
         it("should work as expected with the route argument", function(){

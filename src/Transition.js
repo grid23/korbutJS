@@ -233,7 +233,7 @@ module.exports.Transition = klass(function(statics){
       , animate: { enumerable: true,
             value: function(){
                 if ( CSS_TRANSITION_COMPAT )
-                  return function(propsToIte, callback, oargs, args, propsTo, propsAnimating, animationId, self, alreadyEnabled, error){
+                  return function(propsToIte, callback, oargs, args, propsTo, propsAnimating, animationId, self, error){
                       self = this
                       oargs = arguments
                       args = _.spread(arguments)
@@ -242,7 +242,6 @@ module.exports.Transition = klass(function(statics){
                       propsAnimating = []
                       propsToIte = new Iterator( _.typeof(args[args.length-1]) == "object" ? args.pop() : {} )
                       animationId = UID.uid()
-                      alreadyEnabled = !!this.enabled
 
                       return new Promise(function(resolve, reject){
                           domReady.then(function(d){
@@ -261,8 +260,7 @@ module.exports.Transition = klass(function(statics){
                                           reject(error||true)
                                       }
 
-                                      if ( !alreadyEnabled )
-                                        this.disable()
+                                      this.disable()
                                   }.call(self)
                               }
 
@@ -314,14 +312,13 @@ module.exports.Transition = klass(function(statics){
                                         }
                                     }.call(this, module.exports.CSSHook.testProperty(propsToIte.current.key, propsToIte.current.value), this.node.cloneNode(true))
                               } catch(e){
+                                  console.error(e)
                                   error = e
                                   return end()
                               }
 
                               requestAnimationFrame(function(){
-                                  if ( !alreadyEnabled )
-                                    this.enable()
-
+                                  this.enable()
                                   this.node.addEventListener(this.CSS_TRANSITIONEND_EVENT, ontransitionend, true)
 
                                   requestAnimationFrame(function(){
@@ -386,6 +383,9 @@ module.exports.Transition = klass(function(statics){
 
       , enable: { enumerable: true,
             value: function(){
+                if ( this.enabled )
+                  return
+
                 if ( this.CLASSLIST_COMPAT )
                   this.node.classList.add(transitions[this.uid].classname)
                 else
@@ -394,6 +394,9 @@ module.exports.Transition = klass(function(statics){
         }
       , disable: { enumerable: true,
             value: function(){
+                if ( !this.enabled )
+                  return
+
                 if ( this.CLASSLIST_COMPAT )
                   this.node.classList.remove(transitions[this.uid].classname)
                 else

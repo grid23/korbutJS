@@ -373,8 +373,8 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                         if ( !blob && stylesheets[this.uid].writable )
                           this.insertRule(rules)
 
-                        resolve()
                         requestAnimationFrame(function(){
+                            resolve()
                             this.dispatchEvent("ready", stylesheets[this.uid].sheet)
                         }.bind(this))
                     }.bind(this))
@@ -433,6 +433,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                   stylesheets[this.uid].dfd.then(function(){
                       exec.call(this)
+                      cb.apply(this, [].concat(null, rv))
                   }.bind(this))
 
                   return rv

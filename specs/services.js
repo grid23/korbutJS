@@ -10,17 +10,17 @@ describe("services", function(){
 
     korbut.Promise.all([
         service.request(function(err, status, request){
-            console.log("a", status, request)
+            //console.log("a", status, request)
         }).then(function(request){
-            console.log("b", request)
+            //console.log("b", request)
         })
 
       , serviceb.request(function(err, status, request){
-            console.log("c", status, request)
+            //console.log("c", status, request)
         }).then(function(request){
-            console.log("d", request)
+            //console.log("d", request)
         })
     ]).then(function(){
-        console.log("e")
+        //console.log("e")
     })
 })

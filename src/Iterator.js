@@ -25,8 +25,8 @@ module.exports.Iterator = klass(function(statics){
                   try {
                       rv = Array.prototype.slice.call(o)
 
-                      for ( i = 0; l < o.length; i++ )
-                        if ( !rv.hasOwnProperty(l) )
+                      for ( i = 0, l = o.length; i < l; i++ )
+                        if ( !rv.hasOwnProperty(i) )
                           throw error
 
                       o = rv
