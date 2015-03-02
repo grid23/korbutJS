@@ -6,7 +6,7 @@ var UID = require("./UID").UID
 var Iterator = require("./Iterator").Iterator
 var Stylesheet = require("./Stylesheet").Stylesheet
 var CSSRule = require("./Stylesheet").CSSRule
-var domReady = require("./domReady")
+//var domReady = require("./domReady")
 var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
 var Promise = require("./Promise").Promise
 var cssProperties = window.getComputedStyle(document.createElement("div"))
@@ -106,6 +106,12 @@ new module.exports.CSSHook("transform", function(prop, div){
 module.exports.Transition = klass(function(statics){
     var transitions = Object.create(null)
     var CSS_TRANSITION_COMPAT = "TransitionEvent" in window ? 1 : "WebKitTransitionEvent" in window ? 3 : 0
+    var STYLESHEET = new Stylesheet({ uid: "korbut-transFX" })
+    var READY_DFD = new Promise(function(resolve, reject){
+            STYLESHEET.addEventListener("ready", function(){
+                requestAnimationFrame(resolve)
+            })
+        })
 
     Object.defineProperties(statics, {
         NONE: { enumerable: true, value: 0 }
@@ -121,7 +127,7 @@ module.exports.Transition = klass(function(statics){
             value: "TransitionEvent" in window ? "transitionend" : "WebKitTransitionEvent" in window ? "webkitTransitionEnd" : null
         }
       , stylesheet: { enumerable: true,
-            value: new Stylesheet({ uid: "korbut-transFX" })
+            get: function(){ return STYLESHEET }
         }
       , CUSTOM_DATA: { enumerable: true,
             value: "data-k-transFX-ID"
@@ -244,7 +250,7 @@ module.exports.Transition = klass(function(statics){
                       animationId = UID.uid()
 
                       return new Promise(function(resolve, reject){
-                          domReady.then(function(d){
+                          READY_DFD.then(function(){
                               function end(){
                                   return function(){
                                       this.node.removeEventListener(this.CSS_TRANSITIONEND_EVENT, ontransitionend, true)
@@ -340,7 +346,7 @@ module.exports.Transition = klass(function(statics){
                       propsToIte = new Iterator( _.typeof(args[args.length-1]) == "object" ? args.pop() : {} )
 
                       return new Promise(function(resolve, reject, error){
-                          domReady.then(function(d){
+                          READY_DFD.then(function(){
                               function end(){
                                   if ( error )
                                     callback(error),

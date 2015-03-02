@@ -29,6 +29,9 @@ describe("korbut.Transition", function(){
         return a().then(b).then(c).then(d)
     }
 
+
+    x()
+
     window.addEventListener("click", function(e){
         x()
     })

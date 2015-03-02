@@ -52,7 +52,7 @@ module.exports = new Promise(function(resolve, reject, ready){
     }
 
     function isready(){
-        return "interactive,complete".indexOf(document.readyState) != -1 ? (onready(), true) : false
+        return "interactive, complete".indexOf(document.readyState) != -1 ? (onready(), true) : false
     }
 
     if ( !isready() )
