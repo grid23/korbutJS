@@ -199,7 +199,9 @@ module.exports.EventTarget = klass(function(statics){
                 count = 0
 
                 if ( event.type == "error" && !handlers )
-                  throw module.exports.Event.isImplementedBy(event.detail) ? event.detail : new Error
+                  if ( event.error instanceof Error )
+                    throw event.error
+                  else throw new Error( event.detail || "")
 
                 if ( handlers )
                   if ( typeof handlers == "function" )
