@@ -117,12 +117,14 @@ describe("korbut.Router", function(){
     describe("=>dispatchRoute", function(){
         var a = new korbut.Router
         var b = new korbut.Router
+        var c = new korbut.Router
 
         var foofired, barfired
         var foo2fired, bar2fired = false
         var simplenextfired = 0
         var fooyield, baryield
         var byield
+        var testscope, testscopeyield
 
         function onfoo(route, next){
             foofired = true
@@ -156,6 +158,13 @@ describe("korbut.Router", function(){
             next(false)
         }
 
+        testscope = {
+            handleRoute: function(){
+                return this === testscope
+            }
+        }
+        c.addRouteHandler("/scope", testscope)
+
         a.addRouteHandler({
             "/foo": onfoo
           , "/bar": onbar
@@ -175,6 +184,7 @@ describe("korbut.Router", function(){
         fooyield = a.dispatchRoute("/foo")
         baryield = a.dispatchRoute("/bar")
         byield = b.dispatchRoute("whatever")
+        scopetestyield = c.dispatchRoute("/scope")
 
         it("should work as expected with return values", function(){
             chai.expect(foofired).to.be.true
@@ -184,6 +194,8 @@ describe("korbut.Router", function(){
             chai.expect(baryield).to.be.equal("bar")
             chai.expect(simplenextfired).to.be.equal(6)
             chai.expect(byield).to.be.equal(4) //"*" don't count
+            chai.expect(scopetestyield).to.be.true
+
         })
 
         it("should work as expected with the route argument", function(){

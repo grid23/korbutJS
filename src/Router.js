@@ -257,20 +257,20 @@ module.exports.Router = klass(EventTarget, function(statics){
                           if ( iteration.key !== "*" )
                             hits++
 
-                          rv = (iteration.value.handleRoute||iteration.value).call(null, route, next, hits)
+                          rv = (iteration.value.handleRoute||iteration.value).call(!iteration.value.handleRoute?null:iteration.value, route, next, hits)
                           return _.typeof(rv) !== "undefined" ? rv : hits
                         } else if ( Array.isArray(iteration.value) )
                             return function(handlers, _next){
-                                function _next(handler){
+                                function _next(counts, handler){
                                     if ( !handlers.length )
-                                      return next()
+                                      return next.call(null, counts)
 
                                     handler = handlers.shift()
 
                                     if ( iteration.key !== "*" )
                                       hits++
 
-                                    rv = handler.call(null, route, handlers.length?_next:next, hits)
+                                    rv = (handler.handleRoute||handler).call(!handler.handleRoute?null:handler, route, handlers.length?_next:next, hits)
                                     return _.typeof(rv) !== "undefined" ? rv : hits
                                 }
 
@@ -279,7 +279,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                     }
 
                     function next(counts){
-                        if ( counts && _.typeof(counts) == "boolean" ){
+                        if ( _.typeof(counts) == "boolean" ){
                             if ( !counts && iterator.current.key !== "*" )
                               hits--
                             else if ( counts && iterator.current.key == "*" )

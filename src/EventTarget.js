@@ -204,18 +204,18 @@ module.exports.EventTarget = klass(function(statics){
                 if ( handlers )
                   if ( typeof handlers == "function" )
                     handlers.call(null, event), count++
+                  else if ( typeof handlers.handleEvent == "function" )
+                    handlers.handleEvent.call(handlers, event), count++
                   else if ( Array.isArray(handlers) )
                     void function(handlers){
                         while ( handlers.length )
                           if ( typeof handlers[0] == "function" )
                             handlers.shift().call(null, event), count++
                           else if ( typeof handlers[0].handleEvent == "function" )
-                            handlers.shift().handleEvent.call(handlers, event), count++
+                            handlers[0].handleEvent.call(handlers.shift(), event), count++
                           else
                             handlers.shift()
                     }( [].concat(handlers) )
-                  else if ( typeof handlers.handleEvent == "function" )
-                    handlers.handleEvent.call(handlers, event), count++
 
                 return count
             }
