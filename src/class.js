@@ -81,7 +81,9 @@ module.exports.class = function(args, statics, Class, prototype, k){
             if ( !o )
               return false
 
-            prototype = o && typeof o.constructor == "function" ? o.constructor.prototype : null
+            prototype = o && o.prototype ? o.prototype
+                      : typeof o.constructor == "function" ? o.constructor.prototype
+                      : null
 
             if ( o instanceof Class || Class.prototype === prototype )
               return true

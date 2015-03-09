@@ -219,6 +219,8 @@ describe("korbut.class", function(){
         var c = {}
         var D = korbut.class({ foo: function(){} })
         var E = korbut.class({ foo: { value: function(){} } })
+        var F = korbut.class(E, { bar: { value: function(){} } })
+        var G = korbut.class({ bar: { value: function(){} } })
         B.implementsOn(c)
 
         describe("#extend()", function(){
@@ -250,6 +252,11 @@ describe("korbut.class", function(){
 
             it("should return false when a property is missing from the inspected object", function(){
                 chai.expect(E.isImplementedBy(b)).to.be.false
+            })
+
+            it("should be able to inspect others classes", function(){
+                chai.expect(E.isImplementedBy(F)).to.be.true
+                chai.expect(E.isImplementedBy(G)).to.be.false
             })
         })
 

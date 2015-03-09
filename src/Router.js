@@ -139,7 +139,7 @@ module.exports.Router = klass(EventTarget, function(statics){
             routers[this.uid] = Object.create(null, {
                 router: { value: this }
               , routes: { value: Object.create(null) }
-              , Route: { value: this.constructor.prototype._Route || module.exports.Route }
+              , Route: { writable: true, value: this.constructor.prototype._Route || module.exports.Route }
             })
 
             if ( _.typeof(routes) == "object" )
@@ -152,6 +152,7 @@ module.exports.Router = klass(EventTarget, function(statics){
         }
       , Route: { enumerable: true,
             get: function(){ return routers[this.uid].Route }
+          , set: function(v){ if ( module.exports.Route.isImplementedBy(v) ) routers[this.uid].Route = v }
         }
       , routes: { enumerable: true,
             get: function(){ return routers[this.uid].routes }

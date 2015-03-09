@@ -108,6 +108,18 @@ describe("korbut.Router", function(){
 
     })
 
+    describe(":Route", function(){
+        it("should allow getting the default Route class, or setting a new default one", function(){
+            var r = new korbut.Router
+            var v = new korbut.Router
+            var R = korbut.class(korbut.Route, { constructor: function(){ korbut.Route.apply(this, arguments) } })
+            v.Route = R
+
+            chai.expect( (r.Route === korbut.Route)  ).to.be.true
+            chai.expect( (v.Route === R) ).to.be.true
+        })
+    })
+
     describe("=>removeRouteHandler", function(){
         it("todo", function(){
             throw Error
