@@ -275,11 +275,11 @@ module.exports.Transition = klass(function(statics){
                                       if ( e.target !== this.node )
                                         return
 
-                                      if ( idx = propsAnimating.indexOf(e.propertyName), idx != -1 )
-                                        propsAnimating.splice(idx, 1)
-
                                       if ( this.node.getAttribute(this.CUSTOM_DATA) !== animationId )
                                         return error = new Error("a more recent animation finished"), end()
+
+                                      if ( idx = propsAnimating.indexOf(e.propertyName), idx != -1 )
+                                        propsAnimating.splice(idx, 1)
 
                                       if ( !propsAnimating.length )
                                         end()
