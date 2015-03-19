@@ -272,6 +272,9 @@ module.exports.Transition = klass(function(statics){
 
                               function ontransitionend(e, idx){
                                   return function(){
+                                      if ( !this || !this.node )
+                                        return error = new Error("the animation instance or node does not exist anymore"), end()
+
                                       if ( e.target !== this.node )
                                         return
 
