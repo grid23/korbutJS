@@ -331,9 +331,12 @@ module.exports.Transition = klass(function(statics){
                                   this.node.addEventListener(this.CSS_TRANSITIONEND_EVENT, ontransitionend, true)
 
                                   // this is a very broken way to fix CSS issues with chrome, until we can find better
-                                  if ( !!window.getComputedStyle(this.node).transition.match(/all/) ) {
+                                  if ( !!(window.getComputedStyle(this.node).transition||"").match(/all/) ) {
                                       this.node.style.cssText = this.cssRule.cssText
                                   }
+
+                                  console.log(window.getComputedStyle(this.node))
+
 
                                   requestAnimationFrame(function(){
                                       while ( propsTo.length )

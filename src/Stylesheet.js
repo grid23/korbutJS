@@ -337,8 +337,10 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                       node = ZenParser.parse("link#$id[rel=stylesheet][href=$href]", { id: this.uid, href: url }).tree.childNodes[0]
                     }
-                    else
-                      node = ZenParser.parse("style#$id>§{$rules}", { id: this.uid, rules: rules.splice(0).join("\n") }).tree.childNodes[0]
+                    else {
+                      node = ZenParser.parse("style#$id", { id: this.uid }).tree.childNodes[0]
+                      node.appendChild( document.createTextNode( rules.splice(0).join("\n") ) )
+                    }
 
                     domReady.then(function(e){
                         (e.nodes.head||document.head).appendChild(node)

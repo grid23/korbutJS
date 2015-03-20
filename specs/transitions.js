@@ -32,7 +32,7 @@ describe("korbut.Transition", function(){
 
     x()
 
-    window.addEventListener("click", function(e){
+    document.body.addEventListener("click", function(e){
         x()
     })
 
