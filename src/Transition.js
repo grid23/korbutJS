@@ -335,9 +335,6 @@ module.exports.Transition = klass(function(statics){
                                       this.node.style.cssText = this.cssRule.cssText
                                   }
 
-                                  console.log(window.getComputedStyle(this.node))
-
-
                                   requestAnimationFrame(function(){
                                       while ( propsTo.length )
                                         this.node.style.setProperty(propsTo[0][0], propsTo.shift()[1])
