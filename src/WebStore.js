@@ -2,11 +2,18 @@
 
 var _ = require("./utils")
 var klass = require("./class").class
-var Model = require("./Model").Model
 var UID = require("./UID").UID
 var Serializer = require("./Serializer").Serializer
 var Iterator = require("./Iterator").Iterator
+var Model = require("./Model").Model
 var Event = require("./EventTarget").Event
+
+
+
+var localStorage = window.localStorage
+
+
+var LOCAL_STORAGE_COMPAT = localStorage && _.native(localStorage.setItem)
 
 module.exports.StoreSyncEvent = klass(Event, {
     constructor: function(){
@@ -18,14 +25,24 @@ module.exports.WebStore = klass(Model, function(statics){
     var stores = Object.create(null)
 
     Object.defineProperties(statics, {
-        getByUid: function(uid){
-            return stores[uid] && stores[uid].instance
+        getByUid: { enumerable: true,
+            value: function(uid){
+                return stores[uid] && stores[uid].instance
+            }
+        }
+      , IDB_COMPAT: { enumerable: true,
+            get: function(){ return IDB_COMPAT }
+        }
+      , LOCAL_STORAGE_COMPAT: { enumerable: true,
+            get: function(){ return LOCAL_STORAGE_COMPAT }
         }
     })
 
     return {
         constructor: function(){
-
+            stores[this.uid] = Object.create(null, {
+                instance: { value: this }
+            })
         }
       , sync: { enumerable: true,
             value: function(){
@@ -39,7 +56,6 @@ module.exports.WebStore = klass(Model, function(statics){
 
       , purge: { enumerable: true, configurable: true,
             value: function(){
-                Model.prototype.purge.call(this)
                 delete stores[this.uid]
             }
         }

@@ -50,6 +50,11 @@ Object.defineProperties(korbut, {
 
   , UID: { enumerable: true, value: require("./UID").UID }
   , Serializer: { enumerable: true, value: require("./Serializer").Serializer }
+
+  , IDB: { enumerable: true, value: require("./IDB").IDB }
+  , IDBStore: { enumerable: true, value: require("./IDB").IDBStore }
+  , IDBBroker: { enumerable: true, value: require("./IDB").IDBBroker }
+  , LSDB: { enumerable: true, value: require("./LSDB").LSDB }
 })
 
 module.exports = window.korbut = korbut

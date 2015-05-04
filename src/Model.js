@@ -54,6 +54,7 @@ module.exports.CollectionUpdateEvent = klass(Event, {
 
 module.exports.Collection = klass(EventTarget, function(statics){
     var collections = Object.create(null)
+    var CSV_SEPARATOR = ";"
 
     function update(collection){
         if ( !collections[collection.uid] )
@@ -75,9 +76,14 @@ module.exports.Collection = klass(EventTarget, function(statics){
             }
         }
       , CSVtoCollection: { enumerable: true,
-            value: function(csv, callback){
-                csv = (_.typeof(csv) == "string" ? csv.trim() : "").split(/\n|\r/)
-                callback = _.typeof(callback) == "function" ? callback : null
+            value: function(csv, dict, callback, separator, validationHandler, args){
+                args = _.spread(arguments)
+                callback = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
+                dict = _.typeof(args[args.length-1]) == "object" ? args.pop() : {}
+                csv = _.typeof(args[args.length-1]) == "string" ? args.pop().trim().replace(/\r/g, "").split(/\n|\r/) : []
+
+                separator = _.typeof(dict.separator) == "string" ? dict.separator : CSV_SEPARATOR
+                validationHandler = _.typeof(dict.validate) == "function" ? dict.validate : null
 
                 return new Promise(function(resolve, reject, collection, props, i, l){
                     function onresolve(d){
@@ -93,7 +99,7 @@ module.exports.Collection = klass(EventTarget, function(statics){
                     }
 
                     collection = new module.exports.Collection
-                    props = (csv.shift()||"").split(",")
+                    props = csv.length ? csv.shift().split(separator) : []
 
                     for ( i = 0, l = props.length; i < l; i++ )
                       props[i] = props[i].trim()
@@ -101,16 +107,22 @@ module.exports.Collection = klass(EventTarget, function(statics){
                     function partial(pcsv){
                           try {
                               pcsv = csv.splice(0, Math.min(100, csv.length))
-
+                              //console.log(pcsv)
                               while ( pcsv.length )
                                 void function(data, model){
+                                    if ( !data ) return
+
                                     model = new module.exports.Model
 
                                     for ( i = 0; i < l; i++ )
                                         model.setItem(props[i], data[i])
 
-                                    collection.addModel(model)
-                                }( (pcsv.shift()||"").split(",") )
+                                    if ( validationHandler ) {
+                                      if ( validationHandler(model) )
+                                        collection.addModel(model)
+                                    } else
+                                      collection.addModel(model)
+                                }( pcsv.length ? pcsv.shift().split(separator) : null )
                           } catch(e) {
                               onreject(e)
                           }
@@ -141,6 +153,11 @@ module.exports.Collection = klass(EventTarget, function(statics){
                     })
                     return this.models
                 }.call(this)
+            }
+        }
+      , length: { enumerable: true,
+            get: function(){
+                return this.models.length
             }
         }
       , addModel: { enumerable: true,
