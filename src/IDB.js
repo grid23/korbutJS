@@ -404,7 +404,7 @@ module.exports.IDBAsset = klass(EventTarget, function(statics){
         }
       , purge: { enumerable: true, configurable: true,
             value: function(){
-                assets dbs[this.uid]
+                assets[this.uid]
                 EventTarget.prototype.purge.apply(this, arguments)
             }
         }

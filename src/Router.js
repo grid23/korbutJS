@@ -79,7 +79,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                 function getRule(str, regexp, assignments, split){
                     if ( !cache[str] )
                       if ( str.indexOf(":") == -1 )
-                        cache[str] = new RegExp("^"+str+"$")
+                        cache[str] = new RegExp("^"+str+"$", "i")
                       else {
                         assignments = []
                         regexp = []
@@ -101,7 +101,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                                 regexp.push(part)
                           }( split.shift() )
 
-                        cache[str] = new RegExp("^"+regexp.join("\\\/")+"$")
+                        cache[str] = new RegExp("^"+regexp.join("\\\/")+"$", "i")
                         cache[str].assignments = assignments
                       }
 

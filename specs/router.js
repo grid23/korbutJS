@@ -91,6 +91,11 @@ describe("korbut.Router", function(){
                 chai.expect(a.routes["/foo"]).to.be.a("array")
             })
 
+            it("should work without concern of caps", function(){
+                  var r = new korbut.Router
+                  r.addRouteHandler("/Test", function(){})
+                  chai.expect(r.dispatchRoute("/test")).to.be.equal(1)
+            })
         })
 
         describe("(handlerDict)", function(){
