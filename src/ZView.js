@@ -8,6 +8,16 @@ var Model = require("./Model").Model
 var UID = require("./UID").UID
 var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
 
+var DOCUMENT = window.document
+
+module.exports.getDocument = function(v){
+    return DOCUMENT
+}
+
+module.exports.setDocument = function(v){
+    DOCUMENT = v
+}
+
 module.exports.ZenParser = klass(function(statics){
     var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
 
@@ -198,7 +208,7 @@ module.exports.ZenParser = klass(function(statics){
                         node = function(node){
                             if ( node.nodeType === Node.TEXT_NODE)
                               return node
-                            return node.appendChild(document.createTextNode(""))
+                            return node.appendChild(DOCUMENT.createTextNode(""))
                         }(input.buffer)
                         rawTextContent = input.pile
                         model = input.data
@@ -288,10 +298,10 @@ module.exports.ZenParser = klass(function(statics){
                 input.pile = input.pile.trim()
 
                 if ( !input.operator) {
-                    input.buffer = !input.pile.length && input.glyph === "{" ? document.createTextNode("")
-                                 : !input.pile.length && input.glyph !== "{" ? document.createElement("div")
-                                 : input.pile === "§" ? document.createTextNode("")
-                                 : document.createElement(input.pile)
+                    input.buffer = !input.pile.length && input.glyph === "{" ? DOCUMENT.createTextNode("")
+                                 : !input.pile.length && input.glyph !== "{" ? DOCUMENT.createElement("div")
+                                 : input.pile === "§" ? DOCUMENT.createTextNode("")
+                                 : DOCUMENT.createElement(input.pile)
 
                   if ( autoVars.indexOf(input.buffer.nodeName) != -1 )
                     input.pile = input.buffer.nodeName.toLowerCase(),
@@ -374,7 +384,15 @@ module.exports.ZenParser = klass(function(statics){
                     dummy.nodeValue = str
                     return dummy.nodeValue
                 }
-            }( document.createTextNode("") )
+            }( DOCUMENT.createTextNode("") )
+        }
+      , document: { enumerable: true,
+            get: function(){
+                return DOCUMENT
+            }
+          , set: function(v){
+                return module.exports.setDocument.call(null, v)
+            }
         }
     })
 
@@ -394,7 +412,7 @@ module.exports.ZenParser = klass(function(statics){
 
                 stream = new Iterator(this.expression)
                 input = { data: data, update: [], pile: "", glyph: "", buffer: null, operator: null, traversal: null, context: null }
-                output = { vars: {}, tree: document.createDocumentFragment() }
+                output = { vars: {}, tree: DOCUMENT.createDocumentFragment() }
 
                 return parse(stream, input, output)
             }
@@ -413,6 +431,14 @@ module.exports.ZView = klass(EventTarget, function(statics){
     Object.defineProperties(statics, {
         getByUid: function(uid){
             return views[uid] ? views[uid].view : void 0
+        }
+      , document: { enumerable: true,
+            get: function(){
+                return DOCUMENT
+            }
+          , set: function(v){
+                return module.exports.setDocument.call(null, v)
+            }
         }
     })
 
