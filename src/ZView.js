@@ -8,7 +8,7 @@ var Model = require("./Model").Model
 var UID = require("./UID").UID
 var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
 
-var DOCUMENT = window.document
+var DOCUMENT = !!window ? window.document : {}
 
 module.exports.getDocument = function(v){
     return DOCUMENT
