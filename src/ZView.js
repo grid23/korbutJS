@@ -6,7 +6,13 @@ var EventTarget = require("./EventTarget").EventTarget
 var Iterator = require("./Iterator").Iterator
 var Model = require("./Model").Model
 var UID = require("./UID").UID
-var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
+var requestAnimationFrame = function(){
+        if ( typeof window !== "undefined" )
+          return require("./dom-utils/requestAnimationFrame").requestAnimationFrame
+        return function(fn){
+            return fn()
+        }
+    }( )
 
 var DOCUMENT, WINDOW, ELEMENT, NODE
 
