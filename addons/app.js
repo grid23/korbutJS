@@ -17,6 +17,9 @@ const TestBuilder = klass(Builder, {
     }
 })
 
+
+const ZView = require("../src/ZView").ZView
+
 let builder = new TestBuilder
 let watcher = new Watcher
 

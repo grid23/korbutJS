@@ -12,7 +12,7 @@ dest = path.join(__dirname, "../dist/korbut.js")
 module.exports.browserify = function(dfd){
     dfd = q.defer()
 
-    browserify(main).bundle(function(err, buffer){
+    browserify(main).ignore("jsdom").bundle(function(err, buffer){
         if ( err )
           return dfd.reject(err)
 

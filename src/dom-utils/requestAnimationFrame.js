@@ -1,11 +1,20 @@
 "use strict"
 
 var _ = require("../utils")
+var WINDOW = typeof window !== "undefined" ? window : {}
+
+module.exports.setWindow = function(v){
+    WINDOW = v
+}
+
+module.exports.getWindow = function(){
+    return WINDOW
+}
 
 module.exports.requestAnimationFrame = function(fn){
-    fn = _.native(window.requestAnimationFrame) ? window.requestAnimationFrame
-                              : window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame
-                             || window.msRequestAnimationFrame || window.oRequestAnimationFrame
+    fn = _.native(WINDOW.requestAnimationFrame) ? WINDOW.requestAnimationFrame
+                              : WINDOW.webkitRequestAnimationFrame || WINDOW.mozRequestAnimationFrame
+                             || WINDOW.msRequestAnimationFrame || WINDOW.oRequestAnimationFrame
                              || function(fn){
                                     return setTimeout(function(){
                                         fn(Date.now())
@@ -16,9 +25,9 @@ module.exports.requestAnimationFrame = function(fn){
 }()
 
 module.exports.cancelAnimationFrame = function(fn){
-    fn = _.native(window.cancelAnimationFrame) ? window.cancelAnimationFrame
-                             : window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame
-                            || window.msCancelAnimationFrame || window.oCancelAnimationFame
+    fn = _.native(WINDOW.cancelAnimationFrame) ? WINDOW.cancelAnimationFrame
+                             : WINDOW.webkitCancelAnimationFrame || WINDOW.mozCancelAnimationFrame
+                            || WINDOW.msCancelAnimationFrame || WINDOW.oCancelAnimationFame
                             || function(id){ clearTimeout(id) }
 
     return function(id){ return fn(id) }

@@ -8,7 +8,7 @@ var Model = require("./Model").Model
 var UID = require("./UID").UID
 var requestAnimationFrame = require("./dom-utils/requestAnimationFrame").requestAnimationFrame
 
-var DOCUMENT = !!window ? window.document : {}
+var DOCUMENT, WINDOW, ELEMENT, NODE
 
 module.exports.getDocument = function(v){
     return DOCUMENT
@@ -16,10 +16,19 @@ module.exports.getDocument = function(v){
 
 module.exports.setDocument = function(v){
     DOCUMENT = v
+    WINDOW = DOCUMENT.defaultView
+    ELEMENT = WINDOW.Element
+    NODE = WINDOW.Node
+    require("./dom-utils/requestAnimationFrame").setWindow(WINDOW)
 }
 
+if ( typeof window !== "undefined" )
+    module.exports.setDocument(window.document)
+else
+    module.exports.setDocument(require("jsdom").jsdom())
+
 module.exports.ZenParser = klass(function(statics){
-    var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
+    var CLASS_LIST_COMPAT = ELEMENT.prototype.hasOwnProperty("classList")
 
     var rtemplatevars = /\$([^$\s]*)/g
     var templateVarGlyph = "\\$"
@@ -206,7 +215,7 @@ module.exports.ZenParser = klass(function(statics){
                 value: function(){
                     function textContent(stream, input, output, node, rawTextContent, model, vars, hit, onupdate){
                         node = function(node){
-                            if ( node.nodeType === Node.TEXT_NODE)
+                            if ( node.nodeType === NODE.TEXT_NODE)
                               return node
                             return node.appendChild(DOCUMENT.createTextNode(""))
                         }(input.buffer)
@@ -286,7 +295,7 @@ module.exports.ZenParser = klass(function(statics){
             input.pile = ""
             input.glyph = ""
             input.operator = null
-            if ( input.buffer && input.buffer.nodeType === Node.ELEMENT_NODE )
+            if ( input.buffer && input.buffer.nodeType === NODE.ELEMENT_NODE )
               input.context = input.buffer
             input.buffer = null
         }
