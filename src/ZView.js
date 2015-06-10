@@ -532,6 +532,18 @@ module.exports.ZView = klass(EventTarget, function(statics){
                 return []
             }
         }
+
+      , recover: { enumerable: true,
+            value: function(){
+                nodes = this.queryAll("root")
+
+                while ( nodes.length )
+                  void function(node){
+                      if ( node.parentNode !== this.fragment )
+                        this.fragment.appendChild(nodes.shift())
+                  }.call( this, nodes.shift() )
+            }
+        }
         /*
       , clone: { enumerable: true,
             value: function(){
@@ -548,18 +560,15 @@ module.exports.ZView = klass(EventTarget, function(statics){
         }
 
       , purge: { enumerable: true, configurable: true,
-            value: function(what, nodes){
+            value: function(what){
                 what = _.typeof(what) == "boolean" && what ? { nodes: true, model: true }
                      : _.typeof(what) == "object" ? what
                      : { nodes: false, model: false }
 
                 EventTarget.prototype.purge.call(this)
 
-                if ( what.nodes ) {
-                  nodes = this.queryAll("root")
-                  while ( nodes.length )
-                    this.fragment.appendChild(nodes.shift())
-                }
+                if ( what.nodes )
+                  this.recover()
 
                 if ( what.model )
                   this.model.purge()
