@@ -126,7 +126,7 @@ module.exports.class = function(args, statics, Class, prototype, k){
             while ( properties.length )
               Object.defineProperty(prototype, properties[0], Object.getOwnPropertyDescriptor(Class.prototype, properties.shift()))
 
-            Class.apply(this, _.spread(arguments, 1))
+            Class.apply(prototype, _.spread(arguments, 1))
         }
     })
 
