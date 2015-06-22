@@ -154,7 +154,7 @@ module.exports.Watcher = klass(EventTarget, function(statics){
         }
       , purge: { enumerable: true,
             value: function(){
-                fs.unwatch(this.path, this.handleChange)
+                fs.unwatchFile(this.path, this.handleChange)
                 EventTarget.prototype.purge.call(this)
                 watchers.delete(this)
             }

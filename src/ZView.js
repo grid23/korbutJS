@@ -72,6 +72,7 @@ module.exports.ZenParser = klass(function(statics){
 
                     if ( vars.length ) {
                         onupdate = function(e, str, hit, i, l, value){
+                            function exec(){ node.setAttribute("id", module.exports.ZenParser.escapeHTML(str)) }
                             str = rawid
 
                             for ( i = 0, l = e.keys.length; i < l; i++ )
@@ -88,9 +89,10 @@ module.exports.ZenParser = klass(function(statics){
                                   str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                               }
 
-                              requestAnimationFrame(function(){
-                                  node.setAttribute("id", module.exports.ZenParser.escapeHTML(str))
-                              })
+                              if ( input.done )
+                                requestAnimationFrame(exec)
+                              else
+                                exec()
                             }
                         }
 
@@ -127,6 +129,10 @@ module.exports.ZenParser = klass(function(statics){
 
                         if ( vars.length ) {
                             onupdate = function(e, str, hit, i, l, value){
+                                function exec(){
+                                    set(node, str, lastValue)
+                                    lastValue = str
+                                }
                                 str = rawClassName
                                 for ( i = 0, l = e.keys.length; i < l; i++ )
                                   if ( vars.indexOf(e.keys[i]) != -1 ) {
@@ -142,10 +148,10 @@ module.exports.ZenParser = klass(function(statics){
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
-                                  requestAnimationFrame(function(){
-                                      set(node, str, lastValue)
-                                      lastValue = str
-                                  })
+                                  if ( input.done )
+                                    requestAnimationFrame(exec)
+                                  else
+                                    exec()
                                 }
                             }
                             input.update.push(onupdate)
@@ -179,6 +185,7 @@ module.exports.ZenParser = klass(function(statics){
 
                         if ( vars.length ) {
                             onupdate = function(e, str, hit, i, l, value){
+                                function exec(){ node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str)) }
                                 str = rawValue
 
                                 for ( i = 0, l = e.keys.length; i < l; i++ )
@@ -195,9 +202,10 @@ module.exports.ZenParser = klass(function(statics){
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
-                                  requestAnimationFrame(function(){
-                                      node.setAttribute(module.exports.ZenParser.escapeHTML(rawKey), module.exports.ZenParser.escapeHTML(str))
-                                  })
+                                  if ( input.done )
+                                    requestAnimationFrame(exec)
+                                  else
+                                    exec()
                                 }
                             }
                             input.update.push(onupdate)
@@ -235,6 +243,7 @@ module.exports.ZenParser = klass(function(statics){
 
                         if ( vars.length ) {
                             onupdate = function(e, str, hit, i, l, value){
+                                function exec(){ node.nodeValue = str }
                                 str = rawTextContent
 
                                 for ( i = 0, l = e.keys.length; i < l; i++ )
@@ -251,9 +260,10 @@ module.exports.ZenParser = klass(function(statics){
                                       str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
                                   }
 
-                                  requestAnimationFrame(function(){
-                                      node.nodeValue = str
-                                  })
+                                  if ( input.done)
+                                    requestAnimationFrame(exec)
+                                  else
+                                    exec()
                                 }
                             }
                             input.update.push(onupdate)
@@ -384,6 +394,7 @@ module.exports.ZenParser = klass(function(statics){
                   }
               }(input.update, input.update.length))
 
+            input.done = true
             return output
         }
 
@@ -426,7 +437,7 @@ module.exports.ZenParser = klass(function(statics){
                      : new Model
 
                 stream = new Iterator(this.expression)
-                input = { data: data, update: [], pile: "", glyph: "", buffer: null, operator: null, traversal: null, context: null }
+                input = { data: data, update: [], pile: "", glyph: "", buffer: null, operator: null, traversal: null, context: null, done: false }
                 output = { vars: {}, tree: DOCUMENT.createDocumentFragment() }
 
                 return parse(stream, input, output)
@@ -495,7 +506,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
 
             views[this.uid].model = model
             views[this.uid].template = _.typeof(this.constructor.prototype._template) == "string" ? this.constructor.prototype._template : dict.template
-            buffer = new module.exports.ZenParser(views[this.uid].template).parse(this)
+            buffer = new module.exports.ZenParser(views[this.uid].template).parse(views[this.uid].model)
             views[this.uid].fragment = buffer.tree
             views[this.uid].vars = buffer.vars
 
