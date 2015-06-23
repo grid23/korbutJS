@@ -52,9 +52,9 @@ module.exports.Promise = klass(function(statics){
                 if ( !Iterator.iterable(promises) )
                   throw new TypeError("korbut.Promise.race requires an iterable object as argument 0.")
 
-                return new module.exports.Promise(function(resolve, reject, length, resolved){
+                return new module.exports.Promise(function(resolve, reject, iterator, length, resolved){
                     iterator = new Iterator(promises)
-                    length = iterator.length()
+                    length = iterator.length
 
                     function onresolve(v){
                         if ( resolved )
