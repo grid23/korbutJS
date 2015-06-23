@@ -204,7 +204,7 @@ module.exports.Promise = klass(function(statics){
 
                             if ( rv && typeof rv.then == "function" )
                               rv.then(function(v){ resolve(v) }, function(r){ reject(r) })
-                            else resolve(rv)
+                            else setTimeout(reject, 4, rv)
                         })
                 }(this, promises[this.uid].state.key == this.RESOLVED, promises[this.uid].state.key == this.REJECTED )
             }
