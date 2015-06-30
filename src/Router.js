@@ -135,17 +135,26 @@ module.exports.Router = klass(EventTarget, function(statics){
     })
 
     return {
-        constructor: function(routes, dispatcher){
+        constructor: function(routes, dict, dispatcher, args){
+            args = _.spread(arguments)
+            dispatcher = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
+            dict = args.length > 1 && _.typeof(args[args.length-1]) == "object" ? args.pop() : {}
+            routes = args.shift()
+
             routers[this.uid] = Object.create(null, {
                 router: { value: this }
               , routes: { value: Object.create(null) }
-              , Route: { writable: true, value: this.constructor.prototype._Route || module.exports.Route }
+              , Route: { writable: true,
+                    value : Route.isImplementedBy(this.constructor.prototype._Route) ? this.constructor.prototype._Route
+                          : Route.isImplementedBy(dict.Route) ? dict.Route
+                          : Route
+                }
             })
 
             if ( _.typeof(routes) == "object" )
               this.addRouteHandler(routes)
 
-            if ( typeof dispatcher == "function" )
+            if ( dispatcher )
               dispatcher.call(this, function dispatch(){
                   return this.dispatch.apply(this, arguments)
               }.bind(this))
