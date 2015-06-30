@@ -170,6 +170,16 @@ module.exports.Router = klass(EventTarget, function(statics){
             value: function(route, handler, handlers){
                 //!this._routes && Object.defineProperty(this, "_routes", { value: Object.create(null) })
 
+                if ( arguments.length > 1 && _.typeof(arguments[0]) == "array" )
+                  return function(routes, count){
+                      count = 0
+
+                      while (routes.length)
+                        count += this.addRouteHandler(routes.shift(), handler)
+
+                      return count
+                  }.call(this, [].concat(arguments[0]))
+
                 if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
                   return function(routes, count, k){
                       count = 0
