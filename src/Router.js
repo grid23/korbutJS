@@ -145,9 +145,9 @@ module.exports.Router = klass(EventTarget, function(statics){
                 router: { value: this }
               , routes: { value: Object.create(null) }
               , Route: { writable: true,
-                    value : Route.isImplementedBy(this.constructor.prototype._Route) ? this.constructor.prototype._Route
-                          : Route.isImplementedBy(dict.Route) ? dict.Route
-                          : Route
+                    value : module.exports.Route.isImplementedBy(this.constructor.prototype._Route) ? this.constructor.prototype._Route
+                          : module.exports.Route.isImplementedBy(dict.Route) ? dict.Route
+                          : module.exports.Route
                 }
             })
 
