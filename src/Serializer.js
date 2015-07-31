@@ -2,6 +2,7 @@
 
 var _ = require("./utils")
 var klass = require("./class").class
+
 var Iterator = require("./Iterator").Iterator
 var UID = require("./UID").UID
 
@@ -9,6 +10,7 @@ module.exports.Serializer = klass(function(statics){
     var serializers = Object.create(null)
     var DELIMITER = "="
     var SEPARATOR = "&"
+    var KEY_SEPARATOR = "."
     var rspacetoplus = /%20/g
     var rplustospace = /\+/g
 
@@ -17,8 +19,8 @@ module.exports.Serializer = klass(function(statics){
             value: function(o, s, iterator, del, sep){
                 s = []
                 iterator = new Iterator(o)
-                del = this.delimiter || DELIMITER
-                sep = this.separator || SEPARATOR
+                del = this && this.delimiter || DELIMITER
+                sep = this && this.separator || SEPARATOR
 
                 while( !iterator.next().done )
                   s.push( escape(iterator.current.key) + del + encodeURIComponent(iterator.current.value) )
@@ -29,8 +31,8 @@ module.exports.Serializer = klass(function(statics){
       , objectify: { enumerable: true,
             value: function(s, o, iterator, del, sep){
                 o = {}
-                del = this.delimiter || DELIMITER
-                sep = this.separator || SEPARATOR
+                del = this && this.delimiter || DELIMITER
+                sep = this && this.separator || SEPARATOR
                 iterator = new Iterator(s.search(sep) != -1 ? s.split(sep) : s.length ? [s] : [])
 
                 while ( !iterator.next().done )
@@ -58,6 +60,7 @@ module.exports.Serializer = klass(function(statics){
                 instance: { value: this }
               , delimiter: { value: _.typeof(dict.delimiter) == "string" ? dict.delimiter : DELIMITER }
               , separator: { value: _.typeof(dict.separator) == "string" ? dict.separator : SEPARATOR }
+              , key_separator: { value: _.typeof(dict.key_separator) == "string" ? dict.key_separator : KEY_SEPARATOR }
             })
         }
       , serialize: { enumerable: true,

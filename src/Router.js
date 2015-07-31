@@ -4,68 +4,8 @@ var _ = require("./utils")
 var klass = require("./class").class
 var EventTarget = require("./EventTarget").EventTarget
 var Iterator = require("./Iterator").Iterator
+var Route = require("./Route").Route
 var UID = require("./UID").UID
-
-module.exports.Route = klass(function(statics){
-    var routes = Object.create(null)
-
-    return {
-        constructor: function(path, dict, detail){
-            path = _.typeof(path) == "string" ? path : function(){ throw new Error("Route.path") }() //TODO
-            dict = _.typeof(dict) == "object" ? dict : {}
-
-            detail = function(detail){
-                return detail.length == 1 && _.typeof(detail[0]) == "object" && _.typeof(detail[0].detail) == "object" ? function(o, t, k){
-                          while ( k.length ) Object.defineProperty( t, k[0], Object.getOwnPropertyDescriptor(o, k.shift()) )
-                          return t
-                       }( detail[0].detail, Object.create({}), Object.getOwnPropertyNames(detail[0].detail) )
-                     : detail.length == 1 && "undefined, null".indexOf(_.typeof(detail[0])) > -1 ? null
-                     : detail.length == 1 ? detail[0]
-                     : detail.length > 0 ? [].concat(detail)
-                     : null
-            }( _.spread(arguments, 1))
-
-            routes[this.uid] = Object.create(null, {
-                path: { value: path }
-              , detail: { value: detail }
-              , timestamp: { value: Date.now() }
-              , matches: { value: {} }
-              , request: { value: dict.request||{} }
-              , response: { value: dict.response||{} }
-            })
-        }
-
-      , path: { enumerable: true,
-            get: function(){
-                return routes[this.uid].path
-            }
-        }
-      , timestamp: { enumerable: true,
-            get: function(){
-                return routes[this.uid].timestamp
-            }
-        }
-      , detail: { enumerable: true,
-            get: function(){ return routes[this.uid].detail }
-        }
-      , request: { enumerable: true,
-            get: function(){ return routes[this.uid].request }
-        }
-      , response: { enumerable: true,
-            get: function(){ return routes[this.uid].response }
-        }
-      , matches: { enumerable: true,
-            get: function(){ return routes[this.uid].matches }
-        }
-
-      , uid: { enumerable: true, configurable: true,
-            get: function(){ return this._uid || Object.defineProperty(this, "_uid", { value: UID.uid() })._uid }
-        }
-      , purge: { enumerable: true, configurable: true,
-            value: function(){ delete routes[this.uid] }
-        }
-    }
-})
 
 module.exports.Router = klass(EventTarget, function(statics){
     var routers = Object.create(null)
@@ -83,7 +23,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                       else {
                         assignments = []
                         regexp = []
-                        split = str.split("/")
+                        split = str.split(/\/|\.(?=:)/)
 
                         while ( split.length )
                           void function(part, match){
@@ -101,7 +41,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                                 regexp.push(part)
                           }( split.shift() )
 
-                        cache[str] = new RegExp("^"+regexp.join("\\\/")+"$", "i")
+                        cache[str] = new RegExp("^"+regexp.join("(?:\\\/|\\\.)")+"$", "i")
                         cache[str].assignments = assignments
                       }
 
@@ -145,9 +85,9 @@ module.exports.Router = klass(EventTarget, function(statics){
                 router: { value: this }
               , routes: { value: Object.create(null) }
               , Route: { writable: true,
-                    value : module.exports.Route.isImplementedBy(this.constructor.prototype._Route) ? this.constructor.prototype._Route
-                          : module.exports.Route.isImplementedBy(dict.Route) ? dict.Route
-                          : module.exports.Route
+                    value : Route.isImplementedBy(this.constructor.prototype._Route) ? this.constructor.prototype._Route
+                          : Route.isImplementedBy(dict.Route) ? dict.Route
+                          : Route
                 }
             })
 
@@ -161,7 +101,7 @@ module.exports.Router = klass(EventTarget, function(statics){
         }
       , Route: { enumerable: true,
             get: function(){ return routers[this.uid].Route }
-          , set: function(v){ if ( module.exports.Route.isImplementedBy(v) ) routers[this.uid].Route = v }
+          , set: function(v){ if ( Route.isImplementedBy(v) ) routers[this.uid].Route = v }
         }
       , routes: { enumerable: true,
             get: function(){ return routers[this.uid].routes }
@@ -259,7 +199,7 @@ module.exports.Router = klass(EventTarget, function(statics){
         }
       , dispatchRoute: { enumerable: true,
             value: function(route, iterator){
-                route = module.exports.Route.isImplementedBy(route) ? route : this.Route.create.apply(null, arguments)
+                route = Route.isImplementedBy(route) ? route : this.Route.create.apply(null, arguments)
                 iterator = function(routes, copy, keys){
                     keys = Object.keys(routes).sort()
 

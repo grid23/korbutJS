@@ -1,1 +1,32 @@
-{"name":"korbutJS","version":"0.0.0-1434373556104","repository":{"type":"git","url":"git://github.com/grid23/korbutJS.git"},"licence":"WTFPL2","author":"grid23 <hello@grid23.net>","main":"./index.js","dependencies":{"jsdom":"*"},"devDependencies":{"browserify":"^8.1.3","gulp":"^3.8.11","karma":"^0.12.31","karma-mocha":"^0.1.4","karma-chai":"^0.1.0","uglify-js":"^2.4.16","q":"^1.1.2"}}
+{
+    "name": "korbutJS"
+  ,"licence":"WTFPL2"
+  , "version": "0.1.0"
+
+  , "author": "grid23 <hello@grid23.net>"
+  , "contributors": []
+
+
+  , "repository": {
+        "type": "git"
+      , "url": "git://github.com/grid23/korbutJS.git"
+    }
+  , "description": "an ecmascript library for the future of mankind"
+
+  , "main": "src/index"
+  , "engines": {
+        "iojs": "*"
+    }
+
+  , "dependencies": {
+        "jsdom": "*"
+      , "hogan.js": "*"
+    }
+  , "devDependencies": {
+        "browserify": "*"
+      , "sinon": "*"
+      , "mocha": "*"
+      , "chai": "*"
+    }
+  , "contributors": []
+}
