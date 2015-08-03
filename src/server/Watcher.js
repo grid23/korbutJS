@@ -76,11 +76,13 @@ module.exports.Watcher = klass(EventTarget, function(statics){
         fs.stat(this.path, function(err, stats){
             if ( err ) throw err //TODO
 
+            /*
             let ctime = +stats.ctime
             if ( watchers.get(this).ctime === ctime )
               return
             watchers.get(this).ctime = ctime
-
+            */
+            
             dir = !!watchers.get(this).isFile ? path.dirname(this.path) : this.path
             this.dispatchEvent( new this.ChangeEvent(e, file, dir) )
         }.bind(this))
