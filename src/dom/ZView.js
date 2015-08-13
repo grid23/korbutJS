@@ -94,7 +94,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
         }
 
       , recover: { enumerable: true,
-            value: function(){
+            value: function(nodes){
                 nodes = this.queryAll("root")
 
                 while ( nodes.length )
