@@ -100,7 +100,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
                 while ( nodes.length )
                   void function(node){
                       if ( node.parentNode !== this.fragment )
-                        this.fragment.appendChild(nodes.shift())
+                        this.fragment.appendChild(node)
                   }.call( this, nodes.shift() )
             }
         }
