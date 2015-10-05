@@ -82,7 +82,7 @@ module.exports.Watcher = klass(EventTarget, function(statics){
               return
             watchers.get(this).ctime = ctime
             */
-            
+
             dir = !!watchers.get(this).isFile ? path.dirname(this.path) : this.path
             this.dispatchEvent( new this.ChangeEvent(e, file, dir) )
         }.bind(this))
@@ -95,7 +95,7 @@ module.exports.Watcher = klass(EventTarget, function(statics){
 
         if ( err )
           return setTimeout(function(){
-              this.dispathEvent( new this.ErrorEvent(err) )
+              this.dispatchEvent( new this.ErrorEvent(err) )
           }.bind(this))
 
         watchers.get(this).isFile = stats.isFile()

@@ -123,16 +123,27 @@ module.exports.Model = klass(EventTarget, function(statics){
         }
     }
 
-    function setRaw(obj, key, value, path){
+    function setRaw(key, value, fpath, path, obj, nkey){
+        obj = models[this.uid].export
         path = key.split(".")
         key = path.pop()
+        fpath = path.join(".")
 
         while ( path.length )
           void function(key){
               obj = ( obj[key] = obj[key] || {} )
           }( path.shift() )
 
+        if ( nkey = +key, nkey === nkey && obj.hasOwnProperty("length") ) {
+            if ( obj.length <= nkey )
+              this.setItem(fpath+".length", nkey+1)
+        }
         obj[key] = value
+    }
+
+    function setRawArray(key, obj){
+        obj = models[this.uid].export
+        obj[key] = Array.prototype.slice.call(obj[key])
     }
 
     Object.defineProperties(statics, {
@@ -221,6 +232,7 @@ module.exports.Model = klass(EventTarget, function(statics){
                       while ( !iterator.next().done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
                       this.setItem(key+"."+"length", length)
+                      setRawArray.call(this, key)
                   }.call(this, new Iterator(nvalue), nvalue.length)
 
                 if ( nvalue == void 0 && this.data[key] )
@@ -230,7 +242,7 @@ module.exports.Model = klass(EventTarget, function(statics){
                   if ( !this.data[key] )
                     added = true
 
-                  setRaw(this.raw, key, nvalue)
+                  setRaw.call(this, key, nvalue)
                   this.data[key] = nvalue
                 }
 
