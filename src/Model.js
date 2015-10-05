@@ -141,8 +141,16 @@ module.exports.Model = klass(EventTarget, function(statics){
         obj[key] = value
     }
 
-    function setRawArray(key, obj){
+    function setRawArray(key, obj, path){
         obj = models[this.uid].export
+        path = key.split(".")
+        key = path.pop()
+
+        while ( path.length )
+          void function(key){
+              obj = ( obj[key] = obj[key] || {} )
+          }( path.shift() )
+
         obj[key] = Array.prototype.slice.call(obj[key])
     }
 
