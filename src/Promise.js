@@ -30,7 +30,9 @@ module.exports.Promise = klass(function(statics){
 
                     function onreject(e){ reject(e) }
 
-                    while ( !iterator.next().done )
+                    if ( !iterator.length )
+                      resolve()
+                    else while ( !iterator.next().done )
                       void function(iteration, input){
                           input = iteration.value
                           if ( !module.exports.Promise.isImplementedBy(input) )
