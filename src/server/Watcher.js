@@ -1,7 +1,7 @@
 "use strict"
 
 const path = require("path")
-const ROOT_PATH = path.resolve(process.cwd(), path.dirname(require.main.filename || __filename) , "./")
+const ROOT_PATH = path.resolve(process.cwd(), path.dirname(require.main && require.main.filename ? require.main.filename : __filename , "./")
 const fs = require("fs")
 
 const type = require("../utils").typeof

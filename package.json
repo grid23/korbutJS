@@ -15,7 +15,7 @@
 
   , "main": "src/index"
   , "engines": {
-        "iojs": "*"
+        "nodejs": "*"
     }
 
   , "dependencies": {
@@ -28,5 +28,4 @@
       , "mocha": "*"
       , "chai": "*"
     }
-  , "contributors": []
 }
