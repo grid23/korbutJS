@@ -16,32 +16,65 @@ module.exports.Router = klass(EventTarget, function(statics){
         }
       , dispatcher: { enumerable: true,
             value: function(cache){
-                function getRule(str, regexp, assignments, split){
+                function getRule(str, regexp, nregexp, assignments, split, nsplit, join, pile, i, l){
                     if ( !cache[str] )
                       if ( str.indexOf(":") == -1 )
                         cache[str] = new RegExp("^"+str+"$", "i")
                       else {
                         assignments = []
-                        regexp = []
-                        split = str.split(/\/|\.(?=:)/)
+                        //regexp = []
+                        nregexp = []
 
-                        while ( split.length )
-                          void function(part, match){
+                        //split = str.split(/\/|\.(?=:)/)
+
+                        nsplit = []
+                        join = []
+
+                        pile = ""
+
+                        for ( i = 0, l = str.length; i<=l; i++)
+                          void function(char){
+                              if ( i === l ) {
+                                  if ( pile.length )
+                                    nsplit.push(pile)
+                              }
+                              else if ( char === "/")
+                                nsplit.push(pile),
+                                join.push(char),
+                                pile = ""
+                              else if ( char === "." && str[i+1] === ":" )
+                                nsplit.push(pile),
+                                join.push(char),
+                                pile = ""
+                              else
+                                pile += char
+                          }( str[i] )
+
+                        while ( nsplit.length )
+                          void function(part, match, joiner){
+                              joiner = join.shift()
                               if ( part[0] === ":" ) {
 
                                 if ( match = part.match(/^:(\w+)(\(.*\))$/), match ) {
                                   assignments.push(match[1])
-                                  regexp.push(match[2])
+                                  //regexp.push(match[2])
+                                  nregexp.push(match[2])
                                 } else {
-                                  assignments.push(part.slice(1)),
-                                  regexp.push("([^\\\/]*)")
+                                  assignments.push(part.slice(1))
+                                  //regexp.push("([^\\\/]*)")
+                                  nregexp.push("([^\\"+(joiner||"\/")+"]*)")
                                 }
 
-                              } else
-                                regexp.push(part)
-                          }( split.shift() )
+                              } else {
+                                //regexp.push(part)
+                                nregexp.push(part)
+                              }
 
-                        cache[str] = new RegExp("^"+regexp.join("(?:\\\/|\\\.)")+"$", "i")
+                              joiner && nregexp.push("(?:\\"+joiner+")")
+                          }( nsplit.shift() )
+
+                        //cache[str] = new RegExp("^"+regexp.join("(?:\\\/|\\\.)")+"$", "i")
+                        cache[str] = new RegExp("^"+nregexp.join("")+"$", "i")
                         cache[str].assignments = assignments
                       }
 
