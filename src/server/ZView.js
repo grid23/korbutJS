@@ -121,6 +121,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
                 dict = _.typeof(dict) == "object" ? dict : {}
 
                 append = _.typeof(dict.append) == "string" ? dict.append : ""
+                prepend = _.typeof(dict.prepend) == "string" ? dict.prepend : ""
                 buffer = function(nodes, str){
                     str = ""
 
@@ -130,9 +131,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
                     return str
                 }.call( this, [].concat(this.queryAll("root")) )
 
-                prepend = _.typeof(dict.prepend) == "string" ? dict.prepend : ""
-
-                return new Buffer( append + buffer + prepend )
+                return new Buffer( prepend + buffer + append )
             }
         }
 
