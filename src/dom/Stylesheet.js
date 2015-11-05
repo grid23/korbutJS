@@ -104,24 +104,23 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
             stylesheets[this.uid].dfd = new Promise(function(resolve, reject, start){
                 function wait(){
-                    if ( !node.sheet )
-                      if ( Date.now() - start > 5000)
-                        return reject(new Error("timeout"))
-                      else
-                        return setTimeout(wait.bind(this), 4)
+                    try {
+                        node.sheet.insertRule("#"+this.uid+"{}", 0)
+
+                    } catch(e){
+                          if ( Date.now() - start > 5000)
+                            return reject(new Error("timeout"))
+                        return requestAnimationFrame(wait.bind(this), 4)
+                    }
 
                     stylesheets[this.uid].sheet = node.sheet
 
-                    requestAnimationFrame(function(){
-                        if ( !blob && stylesheets[this.uid].writable )
-                          this.insertRule(rules)
+                    if ( !blob && stylesheets[this.uid].writable )
+                      this.insertRule(rules)
 
-                        domReady.then(function(){
-                            requestAnimationFrame(function(){
-                                resolve()
-                                this.dispatchEvent("ready", stylesheets[this.uid].sheet)
-                            }.bind(this))
-                        }.bind(this))
+                    domReady.then(function(){
+                        resolve()
+                        this.dispatchEvent("ready", stylesheets[this.uid].sheet)
                     }.bind(this))
                 }
 
