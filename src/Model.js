@@ -290,7 +290,7 @@ module.exports.Model = klass(EventTarget, function(statics){
             value: function(key, handler){
                 if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
                   return function(iterator){
-                      while ( iterator.next(), !iterator.done )
+                      while ( iterator.next(), !iterator.current.done )
                         this.setHook(iterator.current.key, iterator.current.value)
                   }.call(this, new Iterator(arguments[0]))
 
