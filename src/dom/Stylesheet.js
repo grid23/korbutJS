@@ -27,6 +27,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                 if ( "msClose" in blob ) // on ie10 (+?), blobs are treated like x-domain files, making them unwritable
                   throw new Error
             } catch(e){
+                console.log(e)
                 return false
             }
 
@@ -84,9 +85,9 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                     }
 
                     domReady.then(function(e){
-                        (e.nodes.head||document.head).appendChild(node)
-
                         requestAnimationFrame(function(){ // let a frame for the browser to digest things, glups
+                            (e.nodes.head||document.head).appendChild(node)
+
                             if ( !!dict.disabled )
                               node.disabled = true
                         })
@@ -105,7 +106,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
             stylesheets[this.uid].dfd = new Promise(function(resolve, reject, start){
                 function wait(){
                     try {
-                        node.sheet.insertRule("#"+this.uid+"{}", 0)
+                        node.sheet.insertRule("#"+this.uid+"{}", node.sheet.cssRules.length)
 
                     } catch(e){
                           if ( Date.now() - start > 5000)
