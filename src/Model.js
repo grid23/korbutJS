@@ -203,7 +203,7 @@ module.exports.Model = klass(EventTarget, function(statics){
             }
         }
       , setItem: { enumerable: true,
-            value: function(key, nvalue, pvalue, hook, added, updated, removed){
+            value: function(key, nvalue, pvalue, hook, added, updated, removed, tvalue){
                 if ( arguments.length == 1 && _.typeof(arguments[0]) == "object" )
                   return function(iterator){
                       while ( iterator.next(), !iterator.current.done )
@@ -229,13 +229,14 @@ module.exports.Model = klass(EventTarget, function(statics){
                 if ( typeof hook == "function" )
                   nvalue = hook.call(this, nvalue, pvalue)
 
-                if ( _.typeof(nvalue) == "object" )
+                tvalue = _.typeof(nvalue)
+                if ( tvalue == "object" )
                   return function(iterator){
                       while ( iterator.next(), !iterator.current.done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
                   }.call(this, new Iterator(nvalue))
 
-                if ( _.typeof(nvalue) == "array" )
+                if ( tvalue == "array" )
                   return function(iterator, length){
                       while ( !iterator.next().done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
@@ -243,10 +244,20 @@ module.exports.Model = klass(EventTarget, function(statics){
                       setRawArray.call(this, key)
                   }.call(this, new Iterator(nvalue), nvalue.length)
 
-                if ( nvalue == void 0 && this.data[key] )
-                  removed = true,
-                  delete this.data[key]
-                else {
+                if ( tvalue == "string" && typeof nvalue == "object" )
+                  nvalue = nvalue.toString() // new String
+
+                if ( tvalue == "number" && typeof nvalue == "object" )
+                  nvalue = +nvalue // new Number
+
+                if ( tvalue == "boolean" && typeof nvalue == "object" )
+                  nvalue = !!nvalue // new Boolean
+
+                if ( tvalue == null ) {
+                    if ( this.data[key] )
+                      removed = true,
+                      delete this.data[key]
+                } else {
                   if ( !this.data[key] )
                     added = true
 
@@ -275,7 +286,7 @@ module.exports.Model = klass(EventTarget, function(statics){
                 iterator = new Iterator(keys)
 
                 while( iterator.next(), !iterator.current.done )
-                  hits.push( this.data[iterator.current.value] || void 0 )
+                  hits.push( this.data[iterator.current.value] )
 
                 return hits.length > 1 ? hits : hits[0]
             }
