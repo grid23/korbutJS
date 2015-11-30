@@ -27,7 +27,6 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                 if ( "msClose" in blob ) // on ie10 (+?), blobs are treated like x-domain files, making them unwritable
                   throw new Error
             } catch(e){
-                console.log(e)
                 return false
             }
 
@@ -48,7 +47,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
     return {
         constructor: function(dict, rules, node, args, blob){
             args = _.spread(arguments)
-            rules = _.typeof(args[args.length-1]) == "array" ? [].concat(args.pop()) : []
+            rules = _.typeof(args[args.length-1]) == "array" ? [].concat(args.pop()) : [""]
             dict = _.typeof(args[args.length-1]) == "object" ? args.pop() : { node: args.pop() }
 
             if ( _.typeof(dict.uid) == "string" )
@@ -85,13 +84,18 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                     }
 
                     domReady.then(function(e){
-                        requestAnimationFrame(function(){ // let a frame for the browser to digest things, glups
+                        var op = function(){
                             (e.nodes.head||document.head).appendChild(node)
-
                             if ( !!dict.disabled )
                               node.disabled = true
-                        })
-                    })
+                        }
+
+                        if ( this.BLOB_COMPAT && !!window.webkitURL ) // let a lot of time for the crappy browsers
+                          setTimeout(op, 101)
+                        else
+                          requestAnimationFrame(op) // let a frame for the good browsers to digest things, glups
+
+                    }.bind(this))
 
                     if ( dict.media )
                       node.setAttribute("media", dict.media)
@@ -104,10 +108,10 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
             }.call(this, dict.node||dict.href||void 0)
 
             stylesheets[this.uid].dfd = new Promise(function(resolve, reject, start){
+                /*
                 function wait(){
                     try {
                         node.sheet.insertRule("#"+this.uid+"{}", node.sheet.cssRules.length)
-
                     } catch(e){
                           if ( Date.now() - start > 5000)
                             return reject(new Error("timeout"))
@@ -124,9 +128,24 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                         this.dispatchEvent("ready", stylesheets[this.uid].sheet)
                     }.bind(this))
                 }
+                */
+
+                node.addEventListener("load", function(){
+                    stylesheets[this.uid].sheet = node.sheet
+
+                    if ( !blob && stylesheets[this.uid].writable )
+                      this.insertRule(rules)
+
+                    resolve()
+                    this.dispatchEvent("ready", stylesheets[this.uid].sheet)
+                }.bind(this))
+
+                node.addEventListener("error", function(e){
+                    throw e
+                })
 
                 start = Date.now()
-                wait.call(this)
+                //wait.call(this)
             }.bind(this))
         }
       , insertRule: { enumerable: true,
