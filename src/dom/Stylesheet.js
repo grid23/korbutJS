@@ -26,6 +26,9 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                 if ( "msClose" in blob ) // on ie10 (+?), blobs are treated like x-domain files, making them unwritable
                   throw new Error
+
+                if ( "webkitURL" in window )
+                  throw new Error // falbback on <style> on chrome/safari for the time being
             } catch(e){
                 return false
             }
@@ -90,11 +93,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                               node.disabled = true
                         }
 
-                        if ( this.BLOB_COMPAT && !!window.webkitURL ) // let a lot of time for the crappy browsers
-                          setTimeout(op, 101)
-                        else
-                          requestAnimationFrame(op) // let a frame for the good browsers to digest things, glups
-
+                        requestAnimationFrame(op) // let a frame for the browsers to digest things, glups
                     }.bind(this))
 
                     if ( dict.media )
