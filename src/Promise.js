@@ -111,7 +111,8 @@ module.exports.Promise = klass(function(statics){
         constructor: function(resolver, resolved){
             if ( typeof resolver !== "function" )
               throw new TypeError("Constructor korbut.Promise requires a resolver function as argument 0.")
-
+            resolved = false
+            
             promises[this.uid] = {
                 promise: this
               , state: { key: this.PENDING, value: null }
