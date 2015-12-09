@@ -1,13 +1,13 @@
-describe("mbx.Model", function(){
+describe("korbut.Model", function(){
 
     describe("| instantiation", function(){
 
-        it("should return a valid mbx.Model instance", function(){
-            chai.expect(mbx.Model.isImplementedBy(new mbx.Model)).to.be.true
+        it("should return a valid korbut.Model instance", function(){
+            chai.expect(korbut.Model.isImplementedBy(new korbut.Model)).to.be.true
         })
 
         it("should accept an object as base key->value pairs", function(){
-            var m = new mbx.Model({foo:"bar", bar:"foo"})
+            var m = new korbut.Model({foo:"bar", bar:"foo"})
 
             chai.expect(m.data.foo).to.be.equal("bar")
             chai.expect(m.data.bar).to.be.equal("foo")
@@ -16,7 +16,7 @@ describe("mbx.Model", function(){
         })
 
         it("should accept a serialized string as base key->value pairs", function(){
-            var m = new mbx.Model("foo=bar&bar=foo")
+            var m = new korbut.Model("foo=bar&bar=foo")
 
             chai.expect(m.data.foo).to.be.equal("bar")
             chai.expect(m.getItem("foo")).to.be.equal("bar")
@@ -26,7 +26,7 @@ describe("mbx.Model", function(){
     })
 
     describe("#setItem", function(){
-        var m = new mbx.Model
+        var m = new korbut.Model
         window.m = m
 
         it("should accept any JSON-compatible type of data", function(){

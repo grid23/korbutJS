@@ -24,7 +24,7 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                 blob = new Blob([""], { type: "text/plain" })
                 url = URL.createObjectURL(blob)
 
-                if ( "msClose" in blob ) // on ie10 (+?), blobs are treated like x-domain files, making them unwritable
+                if ( "msClose" in blob ) // on ie10+, blobs used to be/are (?) treated like x-domain files, making them really unwritable (cssRuleList in read-only)
                   throw new Error
 
                 if ( "webkitURL" in window )
@@ -43,6 +43,11 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
       , getByUid: { enumerable: true,
             value: function(uid){
                 return stylesheets[uid] ? stylesheets[uid].instance : void 0
+            }
+        }
+      , BLOB_COMPAT: { enumerable: true,
+            get: function(){
+                return BLOB_COMPAT
             }
         }
     })
@@ -129,7 +134,8 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
                 }
                 */
 
-                node.addEventListener("load", function(){
+
+                function onload(){
                     stylesheets[this.uid].sheet = node.sheet
 
                     if ( !blob && stylesheets[this.uid].writable )
@@ -137,11 +143,15 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                     resolve()
                     this.dispatchEvent("ready", stylesheets[this.uid].sheet)
-                }.bind(this))
+                }
 
-                node.addEventListener("error", function(e){
-                    throw e
-                })
+                if ( "msSetImmediate" in window ) // no events for <style> on ie
+                  msSetImmediate(onload.bind(this), 4)
+                else
+                  node.addEventListener("load", onload.bind(this)),
+                  node.addEventListener("error", function(e){
+                      throw e
+                  })
 
                 start = Date.now()
                 //wait.call(this)
@@ -193,7 +203,6 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                 if (stylesheets[this.uid].dfd.state != Promise.RESOLVED ) {
                   args = arguments
-
                   stylesheets[this.uid].dfd.then(function(){
                       exec.call(this)
                       cb.apply(this, [].concat(null, rv))
@@ -201,7 +210,6 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                   return rv
                 }
-
                 exec.call(this)
                 cb.apply(this, [].concat(null, rv))
                 return rv.length > 1 ? rv : rv[0]

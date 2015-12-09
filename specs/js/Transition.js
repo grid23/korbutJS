@@ -5,8 +5,8 @@ describe("korbut.Transition", function(){
     var divb = zen.vars.b[0]
     var transition = new korbut.Transition(divb, { opacity: "1s", top: "5s", left: "1s" })
 
-    stylesheet.insertRule("#specsa{position:relative;width:200px;height:200px;background:black;}")
-    stylesheet.insertRule("#specsb{position:absolute;top:0;left:0;width:50px;height:50px;background:white;z-index:1}")
+    window.a = stylesheet.insertRule("#specsa{position:relative;width:200px;height:200px;background:black;}")
+    window.b = stylesheet.insertRule("#specsb{position:absolute;top:0;left:0;width:50px;height:50px;background:white;z-index:1}")
     ;(window["tests"]||document.body).appendChild(zen.tree)
 
     function a(){

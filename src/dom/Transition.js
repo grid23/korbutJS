@@ -42,7 +42,7 @@ module.exports.Transition = klass(function(statics){
             value: "data-k-transFX-ID"
         }
       , CLASSLIST_COMPAT: { enumerable: true,
-            value: Element.prototype.hasOwnProperty("classList")
+            value: HTMLElement.prototype.hasOwnProperty("classList")
         }
       , animate: { enumerable: true,
             value: function(nodes, properties, callback, all, output, args, iterator, propsDict, propsTo){
