@@ -15,6 +15,11 @@ module.exports.ZParser = klass(function(statics){
     var rtemplatevars = /\$([^$\s]*)/g
     var templateVarGlyph = "\\$"
 
+    var namespaces = {
+        html: "http://www.w3.org/1999/xhtml"
+      , svg: "http://www.w3.org/2000/svg"
+    }
+
     var traversals = Object.create(null, {
             "+": { enumerable: true,
                 value: function sibling(stream, input, output){
@@ -299,14 +304,15 @@ module.exports.ZParser = klass(function(statics){
     var operate = function(autoVars){
             autoVars = ["A", "INPUT", "SUBMIT", "BUTTON"]
 
-            return function(stream, input, output){
+            return function(stream, input, output, split){
                 input.pile = input.pile.trim()
 
                 if ( !input.operator) {
                     input.buffer = !input.pile.length && input.glyph === "{" ? document.createTextNode("")
                                  : !input.pile.length && input.glyph !== "{" ? document.createElement("div")
                                  : input.pile === "§" ? document.createTextNode("")
-                                 : document.createElement(input.pile)
+                                 : input.pile.indexOf(":") == -1 ? document.createElement(input.pile)
+                                 : (split = input.pile.split(":"), document.createElementNS(namespaces[split[0].toLowerCase()]||namespaces.hmtl, split[1]))
 
                   if ( autoVars.indexOf(input.buffer.nodeName) != -1 )
                     input.pile = input.buffer.nodeName.toLowerCase(),
