@@ -188,14 +188,23 @@ module.exports.Stylesheet = klass(EventTarget, function(statics){
 
                           idx = stylesheets[this.uid].sheet.cssRules.length
                           stylesheets[this.uid].rules[idx] = cssRule
+
                           rv.push(cssRule)
 
-                          stylesheets[this.uid].sheet.insertRule(cssRule.toString(), idx)
+                          if ( cssRule.media ) {
+                              stylesheets[this.uid].sheet.insertRule(cssRule.media.cssText, idx)
+                              stylesheets[this.uid].sheet.cssRules[idx].insertRule(cssRule.toString(), 0)
+                          } else {
+                              stylesheets[this.uid].sheet.insertRule(cssRule.toString(), idx)
+                          }
 
                           cssRule.addEventListener("csstextupdate", function(e, idx){
                               if ( idx = stylesheets[this.uid].rules.indexOf(e.cssRule), idx != -1 )
                                 requestAnimationFrame(function(){
-                                    stylesheets[this.uid].sheet.cssRules[idx].style.cssText = e.cssText
+                                    var rule = _.typeof(stylesheets[this.uid].sheet.cssRules[idx]) == "cssmediarule" ? stylesheets[this.uid].sheet.cssRules[idx].cssRules[0]
+                                             : stylesheets[this.uid].sheet.cssRules[idx]
+
+                                    rule.style.cssText = e.cssText
                                 }.bind(this))
                           }.bind(this))
                       }.call(this, iterator.current)

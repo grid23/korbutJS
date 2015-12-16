@@ -12,12 +12,17 @@ var UID = require("../UID").UID
 module.exports.ZParser = klass(function(statics){
     var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
 
-    var rtemplatevars = /\$([^$\s]*)/g
+    var rtemplatevars = /\$([^$£\s]*)/g
+    var rustemplatevars = /£([^$£\s]*)/g
+
     var templateVarGlyph = "\\$"
+    var us_templateVarGlyph = "£"
 
     var namespaces = {
         html: "http://www.w3.org/1999/xhtml"
       , svg: "http://www.w3.org/2000/svg"
+      , xml: "http://www.w3.org/XML/1998/namespace"
+      , xmlns: "http://www.w3.org/2000/xmlns/"
     }
 
     var traversals = Object.create(null, {
@@ -211,28 +216,34 @@ module.exports.ZParser = klass(function(statics){
             }
           , "{": { enumerable: true,
                 value: function(){
-                    function textContent(stream, input, output, node, rawTextContent, model, vars, hit, onupdate){
-                        node = function(node){
-                            if ( node.nodeType === Node.TEXT_NODE)
-                              return node
-                            return node.appendChild(document.createTextNode(""))
-                        }(input.buffer)
+                    function textContent(stream, input, output, node, rawTextContent, model, vars, us_vars, hit, onupdate){
+                        node = input.buffer
                         rawTextContent = input.pile
                         model = input.data
                         vars = []
+                        us_vars = []
 
                         while ( hit = (rtemplatevars.exec(rawTextContent)||[])[1], hit )
                           if ( vars.indexOf(hit) == -1 )
                             vars.push(hit)
 
-                        if ( vars.length ) {
+                        while ( hit = (rustemplatevars.exec(rawTextContent)||[])[1], hit )
+                          if ( us_vars.indexOf(hit) == -1 )
+                            us_vars.push(hit)
+
+                        if ( vars.length || us_vars.length ) {
                             onupdate = function(e, str, hit, i, l, value){
-                                function exec(){ node.nodeValue = str }
+                                function exec(){
+                                    if ( node.nodeType === Node.TEXT_NODE )
+                                      node.nodeValue = str
+                                    else
+                                      node.innerHTML = str
+                                }
 
                                 str = rawTextContent
 
                                 for ( i = 0, l = e.keys.length; i < l; i++ )
-                                  if ( vars.indexOf(e.keys[i]) != -1 ) {
+                                  if ( vars.indexOf(e.keys[i]) != -1 || us_vars.indexOf(e.keys[i]) != -1 ) {
                                       hit = true
                                       break
                                   }
@@ -242,7 +253,14 @@ module.exports.ZParser = klass(function(statics){
                                     value = model.getItem(vars[i])
 
                                     if ( value !== void 0 && value !== null )
-                                      str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return value })
+                                      str = str.replace(new RegExp(templateVarGlyph+vars[i], "g"), function(){ return module.exports.ZParser.escapeHTML(value) })
+                                  }
+
+                                  for ( i = 0, l = us_vars.length; i < l; i++ ) {
+                                    value = model.getItem(us_vars[i])
+
+                                    if ( value !== void 0 && value !== null )
+                                      str = str.replace(new RegExp(us_templateVarGlyph+us_vars[i], "g"), function(){ return value })
                                   }
 
                                   if ( input.done )

@@ -1,8 +1,12 @@
 window.ss1 = new korbut.Stylesheet(["html, body{height:100%;background: red;}"])
 window.r1 = new korbut.CSSRule("html, body", "background:blue")
+window.r2 = new korbut.CSSRule("html, body", "background:red", "max-width:600px")
+window.r3 = new korbut.CSSRule("html, body", "background:blue", "max-width:400px")
 window.ss2 = new korbut.Stylesheet
 ss2.insertRule(r1)
 ss2.insertRule("html, body{background:white;}")
+ss2.insertRule(r2)
+ss2.insertRule(r3)
 
 /*
 var s1 = new korbut.Stylesheet(["#foo{height:100px;background:red;}"])
