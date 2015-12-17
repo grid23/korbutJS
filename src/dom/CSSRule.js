@@ -33,19 +33,19 @@ module.exports.CssEvent = klass(Event, {
 
 module.exports.CssTextUpdateEvent = klass(module.exports.CssEvent, {
     constructor: function(cssRule){
-        module.exports.CssEvent.apply(this, "csstextupdate", cssRule)
+        module.exports.CssEvent.call(this, "csstextupdate", cssRule)
     }
 })
 
 module.exports.CssSelectorUpdateEvent = klass(module.exports.CssEvent, {
     constructor: function(cssRule){
-        module.exports.CssEvent.apply(this, "cssselectorupdate", cssRule)
+        module.exports.CssEvent.call(this, "cssselectorupdate", cssRule)
     }
 })
 
 module.exports.CssMediaUpdateEvent = klass(module.exports.CssEvent, {
     constructor: function(cssRule){
-        module.exports.CssEvent.apply(this, "cssmediaupdate", cssRule)
+        module.exports.CssEvent.call(this, "cssmediaupdate", cssRule)
     }
 })
 
