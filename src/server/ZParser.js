@@ -278,7 +278,10 @@ module.exports.ZParser = klass(function(statics){
                             input.update.push(onupdate)
                             onupdate({keys: vars})
                         } else
-                          node.nodeValue = rawTextContent||" "
+                          if ( node.nodeType === Node.TEXT_NODE )
+                            node.nodeValue = rawTextContent||" "
+                          else
+                            node.textContent = rawTextContent||" "
                     }
 
                     textContent.enclosing_glyph = "}"
