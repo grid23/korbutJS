@@ -52,7 +52,7 @@ module.exports.CssMediaUpdateEvent = klass(module.exports.CssEvent, {
 //document.styleSheets[0].insertRule("@media(min-width:500px){ body, html{ height:100%;background:red; } }", document.styleSheets[0].cssRules.length)
 module.exports.CSSMediaRule = klass(EventTarget, function(statics){
     var rules = Object.create(null)
-    var rmedia = /@media\(([^\)]*)\)/i
+    var rmedia = /^\@media(.*)/i
 
     return {
         constructor: function(media, conditionText){
@@ -70,7 +70,7 @@ module.exports.CSSMediaRule = klass(EventTarget, function(statics){
         }
       , cssText: { enumerable: true,
             get: function(){
-                return ["@media(", this.conditionText, "){}"].join("")
+                return ["@media ", this.conditionText, "{}"].join("")
             }
         }
     }
