@@ -230,13 +230,14 @@ module.exports.Model = klass(EventTarget, function(statics){
                   nvalue = hook.call(this, nvalue, pvalue)
 
                 tvalue = _.typeof(nvalue)
-                if ( tvalue == "object" )
-                  return function(iterator){
+                if ( tvalue == "object" && !{}.hasOwnProperty.call(nvalue, "length") )
+                  return function(iterator, pseudo_array, length){
                       while ( iterator.next(), !iterator.current.done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
-                  }.call(this, new Iterator(nvalue))
 
-                if ( tvalue == "array" )
+                  }.call(this, new Iterator(nvalue), {}.hasOwnProperty.call(nvalue, "length"), nvalue.length)
+
+                if ( tvalue == "array" || tvalue == "object" && {}.hasOwnProperty.call(nvalue, "length") )
                   return function(iterator, length){
                       while ( !iterator.next().done )
                         this.setItem(key + "." + iterator.current.key, iterator.current.value)
