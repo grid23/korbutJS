@@ -118,7 +118,7 @@ module.exports.Service = klass(function(statics){
                 return new Promise(function(resolve, reject, request){
                     this.abort()
                     request = services[this.uid].ongoing = new XMLHttpRequest
-                    request.open(services[this.uid].type, services[this.uid].url, services[this.uid].async, services[this.uid].withCredentials&&services[this.uid].credentials.user||void 0, services[this.uid].withCredentials&&services[this.uid].credentials.password||void 0)
+                    request.open(services[this.uid].type, url, services[this.uid].async, services[this.uid].withCredentials&&services[this.uid].credentials.user||void 0, services[this.uid].withCredentials&&services[this.uid].credentials.password||void 0)
                     request.timeout = services[this.uid].timeout
 
                     if ( services[this.uid].headers )
