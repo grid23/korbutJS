@@ -54,7 +54,7 @@ module.exports.Cookie = klass(Model, function(statics){
     })
 
     return {
-        constructor: function(dict, args, exists){
+        constructor: function(dict, args, exists, data){
             args = _.spread(arguments)
             dict = _.typeof(args[0]) == "string" ? { name: args.shift() }
                  : _.typeof(args[0]) == "object" && _.typeof(args[0].name) == "string" ? args.shift()
@@ -75,8 +75,15 @@ module.exports.Cookie = klass(Model, function(statics){
                 }
             })
 
-            if ( exists = document.cookie.match(cookies[this.uid].name+"=([^;]*)"), exists )
-              this.setItem(Serializer.objectify(exists[1]))
+            if ( exists = document.cookie.match(cookies[this.uid].name+"=([^;]*)"), exists ) {
+                try {
+                    data = JSON.parse(unescape(exists[1]))
+                } catch(e){
+                    console.error(e)
+                    data = {}
+                }
+                this.setItem(data)
+            }
 
             this.addEventListener("update", function(){
                 this.sync()
@@ -87,7 +94,7 @@ module.exports.Cookie = klass(Model, function(statics){
 
       , sync: { enumerable: true,
             value: function(str){
-                str = this.serialize()
+                str = escape(JSON.stringify(this.raw))
 
                 if ( str.length )
                   document.cookie = [this.name, "=", str, "; domain=", this.domain, "; path=", this.path, "; expires=", this.expires, ";"].join("")

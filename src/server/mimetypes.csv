@@ -11,6 +11,7 @@ svg;image/svg+xml;svg
 mp4;video/mp4;mp4
 ogg;application/ogg;ogv
 font-woff;application/font-woff;woff
+font-woff2;application/font-woff2;woff2
 font-eot;application/vnd.ms-fontobject;eot
 font-ttf;font/opentype;ttf
 ico;image/vnd.microsoft.icon;ico
