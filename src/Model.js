@@ -254,7 +254,7 @@ module.exports.Model = klass(EventTarget, function(statics){
                 if ( tvalue == "boolean" && typeof nvalue == "object" )
                   nvalue = !!nvalue // new Boolean
 
-                if ( tvalue == null ) {
+                if ( tvalue == "null" ) {
                     if ( this.data[key] )
                       removed = true,
                       delete this.data[key]
@@ -294,7 +294,7 @@ module.exports.Model = klass(EventTarget, function(statics){
         }
       , removeItem: { enumerable: true,
             value: function(key){
-                return this.setItem(key, void 0)
+                return this.setItem(key, null)
             }
         }
 
