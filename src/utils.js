@@ -1,9 +1,13 @@
 "use strict"
 
 module.exports.native = function(rnative){
+    var known_exceptions = ["[object CSSMediaRule]"]
+
     return function(fn){
         try {
-            return typeof fn == "function" ? !!fn.toString().match(rnative) : false
+            return typeof fn == "function" ? !!fn.toString().match(rnative)
+                 : known_exceptions.indexOf(fn.toString()) > -1 ? true
+                 : false
         } catch(e) {
             return null
         }

@@ -60,8 +60,6 @@ module.exports.CSSMediaRule = klass(EventTarget, function(statics){
                 instance: { value: this }
               , conditionText: { writable: true, value: _.typeof(arguments[0]) == "string" ? (rmedia.exec(arguments[0])||[,arguments[0]])[1] : "" }
             })
-
-            console.log(this.conditionText)
         }
       , conditionText: { enumerable: true,
             get: function(){
