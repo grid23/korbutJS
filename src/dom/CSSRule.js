@@ -151,7 +151,7 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
             get: function(){
                 return rules[this.uid].dummy.style.cssText
             }
-          , set: function(v, o){
+          , set: function(v, o, n){
                 o = rules[this.uid].dummy.style.cssText
                 rules[this.uid].dummy.style.cssText = CSSHook.testCssText(v)
                 n = rules[this.uid].dummy.style.cssText
