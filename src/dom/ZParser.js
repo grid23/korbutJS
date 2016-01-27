@@ -9,8 +9,22 @@ var Iterator = require("../Iterator").Iterator
 var Model = require("../Model").Model
 var UID = require("../UID").UID
 
+
+module.exports.namespaces = {
+    html: "http://www.w3.org/1999/xhtml"
+  , svg: "http://www.w3.org/2000/svg"
+  , xml: "http://www.w3.org/XML/1998/namespace"
+  , xmlns: "http://www.w3.org/2000/xmlns/"
+}
+
 module.exports.ZParser = klass(function(statics){
-    var CLASS_LIST_COMPAT = Element.prototype.hasOwnProperty("classList")
+    var CLASS_LIST_COMPAT = (Element.prototype.hasOwnProperty("classList") || HTMLElement.prototype.hasOwnProperty("classList")) && function(){
+        try {
+            document.createElementNS("http://www.w3.org/2000/svg", "svg").classList.add("x")
+            return true
+        } catch(e){}
+        return false
+    }()
 
     var rtemplatevars = /\$([^$£\s]*)/g
     var rustemplatevars = /£([^$£\s]*)/g
@@ -18,12 +32,7 @@ module.exports.ZParser = klass(function(statics){
     var templateVarGlyph = "\\$"
     var us_templateVarGlyph = "£"
 
-    var namespaces = {
-        html: "http://www.w3.org/1999/xhtml"
-      , svg: "http://www.w3.org/2000/svg"
-      , xml: "http://www.w3.org/XML/1998/namespace"
-      , xmlns: "http://www.w3.org/2000/xmlns/"
-    }
+    var namespaces = module.exports.namespaces
 
     var traversals = Object.create(null, {
             "+": { enumerable: true,
@@ -91,16 +100,21 @@ module.exports.ZParser = klass(function(statics){
           , ".": { enumerable: true,
                 value: function(){
                     function set(node, newClass, replacedClass){
-                        if ( CLASS_LIST_COMPAT ) {
-                          if ( replacedClass )
-                            node.classList.remove(module.exports.ZParser.escapeHTML(replacedClass))
-                          node.classList.add(module.exports.ZParser.escapeHTML(newClass))
-                        } else {
-                          if ( replacedClass )
-                            node.className = node.className.replace(" "+module.exports.ZParser.escapeHTML(replacedClass), function(){ return " "+module.exports.ZParser.escapeHTML(newClass) })
-                          else
-                            node.className += " "+module.exports.ZParser.escapeHTML(newClass)
-                        }
+                            if ( CLASS_LIST_COMPAT ) {
+                              if ( replacedClass )
+                                node.classList.remove(module.exports.ZParser.escapeHTML(replacedClass))
+                              else
+                                node.classList.add(module.exports.ZParser.escapeHTML(newClass))
+                            } else {
+
+                              if ( replacedClass )
+                                node.setAttribute("class", node.getAttribute("class").replace(" "+module.exports.ZParser.escapeHTML(replacedClass), function(){ return " "+module.exports.ZParser.escapeHTML(newClass) }))
+                                //node.className = node.className.replace(" "+module.exports.ZParser.escapeHTML(replacedClass), function(){ return " "+module.exports.ZParser.escapeHTML(newClass) })
+                              else
+                                node.setAttribute("class", node.getAttribute("class")||""+ " "+module.exports.ZParser.escapeHTML(newClass))
+                                //node.className += " "+module.exports.ZParser.escapeHTML(newClass)
+
+                            }
                     }
 
                     return function(stream, input, output, node, rawClassName, model, vars, hit, onupdate, lastValue){
@@ -173,7 +187,16 @@ module.exports.ZParser = klass(function(statics){
 
                         if ( vars.length ) {
                             onupdate = function(e, str, hit, i, l, value){
-                                function exec(){ node.setAttribute(module.exports.ZParser.escapeHTML(rawKey), module.exports.ZParser.escapeHTML(str)) }
+                                function exec(split, ns, key){
+                                    split = module.exports.ZParser.escapeHTML(rawKey).split(":")
+                                    ns = namespaces[split[0].toLowerCase()] ? split.shift().toLowerCase() : null
+                                    key = split[0]
+
+                                    if ( ns )
+                                        node.setAttributeNS(ns, key, module.exports.ZParser.escapeHTML(str))
+                                    else
+                                        node.setAttribute(key, module.exports.ZParser.escapeHTML(str))
+                                }
                                 str = rawValue
 
                                 for ( i = 0, l = e.keys.length; i < l; i++ )
@@ -200,7 +223,16 @@ module.exports.ZParser = klass(function(statics){
                             input.update.push(onupdate)
                             onupdate({keys: vars})
                         } else
-                          node.setAttribute(module.exports.ZParser.escapeHTML(rawKey), module.exports.ZParser.escapeHTML(rawValue))
+                          void function(split, ns, key){
+                              split = module.exports.ZParser.escapeHTML(rawKey).split(":")
+                              ns = namespaces[split[0].toLowerCase()] ? namespaces[split.shift().toLowerCase()] : null
+                              key = split[0]
+
+                              if ( ns )
+                                  node.setAttributeNS(ns, key, module.exports.ZParser.escapeHTML(rawValue))
+                              else
+                                  node.setAttribute(key, module.exports.ZParser.escapeHTML(rawValue))
+                          }()
                     }
 
                     attribute.enclosing_glyph = "]"
@@ -334,6 +366,9 @@ module.exports.ZParser = klass(function(statics){
                                  : input.pile === "§" ? document.createTextNode("")
                                  : input.pile.indexOf(":") == -1 ? document.createElement(input.pile)
                                  : (split = input.pile.split(":"), document.createElementNS(namespaces[split[0].toLowerCase()]||namespaces.hmtl, split[1]))
+
+                  //if ( split )
+                    //debugger
 
                   if ( autoVars.indexOf(input.buffer.nodeName) != -1 )
                     input.pile = input.buffer.nodeName.toLowerCase(),
