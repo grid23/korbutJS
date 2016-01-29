@@ -42,6 +42,9 @@ var DomReadyEvent = klass(Event, {
 
 module.exports = new Promise(function(resolve, reject, ready){
     function onready(){
+        if ( !document.body )
+          return setTimeout(onready, 4)
+          
         if ( ready )
           return
         ready = true
