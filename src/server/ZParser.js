@@ -13,6 +13,7 @@ var UID = require("../UID").UID
 var document = jsdom.jsdom()
 var window =  document.defaultView
 var Element = window.Element
+var HTMLElement = window.HTMLElement
 var Node = window.Node
 
 module.exports.namespaces = {

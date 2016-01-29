@@ -27,6 +27,29 @@ describe("korbut.EventTarget", function(){
         })
     })
 
+    describe("->uid", function(){
+        it("should return a valid uid", function(){
+            var a = new korbut.EventTarget().uid
+            var b = new korbut.EventTarget().uid
+            var c
+            var E = korbut.class(korbut.EventTarget, function(){
+                return {
+                    constructor: function(){
+                        c = this.uid
+                        chai.expect(c).to.not.equal(undefined)
+                    }
+                }
+            })
+
+            new E()
+            chai.expect(a).to.not.equal(undefined)
+            chai.expect(b).to.not.equal(undefined)
+            chai.expect(a).to.not.equal(b)
+            chai.expect(a).to.not.equal(c)
+            chai.expect(b).to.not.equal(c)
+        })
+    })
+
     describe("->addEventListener", function(){
         var a = new korbut.EventTarget
         function onfoo(){}
