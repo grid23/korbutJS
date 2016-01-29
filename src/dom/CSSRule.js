@@ -130,7 +130,18 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
                 value = _.typeof(value) == "string" ? value : ""
                 o = rules[this.uid].dummy.style.cssText
                 hooked = CSSHook.testProperty(prop, value)
-                CSSStyleDeclaration.prototype.setProperty.call(rules[this.uid].dummy.style, hooked.property, hooked.value)
+
+                try {
+                    CSSStyleDeclaration.prototype.setProperty.call(rules[this.uid].dummy.style, hooked.property, hooked.value)
+                } catch(e){
+                    try {
+                        rules[this.uid].dummy.style.setProperty(hooked.property, +hooked.value)
+                    } catch(e){
+                        console.warn("unable to set poperty ", hooked.property, " to ", hooked.value)
+                        return
+                    }
+                }
+
                 n = rules[this.uid].dummy.style.cssText
 
                 if ( o !== n )
