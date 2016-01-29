@@ -93,7 +93,7 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
     })
 
     return {
-        constructor: function(selectorText, cssText, media, fromstr, dummy, args){
+        constructor: function(selectorText, /*cssText,*/ media, fromstr, dummy, args){
             args = _.spread(arguments)
             dummy = document.createElement("div")
 
@@ -105,7 +105,7 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
                   : args.length > 1 ? new module.exports.CSSMediaRule( args.pop() )
                   : null
 
-            cssText = CSSHook.testCssText( dummy.style.cssText = fromstr ? (rcssparse.exec(args.pop())||[])[2]||""
+            dummy.style.cssText = CSSHook.testCssText( dummy.style.cssText = fromstr ? (rcssparse.exec(args.pop())||[])[2]||""
                     : _.typeof(args[args.length-1]) == "string" ? args.pop()
                     : _.typeof(args[args.length-1]) == "object" ? module.exports.CSSRule.serializeCssText(args.pop())
                     : "" )
@@ -114,7 +114,7 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
                 instance: { value: this }
               , dummy: { value: dummy }
               , selectorText: { writable: true, value: selectorText}
-              , cssText: { writable: true, value: cssText }
+              //, cssText: { writable: true, value: cssText }
               , media: { writable: true, value: media }
             })
         }

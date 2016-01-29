@@ -121,7 +121,7 @@ new module.exports.CSSHook("transition", function(props, prop, div){
             value = value.replace(new RegExp("( |^)"+props[i], "g"), " -ms-"+props[i])
           return { property: "transition", value: value.trim() }
       }
-    else if ( cssProperties.getPropertyValue("transform") != void 0 )
+    else if ( cssProperties.getPropertyValue("transform") != null )
       return function(value){
           return { property: "transition", value: value }
       }
@@ -141,7 +141,7 @@ new module.exports.CSSHook("transform", function(prop, div){
       return function(value){
           return { property: "-ms-transform", value: value, force: true }
       }
-    else if ( cssProperties.getPropertyValue("transform") != void 0 )
+    else if ( cssProperties.getPropertyValue("transform") != null )
       return function(value){
           return { property: "transform", value: value, force: true }
       }
