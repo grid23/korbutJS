@@ -103,17 +103,13 @@ module.exports.ZParser = klass(function(statics){
                             if ( CLASS_LIST_COMPAT ) {
                               if ( replacedClass )
                                 node.classList.remove(module.exports.ZParser.escapeHTML(replacedClass))
-                              else
-                                node.classList.add(module.exports.ZParser.escapeHTML(newClass))
+                              node.classList.add(module.exports.ZParser.escapeHTML(newClass))
                             } else {
 
                               if ( replacedClass )
                                 node.setAttribute("class", node.getAttribute("class").replace(" "+module.exports.ZParser.escapeHTML(replacedClass), function(){ return " "+module.exports.ZParser.escapeHTML(newClass) }))
-                                //node.className = node.className.replace(" "+module.exports.ZParser.escapeHTML(replacedClass), function(){ return " "+module.exports.ZParser.escapeHTML(newClass) })
                               else
                                 node.setAttribute("class", node.getAttribute("class")||""+ " "+module.exports.ZParser.escapeHTML(newClass))
-                                //node.className += " "+module.exports.ZParser.escapeHTML(newClass)
-
                             }
                     }
 
