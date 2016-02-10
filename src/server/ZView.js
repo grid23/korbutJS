@@ -2,11 +2,19 @@
 
 var _ = require("../utils")
 var klass = require("../class").class
+var html_beautifier = function(){
+    try {
+        return require("js-beautify").html
+    } catch(e){
+        return function(v){ return v }
+    }
+}()
+
 var EventTarget = require("../EventTarget").EventTarget
 var Iterator = require("../Iterator").Iterator
 var Model = require("../Model").Model
-var ZParser = require("./ZParser").ZParser
 var UID = require("../UID").UID
+var ZParser = require("./ZParser").ZParser
 
 module.exports.ZView = klass(EventTarget, function(statics){
     var views = Object.create(null)
@@ -122,6 +130,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
 
                 append = _.typeof(dict.append) == "string" ? dict.append : ""
                 prepend = _.typeof(dict.prepend) == "string" ? dict.prepend : ""
+
                 buffer = function(nodes, str){
                     str = ""
 
@@ -131,7 +140,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
                     return str
                 }.call( this, [].concat(this.queryAll("root")) )
 
-                return new Buffer( prepend + buffer + append )
+                return new Buffer( html_beautifier(prepend + buffer + append) )
             }
         }
 

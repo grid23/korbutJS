@@ -2,12 +2,22 @@
 
 var _ = require("../utils")
 var klass = require("../class").class
+var requestAnimationFrame = function(){}
+var cancelAnimationFrame = function(fn){ return fn() }
+var jsdom = require("jsdom")
+
 
 var EventTarget = require("../EventTarget").EventTarget
 var Iterator = require("../Iterator").Iterator
 var Model = require("../Model").Model
 var Template = require("./Template").Template
 var UID = require("../UID").UID
+
+var document = jsdom.jsdom()
+var window =  document.defaultView
+var Element = window.Element
+var HTMLElement = window.HTMLElement
+var Node = window.Node
 
 module.exports.View = klass(EventTarget, function(statics){
     var views = Object.create(null)
