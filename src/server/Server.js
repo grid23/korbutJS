@@ -74,23 +74,39 @@ module.exports.Server = klass(Router, function(statics){
 
     return {
         constructor: function(){
+            let dict = type(arguments[1]) === "object" ? arguments[1] : {}
             Router.apply(this, arguments)
 
             servers.set(this, Object.create(null))
 
+            this.delay = dict.delay || 0
 
             this.Route = module.exports.HTTPRequestRoute
+        }
+      , delay: { enumerable: true,
+            get: function(){
+                return servers.get(this).delay || 0
+            }
+          , set: function(v){
+                servers.get(this).delay = type(v) == "number" ? v : 0
+            }
         }
       , listen: { enumerable: true,
             value: function(){
                 let server = servers.get(this).server = !servers.get(this).secure ? new http.Server
                                                       : new https.Server(this.options)
 
-
                 servers.get(this).server.on("request", function(request, response, hit){
-                    if ( hit = this.dispatchRoute(new this.Route(request, response)), !hit )
-                      if ( hit = this.dispatchRoute(new this.CatchAllRoute(request, response)), !hit )
-                        response.writeHead("404"), response.end()
+                    let ondelay = function(){
+                        if ( hit = this.dispatchRoute(new this.Route(request, response)), !hit )
+                          if ( hit = this.dispatchRoute(new this.CatchAllRoute(request, response)), !hit )
+                            response.writeHead("404"), response.end()
+                    }.bind(this)
+
+                    if ( this.delay )
+                      setTimeout(ondelay, Math.round(Math.random() * this.delay))
+                    else
+                      ondelay()
                 }.bind(this))
 
                 return http.Server.prototype.listen.apply(servers.get(this).server, arguments)
