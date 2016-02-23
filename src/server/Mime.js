@@ -23,7 +23,7 @@ module.exports.Mime = klass(EventTarget, function(statics){
     Object.defineProperties(statics, {
         lookup: { enumerable: true,
             value: function(lookup, cb){
-                let extname = path.extname(lookup).slice(1)
+                let extname = (path.extname(lookup).length ? path.extname(lookup) : lookup).slice(1)
                 let subset = MIMES.subset({extension: extname})
                 let templates = []
 
@@ -46,6 +46,34 @@ module.exports.Mime = klass(EventTarget, function(statics){
                       cb.apply(null, [null].concat(templates))
                     else
                       return templates
+                }
+            }
+        }
+      , reverse_lookup: { enumerable: true,
+            value: function(lookup, cb){
+                let template = lookup.split(";")[0]
+                let extensions = []
+                let subset = MIMES.subset({template})
+
+                subset.forEach(function(m){
+                    extensions.push(m.getItem("extension"))
+                })
+
+                subset.purge()
+
+                if ( !extentions.length ){
+                    let err = new Error("unable to dertemine an extension for " + lookup)
+
+                    if ( type(cb) == "function" )
+                      cb(err, null)
+                    else
+                      return err
+                }
+                else {
+                    if ( type(cb) == "function" )
+                      cb.apply(null, [null].concat(extensions))
+                    else
+                      return extensions
                 }
             }
         }
