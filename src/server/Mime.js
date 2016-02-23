@@ -38,14 +38,12 @@ module.exports.Mime = klass(EventTarget, function(statics){
 
                     if ( type(cb) == "function" )
                       cb(err, null)
-                    else
-                      return err
+                    return err
                 }
                 else {
                     if ( type(cb) == "function" )
                       cb.apply(null, [null].concat(templates))
-                    else
-                      return templates
+                    return templates
                 }
             }
         }
@@ -60,19 +58,17 @@ module.exports.Mime = klass(EventTarget, function(statics){
                 })
                 subset.purge()
 
-                if ( !extentions.length ){
+                if ( !extensions.length ){
                     let err = new Error("unable to dertemine an extension for " + lookup)
 
-                    if ( type(cb) == "function" )
+                    if ( type(cb) === "function" )
                       cb(err, null)
-                    else
-                      return err
+                    return err
                 }
                 else {
-                    if ( type(cb) == "function" )
+                    if ( type(cb) === "function" )
                       cb.apply(null, [null].concat(extensions))
-                    else
-                      return extensions
+                    return extensions
                 }
             }
         }
