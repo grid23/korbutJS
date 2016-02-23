@@ -24,7 +24,7 @@ module.exports.Mime = klass(EventTarget, function(statics){
         lookup: { enumerable: true,
             value: function(lookup, cb){
                 let extname = (path.extname(lookup).length ? path.extname(lookup) : lookup).slice(1)
-                let subset = MIMES.subset({extension: extname})
+                let subset = MIMES.subset({extension: function(v){ return v.toLowerCase() === extname.toLowerCase() }})
                 let templates = []
 
                 subset.forEach(function(m){
@@ -53,12 +53,11 @@ module.exports.Mime = klass(EventTarget, function(statics){
             value: function(lookup, cb){
                 let template = lookup.split(";")[0]
                 let extensions = []
-                let subset = MIMES.subset({template})
+                let subset = MIMES.subset({template: function(v){ return v.toLowerCase() === template.toLowerCase() }})
 
                 subset.forEach(function(m){
-                    extensions.push(m.getItem("extension"))
+                    extensions.push( m.getItem("extension") )
                 })
-
                 subset.purge()
 
                 if ( !extentions.length ){
