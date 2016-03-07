@@ -57,7 +57,6 @@ module.exports.Router = klass(EventTarget, function(statics){
 
                                 if ( match = part.match(/^:(\w+)(\(.*\))$/), match ) {
                                   assignments.push(match[1])
-                                  //regexp.push(match[2])
                                   nregexp.push(match[2])
                                 } else {
                                   assignments.push(part.slice(1))
@@ -260,8 +259,12 @@ module.exports.Router = klass(EventTarget, function(statics){
 
                                     handler = handlers.shift()
 
-                                    if ( iteration.key !== "*" )
-                                      hits++
+                                    if ( _.typeof(counts) == "boolean" ){
+                                        if ( !counts && iterator.current.key !== "*" )
+                                          hits = Math.max(0, hits - 1)
+                                        else if ( counts && iterator.current.key == "*" )
+                                          hits++
+                                    }
 
                                     rv = (handler.handleRoute||handler).call(!handler.handleRoute?null:handler, route, handlers.length?_next:next, hits)
                                     return _.typeof(rv) !== "undefined" ? rv : hits
@@ -274,7 +277,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                     function next(counts){
                         if ( _.typeof(counts) == "boolean" ){
                             if ( !counts && iterator.current.key !== "*" )
-                              hits--
+                              Math.max(0, hits - 1)
                             else if ( counts && iterator.current.key == "*" )
                               hits++
                         }
