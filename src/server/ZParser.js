@@ -115,7 +115,7 @@ module.exports.ZParser = klass(function(statics){
                               if ( replacedClass )
                                 node.setAttribute("class", node.getAttribute("class").replace(" "+module.exports.ZParser.escapeHTML(replacedClass), function(){ return " "+module.exports.ZParser.escapeHTML(newClass) }))
                               else
-                                node.setAttribute("class", node.getAttribute("class")||""+ " "+module.exports.ZParser.escapeHTML(newClass))
+                                node.setAttribute("class", (node.getAttribute("class")||"")+ " "+module.exports.ZParser.escapeHTML(newClass))
                             }
                     }
 
