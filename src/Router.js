@@ -239,7 +239,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                       copy[keys[0]] = routes[keys.shift()]
 
                     return new Iterator(copy)
-                }( this.routes || Object.create(null), Object.create(null) )
+                }( this.routes || Object.create(null), [] )
 
                 return function(self, hits, hit, rv){
                     hits = 0
@@ -259,12 +259,13 @@ module.exports.Router = klass(EventTarget, function(statics){
 
                                     handler = handlers.shift()
 
-                                    if ( _.typeof(counts) == "boolean" ){
-                                        if ( !counts && iterator.current.key !== "*" )
-                                          hits = Math.max(0, hits - 1)
-                                        else if ( counts && iterator.current.key == "*" )
-                                          hits++
-                                    }
+                                    if (_.typeof(counts) == "boolean" && !counts && iteration.key !== "*" )
+                                        hits--
+                                    if (_.typeof(counts) == "boolean" && !!counts && iteration.key === "*" )
+                                        hits++
+
+                                    if ( iteration.key !== "*" )
+                                      hits++ // natural hit
 
                                     rv = (handler.handleRoute||handler).call(!handler.handleRoute?null:handler, route, handlers.length?_next:next, hits)
                                     return _.typeof(rv) !== "undefined" ? rv : hits
@@ -275,15 +276,12 @@ module.exports.Router = klass(EventTarget, function(statics){
                     }
 
                     function next(counts){
-                        if ( _.typeof(counts) == "boolean" ){
-                            if ( !counts && iterator.current.key !== "*" )
-                              Math.max(0, hits - 1)
-                            else if ( counts && iterator.current.key == "*" )
-                              hits++
-                        }
+                        if (_.typeof(counts) == "boolean" && !counts && iterator.current.key !== "*" )
+                            hits--
+                        if (_.typeof(counts) == "boolean" && !!counts && iterator.current.key === "*" )
+                            hits++
 
                         iterator.next()
-
                         if ( iterator.current.done == true )
                           return hits
 

@@ -74,6 +74,7 @@ module.exports.Iterator = klass(function(statics){
       , next: { enumerable: true,
             value: function(cb, idx){
                 cb = typeof cb == "function" ? cb : null
+
                 idx = ++this._pointer
 
                 Object.defineProperty(this, "_current", { configurable: true,
@@ -94,11 +95,7 @@ module.exports.Iterator = klass(function(statics){
         }
       , pointer: { enumerable: true,
             get: function(){
-                return this._pointer || -1
-            }
-          , set: function(v){
-                this._pointer = this._pointer || Object.defineProperty(this, "_pointer", { value: -1 })._pointer
-                this._pointer = v
+                return this._pointer
             }
         }
       , length: { enumerable: true,
