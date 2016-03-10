@@ -4,6 +4,7 @@ var _ = require("./utils")
 var klass = require("./class").class
 var EventTarget = require("./EventTarget").EventTarget
 var Iterator = require("./Iterator").Iterator
+var Promise = require("./Promise").Promise
 var Route = require("./Route").Route
 var UID = require("./UID").UID
 
@@ -227,6 +228,79 @@ module.exports.Router = klass(EventTarget, function(statics){
                 }
 
                 return count
+            }
+        }
+    , dispatchRouteAsync: { enumerable: true,
+            value: function(route, iterator, emitter){
+                route = Route.isImplementedBy(route) ? route : this.Route.create.apply(null, arguments)
+                iterator = function(routes, copy, keys){
+                    keys = Object.keys(routes).sort()
+
+                    while ( keys.length )
+                      copy[keys[0]] = routes[keys.shift()]
+
+                    return new Iterator(copy)
+                }( this.routes || Object.create(null), [] )
+
+
+                return new Promise(function(resolve, reject, self, hits, hit, rv){
+                  self = this
+                  hits = 0
+
+                  function handle(iteration){
+                      if ( statics.isRouteHandler(iteration.value) ) {
+                        if ( iteration.key !== "*" )
+                          hits++
+
+                        rv = (iteration.value.handleRoute||iteration.value).call(!iteration.value.handleRoute?null:iteration.value, route, next, hits)
+                        return _.typeof(rv) !== "undefined" ? rv : hits
+                      } else if ( Array.isArray(iteration.value) )
+                          return function(handlers, _next){
+                              function _next(counts, handler){
+                                  if ( !handlers.length )
+                                    return next.call(null, counts)
+
+                                  handler = handlers.shift()
+
+                                  if (_.typeof(counts) == "boolean" && !counts && iteration.key !== "*" )
+                                      hits--
+                                  if (_.typeof(counts) == "boolean" && !!counts && iteration.key === "*" )
+                                      hits++
+
+                                  if ( iteration.key !== "*" )
+                                    hits++ // natural hit
+
+                                  rv = (handler.handleRoute||handler).call(!handler.handleRoute?null:handler, route, handlers.length?_next:next, hits)
+
+                                  return _.typeof(rv) !== "undefined" ? rv : hits
+                              }
+
+                              return _next()
+                          }( [].concat(iteration.value) )
+                  }
+
+
+                  function next(counts){
+                      if (_.typeof(counts) == "boolean" && !counts && iterator.current.key !== "*" )
+                          hits--
+                      if (_.typeof(counts) == "boolean" && !!counts && iterator.current.key === "*" )
+                          hits++
+
+                      iterator.next()
+                      if ( iterator.current.done == true )
+                        return resolve(hits)
+
+                      hit = iterator.current.key === "*" ? true
+                          : !!self.dispatcher.call(this, route, iterator.current.key)
+
+                      if ( !hit )
+                        next()
+                      else
+                        handle(iterator.current)
+                  }
+
+                  next()
+                }.bind(this))
             }
         }
       , dispatchRoute: { enumerable: true,
