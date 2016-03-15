@@ -54,7 +54,7 @@ module.exports.Cookie = klass(Model, function(statics){
     })
 
     return {
-        constructor: function(dict, args, exists, data){
+        constructor: function(dict, args, exists, data, read){
             args = _.spread(arguments)
             dict = _.typeof(args[0]) == "string" ? { name: args.shift() }
                  : _.typeof(args[0]) == "object" && _.typeof(args[0].name) == "string" ? args.shift()
@@ -75,15 +75,20 @@ module.exports.Cookie = klass(Model, function(statics){
                 }
             })
 
-            if ( exists = document.cookie.match(cookies[this.uid].name+"=([^;]*)"), exists ) {
-                try {
-                    data = JSON.parse(unescape(exists[1]))
-                } catch(e){
-                    console.error(e)
-                    data = {}
+            read = function(){
+                if ( exists = document.cookie.match(cookies[this.uid].name+"=([^;]*)"), exists ) {
+                    try {
+                        data = JSON.parse(unescape(exists[1]))
+                    } catch(e){
+                        console.error(e)
+                        data = {}
+                    }
+                    this.setItem(data)
                 }
-                this.setItem(data)
-            }
+            }.bind(this)
+
+            window.addEventListener("focus", read)
+            read()
 
             this.addEventListener("update", function(){
                 this.sync()
