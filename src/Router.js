@@ -291,7 +291,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                         return resolve(hits)
 
                       hit = iterator.current.key === "*" ? true
-                          : !!self.dispatcher.call(this, route, iterator.current.key)
+                          : !!self.dispatcher.call(self, route, iterator.current.key)
 
                       if ( !hit )
                         next()
@@ -360,7 +360,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                           return hits
 
                         hit = iterator.current.key === "*" ? true
-                            : !!self.dispatcher.call(this, route, iterator.current.key)
+                            : !!self.dispatcher.call(self, route, iterator.current.key)
 
                         if ( !hit )
                           return next()

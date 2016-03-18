@@ -27,27 +27,30 @@ module.exports.Iterator = klass(function(statics){
 
                       for ( i = 0, l = o.length; i < l; i++ )
                         if ( !rv.hasOwnProperty(i) )
-                          throw error
+                          throw new Error
 
                       o = rv
                   } catch(e) {}
 
+                if ( o && Object.prototype.toString.call(o) == "[object String]" ) {
+                    rv = []
+
+                    for ( i = 0, l = o.length; i < l; i++ ) {
+                        lead = o.charCodeAt(i)
+                        trail = o.charCodeAt(i<l-1?i+1:"")
+                        rv.push( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF ? o[i]+o[++i] : o[i] )
+                    }
+
+                    return rv
+                }
+
+
                 try {
                     rv = Object.keys(o)
-
-                    if ( Object.prototype.toString.call(o) == "[object String]")
-                      throw new Error()
 
                     return rv
                 } catch(e) {
                     rv = []
-
-                    if ( Object.prototype.toString.call(o) == "[object String]" )
-                      for ( i = 0, l = o.length; i < l; i++ ) {
-                          lead = o.charCodeAt(i)
-                          trail = o.charCodeAt(i<l-1?i+1:"")
-                          rv.push( lead >= 0xD800 && lead <= 0xDBFF && trail >= 0xDC00 && trail <= 0xDFFF ? o[i]+o[++i] : o[i] )
-                      }
 
                     return rv
                 }
