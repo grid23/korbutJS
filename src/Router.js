@@ -403,8 +403,9 @@ module.exports.Router = klass(EventTarget, function(statics){
         }
 
       , dispatcher: { enumerable: true,
-            get: function(){
-                return this._dispatcher || module.exports.Router.dispatcher
+            value : function(){
+                return this._dispatcher ? this._dispatcher.apply(this, arguments)
+                     : module.exports.Router.dispatcher.apply(this, arguments)
             }
         }
 
