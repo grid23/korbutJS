@@ -102,7 +102,7 @@ module.exports.Cookie = klass(Model, function(statics){
                 str = escape(JSON.stringify(this.raw))
 
                 if ( str.length )
-                  document.cookie = [this.name, "=", str, "; domain=", this.domain, "; path=", this.path, "; expires=", this.expires, ";"].join("")
+                  document.cookie = [this.name, "=", str, "; domain=", this.domain, "; path=", this.path, ";", this.session?"":"expires="+this.expires+";"].join("")
                 else
                   document.cookie = [this.name, "=0; domain=", this.domain, "; path=", this.path, "; expires=", new Date( +(new Date) - 1000 ).toUTCString(), ";"].join("")
 
