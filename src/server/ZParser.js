@@ -193,7 +193,7 @@ module.exports.ZParser = klass(function(statics){
                                 function exec(split, ns, key){
                                     split = module.exports.ZParser.escapeHTML(rawKey).split(":")
                                     ns = namespaces[split[0].toLowerCase()] ? split.shift().toLowerCase() : null
-                                    key = split[0]
+                                    key = split.join(":")
 
                                     if ( ns )
                                         node.setAttributeNS(ns, key, module.exports.ZParser.escapeHTML(str))
@@ -229,7 +229,7 @@ module.exports.ZParser = klass(function(statics){
                           void function(split, ns, key){
                               split = module.exports.ZParser.escapeHTML(rawKey).split(":")
                               ns = namespaces[split[0].toLowerCase()] ? namespaces[split.shift().toLowerCase()] : null
-                              key = split[0]
+                              key = split.join("")
 
                               if ( ns )
                                   node.setAttributeNS(ns, key, module.exports.ZParser.escapeHTML(rawValue))
