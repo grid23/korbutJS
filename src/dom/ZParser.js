@@ -15,6 +15,7 @@ module.exports.namespaces = {
   , svg: "http://www.w3.org/2000/svg"
   , xml: "http://www.w3.org/XML/1998/namespace"
   , xmlns: "http://www.w3.org/2000/xmlns/"
+  , xlink: "http://www.w3.org/1999/xlink"
 }
 
 module.exports.ZParser = klass(function(statics){
