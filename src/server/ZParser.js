@@ -192,7 +192,7 @@ module.exports.ZParser = klass(function(statics){
                             onupdate = function(e, str, hit, i, l, value){
                                 function exec(split, ns, key){
                                     split = module.exports.ZParser.escapeHTML(rawKey).split(":")
-                                    ns = namespaces[split[0].toLowerCase()] ? split.shift().toLowerCase() : null
+                                    ns = namespaces[split[0].toLowerCase()] ? namespaces[split.shift().toLowerCase()] : null
                                     key = split.join(":")
 
                                     if ( ns )
