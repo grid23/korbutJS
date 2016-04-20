@@ -77,7 +77,7 @@ module.exports.CSSMediaRule = klass(EventTarget, function(statics){
 module.exports.CSSRule = klass(EventTarget, function(statics){
     var rules = Object.create(null)
     var serializer = new Serializer({ delimiter: ":", separator: ";" })
-    var rcssparse = /(?:\s|$)*([^{]*)(?:[]\s|$)*{(.*)}(?:\s|$)*/ // TODO make sure this behaves as expected
+    var rcssparse = /(?:\s|$)*([^{]*)(?:\s|$)*{(.*)}(?:\s|$)*/ // TODO make sure this behaves as expected
 
     Object.defineProperties(statics, {
         serializeCssText: { enumerable: true,
