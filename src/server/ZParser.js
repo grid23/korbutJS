@@ -344,7 +344,7 @@ module.exports.ZParser = klass(function(statics){
             operate(stream, input, output)
 
             if ( !input.traversal )
-              input.context = output.tree.appendChild(input.buffer)
+              input.context = (output.tree.appendChild(input.buffer), output.tree.childNodes[output.tree.childNodes.length-1])
             else
               traversals[input.traversal](stream, input, output)
             input.traversal = input.glyph
