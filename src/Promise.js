@@ -112,7 +112,7 @@ module.exports.Promise = klass(function(statics){
             if ( typeof resolver !== "function" )
               throw new TypeError("Constructor korbut.Promise requires a resolver function as argument 0.")
             resolved = false
-            
+
             promises[this.uid] = {
                 promise: this
               , state: { key: this.PENDING, value: null }
@@ -171,7 +171,7 @@ module.exports.Promise = klass(function(statics){
                                 try {
                                     rv = onreject(r)
                                 } catch(e) {
-                                    reject(e)
+                                    reject(r)
                                     return
                                 }
 
