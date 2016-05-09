@@ -257,7 +257,7 @@ module.exports.Collection = klass(EventTarget, function(statics){
             value: function(fn, i, l){
                 if ( _.typeof(fn) == "function" )
                   for ( i = 0, l = this.models.length; i < l; i++ )
-                    fn(this.models[i])
+                    fn(this.models[i], i, this.models)
             }
         }
       , find: { enumerable: true,
