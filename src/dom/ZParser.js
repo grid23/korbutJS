@@ -34,6 +34,7 @@ module.exports.ZParser = klass(function(statics){
     var us_templateVarGlyph = "£"
 
     var namespaces = module.exports.namespaces
+    var rquoted = /([\"'])(?:\\\1|.)*?\1/
 
     var traversals = Object.create(null, {
             "+": { enumerable: true,
