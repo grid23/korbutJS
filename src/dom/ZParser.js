@@ -185,8 +185,8 @@ module.exports.ZParser = klass(function(statics){
                         if ( vars.length ) {
                             onupdate = function(e, str, hit, i, l, value){
                                 function exec(split, ns, key){
-                                    split = module.exports.ZParser.escapeHTML(rawKey).split(":")
-                                    ns = namespaces[split[0].toLowerCase()] ? namespaces[split.shift().toLowerCase()] : null
+                                    split = !rquoted.exec(rawKey) ? module.exports.ZParser.escapeHTML(rawKey).split(":") : [module.exports.ZParser.escapeHTML(rawKey.slice(1, -1))]
+                                    ns = split.length > 1 && namespaces[split[0].toLowerCase()] ? namespaces[split.shift().toLowerCase()] : null
                                     key = split.join(":")
 
                                     if ( ns )
@@ -221,8 +221,8 @@ module.exports.ZParser = klass(function(statics){
                             onupdate({keys: vars})
                         } else
                           void function(split, ns, key){
-                              split = module.exports.ZParser.escapeHTML(rawKey).split(":")
-                              ns = namespaces[split[0].toLowerCase()] ? namespaces[split.shift().toLowerCase()] : null
+                              split = !rquoted.exec(rawKey) ? module.exports.ZParser.escapeHTML(rawKey).split(":") : [module.exports.ZParser.escapeHTML(rawKey.slice(1, -1))]
+                              ns = split.length > 1 && namespaces[split[0].toLowerCase()] ? namespaces[split.shift().toLowerCase()] : null
                               key = split.join(":")
 
                               if ( ns )
