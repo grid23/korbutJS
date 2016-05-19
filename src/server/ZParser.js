@@ -369,7 +369,7 @@ module.exports.ZParser = klass(function(statics){
                                  : !input.pile.length && input.glyph !== "{" ? document.createElement("div")
                                  : input.pile === "§" ? document.createTextNode("")
                                  : input.pile.indexOf(":") == -1 ? document.createElement(input.pile)
-                                 ( split = input.pile.split(":"), namespaces[split[0]] ? document.createElementNS(namespaces[split[0].toLowerCase()], split[1]) : document.createElement(split.join(":")) )
+                                 : ( split = input.pile.split(":"), namespaces[split[0]] ? document.createElementNS(namespaces[split[0].toLowerCase()], split[1]) : document.createElement(split.join(":")) )
 
                   //if ( split )
                     //debugger
