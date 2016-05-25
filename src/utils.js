@@ -33,6 +33,7 @@ module.exports.typeof = function(toString){
              : toString.call(o).slice(8, -1).toLowerCase()
     }
 }( Object.prototype.toString )
+module.exports.typeOf = module.exports.typeof
 
 module.exports.invoke = function(fn, ctx, args){
     fn = typeof fn == "function" ? fn : function(){ throw new TypeError("korbut.utils.invoke - function expected as argument 0") }()
