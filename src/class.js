@@ -152,3 +152,5 @@ module.exports.singleton = function(F, G){
 
   return G
 }
+
+module.exports.klass = module.exports.class
