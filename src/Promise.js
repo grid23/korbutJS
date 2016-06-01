@@ -118,7 +118,11 @@ module.exports.Promise = klass(function(statics){
               , state: { key: this.PENDING, value: null }
             }
 
-            resolver(resolve.bind(this), reject.bind(this))
+            try {
+                resolver(resolve.bind(this), reject.bind(this))
+            } catch(e){
+                reject.call(this, e)
+            }
 
             function resolve(v, handlers){
                 if ( resolved ) return
