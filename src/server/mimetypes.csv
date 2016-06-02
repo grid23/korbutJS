@@ -1,6 +1,7 @@
 name;template;extension
 javascript;application/javascript;js
 json;application/json;json
+jsonp;application/javascript;jsonp
 html;text/html;html
 css;text/css;css
 gif;image/gif;gif
