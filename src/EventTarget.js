@@ -8,6 +8,7 @@ var UID = require("./UID").UID
 
 module.exports.EventTarget = klass(function(statics){
     var eventTargets = Object.create(null)
+    var logging = false
 
     Object.defineProperties(statics, {
         isEventListener: { enumerable: true,
@@ -17,6 +18,10 @@ module.exports.EventTarget = klass(function(statics){
         }
       , getByUid: { enumerable: true,
             value: function(uid){ return eventTargets[uid] ? eventTargets[uid].eventTarget : void 0 }
+        }
+      , log: { enumerable: true,
+            get: function(){ return logging }
+          , set: function(v){ logging = !v  }
         }
     })
 
@@ -154,6 +159,9 @@ module.exports.EventTarget = klass(function(statics){
                 event = Event.isImplementedBy(event) ? event : this.Event.create.apply(null, arguments)
                 handlers = (this.events||{})[event.type]
                 count = 0
+
+                if ( logging )
+                  console.log("event =>", event.type, event, "from", this)
 
                 if ( event.type == "error" && !handlers )
                   if ( event.error instanceof Error )

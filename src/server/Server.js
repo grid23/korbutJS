@@ -79,6 +79,7 @@ module.exports.Server = klass(Router, function(statics){
 
             servers.set(this, Object.create(null))
 
+            servers.get(this).async = dict.async ? !!dict.async : false
             this.delay = dict.delay || 0
 
             this.Route = module.exports.HTTPRequestRoute
@@ -98,9 +99,20 @@ module.exports.Server = klass(Router, function(statics){
 
                 servers.get(this).server.on("request", function(request, response, hit){
                     let ondelay = function(){
-                        if ( hit = this.dispatchRoute(new this.Route(request, response)), !hit )
-                          if ( hit = this.dispatchRoute(new this.CatchAllRoute(request, response)), !hit )
-                            response.writeHead("404"), response.end()
+                        if ( !servers.get(this).async ) {
+                          if ( hit = this.dispatchRoute(new this.Route(request, response)), !hit )
+                            if ( hit = this.dispatchRoute(new this.CatchAllRoute(request, response)), !hit )
+                              response.writeHead("404"), response.end()
+                        } else {
+                            this.dispatchRouteAsync(new this.Route(request, response)).then(hit => {
+                                if ( !hit )
+                                  this.dispatchRouteAsync(new this.CatchAllRoute(request, response)).then(hit => {
+                                      response.writeHead("404")
+                                      response.end()
+                                  })
+                            })
+                        }
+
                     }.bind(this)
 
                     if ( this.delay )

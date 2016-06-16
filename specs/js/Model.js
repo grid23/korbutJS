@@ -81,4 +81,26 @@ describe("korbut.Model", function(){
         })
     })
 
+    describe("0, null, false, undefined values in dataset", function(){
+        it ("0 should never equal false", function(done){
+            var m = new mbx.Model
+
+            m.addEventListener("add", function onadd(e){
+                m.removeEventListener("add", onadd)
+
+                chai.expect(e.from).to.be.undefined
+                chai.expect(e.to).to.be.equal(0)
+
+                m.addEventListener("add", function onadd(e){
+                    console.log(e.from, e.to)
+                    chai.expect(e.from).to.be.equal(0)
+                    chai.expect(e.to).to.be.equal(25)
+                    done()
+                })
+                m.setItem("x", 25)
+            })
+            m.setItem("x", 0)
+        })
+    })
+
 })

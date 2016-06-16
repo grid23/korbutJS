@@ -224,7 +224,9 @@ module.exports.Model = klass(EventTarget, function(statics){
                 }.call(this, nvalue)
 
                 hook = this.hooks[key] || null
-                pvalue = this.data[key] || void 0
+                pvalue = !!this.data[key] ? this.data[key]
+                       : ["string", "number", "boolean"].indexOf(typeof this.data[key]) > -1 ? this.data[key]
+                       : void 0
 
                 if ( typeof hook == "function" )
                   nvalue = hook.call(this, nvalue, pvalue)
