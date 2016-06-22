@@ -76,3 +76,11 @@ describe("korbut.View", function(){
     })
 
 })
+
+describe("multiple classnames in one expression", function(){
+    it("should work (css modules support)", function(){
+          var z = new mbx.ZView("div.foo bar")
+
+          chai.expect(z.root.className).to.be.equal("foo bar")
+    })
+})
