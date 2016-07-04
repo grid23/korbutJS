@@ -231,7 +231,7 @@ module.exports.Router = klass(EventTarget, function(statics){
             }
         }
     , dispatchRouteAsync: { enumerable: true,
-            value: function(route, iterator, emitter){
+            value: function(route, iterator, emitter, dispatch){
                 route = Route.isImplementedBy(route) ? route : this.Route.create.apply(null, arguments)
                 iterator = function(routes, copy, keys){
                     keys = Object.keys(routes).sort()
@@ -243,7 +243,7 @@ module.exports.Router = klass(EventTarget, function(statics){
                 }( this.routes || Object.create(null), [] )
 
 
-                return new Promise(function(resolve, reject, self, hits, hit, rv){
+                dispatch = new Promise(function(resolve, reject, self, hits, hit, rv){
                   self = this
                   hits = 0
 
@@ -301,6 +301,12 @@ module.exports.Router = klass(EventTarget, function(statics){
 
                   next()
                 }.bind(this))
+
+                dispatch.catch(function(e){
+                    console.error(e)
+                })
+
+                return dispatch
             }
         }
       , dispatchRoute: { enumerable: true,
