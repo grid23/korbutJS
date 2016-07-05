@@ -101,7 +101,7 @@ module.exports.Service = klass(function(statics){
             })
         }
       , request: { enumerable: true,
-            value: function(body, cb, url, args){
+            value: function(body, cb, url, args, request){
                 args = _.spread(arguments)
                 cb = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
                 body = Model.isImplementedBy(args[args.length-1]) ? args.pop().serialize()
@@ -115,7 +115,7 @@ module.exports.Service = klass(function(statics){
                 else
                   url = services[this.uid].url
 
-                return new Promise(function(resolve, reject, request){
+                return new Promise(function(resolve, reject){
                     this.abort()
                     request = services[this.uid].ongoing = new XMLHttpRequest
                     request.open(services[this.uid].type, url, services[this.uid].async, services[this.uid].withCredentials&&services[this.uid].credentials.user||void 0, services[this.uid].withCredentials&&services[this.uid].credentials.password||void 0)
@@ -135,11 +135,10 @@ module.exports.Service = klass(function(statics){
                           return
 
                         if ( services[this.uid].ongoing !== request )
-                          reject(new Error("timeout"))
-                        services[this.uid].ongoing = null
+                          return reject(new Error("timeout"))
 
                         if ( request.status < 400 )
-                          resolve(request)
+                          resolve()
                         else
                           reject(new Error(request.status))
                     }.bind(this)
@@ -153,13 +152,19 @@ module.exports.Service = klass(function(statics){
                     }.bind(this)
 
                     request.send(body)
-                }.bind(this)).then(function(req){
+                }.bind(this)).then(function(){
                     if ( cb )
-                      cb.apply(null, [].concat(null, services[this.uid].handler.call(this, req)) )
+                      cb.apply(null, [].concat(null, services[this.uid].handler.call(this, request)) )
 
-                    return req
+                    if ( services[this.uid].ongoing === request )
+                      services[this.uid].ongoing = null
+                    return request
                 }.bind(this), function(e){
-                      cb.call(null, null)
+                    if ( cb )
+                      cb.call( null, [].concat(e, services[this.uid].handler.call(this, request)) )
+
+                    if ( services[this.uid].ongoing === request )
+                      services[this.uid].ongoing = null
                 }.bind(this))
             }
         }
