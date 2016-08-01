@@ -127,6 +127,9 @@ module.exports.Service = klass(function(statics){
                             request.setRequestHeader(iterator.current.key, iterator.current.value)
                       }.call(this, new Iterator(services[this.uid].headers))
 
+                    if ( services[this.uid].xdomain )
+                          request.setRequestHeader("Origin", location.protocol+"//"+location.host)
+
                     if ( services[this.uid].overrideMimeType )
                       request.overrideMimeType(services[this.uid].overrideMimeType)
 
