@@ -20,3 +20,5 @@ swf;application/x-shockwave-flash;swf
 webm;video/webm;webm
 text;text/plain;txt
 pdf;application/pdf;pdf
+zip;application/x-compressed;zip
+zip;application/x-zip-compressed;zip
