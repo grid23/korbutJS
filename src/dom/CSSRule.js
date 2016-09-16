@@ -96,7 +96,8 @@ module.exports.CSSRule = klass(EventTarget, function(statics){
         constructor: function(selectorText, /*cssText,*/ media, fromstr, dummy, args){
             args = _.spread(arguments)
             dummy = document.createElement("div")
-
+            fromstr = false
+            
             selectorText = args.length > 1 && _.typeof(args[0]) == "string" && isNaN(+args[0]) ? args.shift()
                          : args.length == 1 && _.typeof(args[0]) == "string" ? (fromstr = true, (rcssparse.exec(args[0])||[])[1]||"")
                          : (fromstr = true, args.shift(), (rcssparse.exec(args[0])||[])[1]||"")
