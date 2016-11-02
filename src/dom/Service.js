@@ -164,7 +164,7 @@ module.exports.Service = klass(function(statics){
                     return request
                 }.bind(this), function(e){
                     if ( cb )
-                      cb.call( null, [].concat(e, services[this.uid].handler.call(this, request)) )
+                      cb.apply( null, [].concat(e, services[this.uid].handler.call(this, request)) )
 
                     if ( services[this.uid].ongoing === request )
                       services[this.uid].ongoing = null
