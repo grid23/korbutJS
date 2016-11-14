@@ -1,11 +1,10 @@
 "use strict"
 
 var _ = require("../utils")
-var cssProperties = window.getComputedStyle(document.createElement("div"))
+var cssProperties = window.getComputedStyle(document.createElement("div")) || document.createElement("div").style
 var klass = require("../class").class
 
 var UID = require("../UID").UID
-
 
 module.exports.CSSHook = klass(function(statics){
     var hooks = Object.create(null)
