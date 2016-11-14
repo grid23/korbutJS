@@ -21,7 +21,7 @@ module.exports.EventTarget = klass(function(statics){
         }
       , log: { enumerable: true,
             get: function(){ return logging }
-          , set: function(v){ logging = !v  }
+          , set: function(v){ logging = !!v  }
         }
     })
 
@@ -160,13 +160,13 @@ module.exports.EventTarget = klass(function(statics){
                 handlers = (this.events||{})[event.type]
                 count = 0
 
-                if ( logging )
-                  console.log("event =>", event.type, event, "from", this)
-
                 if ( event.type == "error" && !handlers )
                   if ( event.error instanceof Error )
                     throw event.error
                   else throw new Error( event.detail || "")
+
+                  if ( logging )
+                    console.log("event =>", event.type, "event:", event, "dispatcher:", this, "handlers:", handlers)
 
                 if ( handlers )
                   if ( typeof handlers == "function" )
