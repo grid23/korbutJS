@@ -24,7 +24,7 @@ module.exports.Service = klass(function(statics){
             value: isSameDomain
         }
       , getByUid: function(uid){
-            return stylesheets[uid] ? stylesheets[uid].instance : void 0
+            return services[uid] ? services[uid].instance : void 0
         }
       , createCollectionFromService: { enumerable: true,
             value: function(){
