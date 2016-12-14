@@ -19,9 +19,11 @@ module.exports.Mime = klass(EventTarget, function(statics){
         return Collection.CSVtoCollectionSync(data)
     }( fs.readFileSync(path.resolve(process.cwd(), __dirname, "./mimetypes.csv")) )
 
-
     Object.defineProperties(statics, {
-        lookup: { enumerable: true,
+        DEFAULT: { enumerable: true,
+            value: "application/octet-stream"
+        }
+      , lookup: { enumerable: true,
             value: function(lookup, cb){
                 let extname = (path.extname(lookup).length ? path.extname(lookup) : lookup).slice(1)
                 let subset = MIMES.subset({extension: function(v){ return v.toLowerCase() === extname.toLowerCase() }})
@@ -34,17 +36,18 @@ module.exports.Mime = klass(EventTarget, function(statics){
                 subset.purge()
 
                 if ( !templates.length ) {
-                    let err = new Error("unable to determine a mimeType for " + extname)
+                    templates.push(module.exports.Mime.DEFAULT)
+                    //let err = new Error("unable to determine a mimeType for " + extname)
 
-                    if ( type(cb) == "function" )
-                      cb(err, null)
-                    return err
+                    //if ( type(cb) == "function" )
+                      //cb(err, null)
+                    //return err
                 }
-                else {
-                    if ( type(cb) == "function" )
-                      cb.apply(null, [null].concat(templates))
-                    return templates
-                }
+                //else {
+                if ( type(cb) == "function" )
+                  cb.apply(null, [null].concat(templates))
+                return templates
+                //}
             }
         }
       , reverse_lookup: { enumerable: true,
