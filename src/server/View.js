@@ -13,8 +13,21 @@ var Model = require("../Model").Model
 var Template = require("./Template").Template
 var UID = require("../UID").UID
 
-var document = jsdom.jsdom()
-var window =  document.defaultView
+const dom = typeof jsdom.jsdom == "function"
+          ? jsdom.jsdom("<!doctype html>", {
+              features: {
+                  FetchExternalResources: false
+                , ProcessExternalResources: false
+                , SkipExternalResources: true
+              }
+            })
+          : new jsdom.JSDOM("<!doctype html>")
+const window = typeof jsdom.jsdom == "function"
+             ? dom.defaultView
+             : dom.window
+const document = typeof jsdom.jsdom == "function"
+               ? dom
+               : window.document
 var Element = window.Element
 var HTMLElement = window.HTMLElement
 var Node = window.Node

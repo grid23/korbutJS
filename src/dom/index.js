@@ -26,7 +26,7 @@ window.korbut = module.exports = {
 
   , Template: require("../Template").Template
   , View: require("./View").View
-  , HTemplate: require("./HVIew").HTemplate
+  , HTemplate: require("./HView").HTemplate
   , HView: require("./HView").HView
   , ZParser: require("./ZParser").ZParser
   , ZView: require("./ZView").ZView

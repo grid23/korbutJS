@@ -248,4 +248,61 @@ describe("korbut.Router", function(){
 
     })
 
+    describe("multiple path templates", function(){
+        it("should respect all matches templates", function(done){
+            var router = new korbut.Router
+
+            router.addRouteHandler("/:a/:z", function(route, next){
+                chai.expect(route.matches.a).to.be.equal("foo")
+                chai.expect(route.matches.z).to.be.equal("bar")
+                next(false)
+            })
+
+
+            router.addRouteHandler(["/:c/:w", "/:d/:v"], function(route, next){
+                console.log(route.matches)
+                chai.expect(route.matches.c).to.be.equal("foo")
+                chai.expect(route.matches.w).to.be.equal("bar")
+                //chai.expect(route.matches.d).to.be.equal("foo")
+                //chai.expect(route.matches.v).to.be.equal("bar")
+                next(true)
+            })
+
+
+            router.addRouteHandler("/:b/:y", function(route, next){
+                chai.expect(route.matches.b).to.be.equal("foo")
+                chai.expect(route.matches.y).to.be.equal("bar")
+                next(true)
+                done()
+            })
+
+            router.dispatchRoute("/foo/bar")
+        })
+
+        it("should respect all matches templates (async)", function(done){
+            var router = new korbut.Router
+
+            router.addRouteHandler("/:a/:z", function(route, next){
+                chai.expect(route.matches.a).to.be.equal("foo")
+                chai.expect(route.matches.z).to.be.equal("bar")
+                next(false)
+            })
+
+            router.addRouteHandler("/:b/:y", function(route, next){
+                chai.expect(route.matches.b).to.be.equal("foo")
+                chai.expect(route.matches.y).to.be.equal("bar")
+                next(true)
+            })
+
+            router.addRouteHandler("/:c/:w", function(route, next){
+                chai.expect(route.matches.c).to.be.equal("foo")
+                chai.expect(route.matches.w).to.be.equal("bar")
+                next(true)
+                done()
+            })
+
+            router.dispatchRouteAsync("/foo/bar")
+        })
+    })
+
 })

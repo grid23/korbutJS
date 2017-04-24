@@ -99,7 +99,7 @@ void function dev_server(){
             }
         })
         server.listen(9876)
-        console.log("server: (re)started and listening")
+        console.log("server: (re)started and listening on port 9876")
 
         //bundle the main project
 

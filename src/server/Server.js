@@ -25,9 +25,9 @@ const servers = new WeakMap
 
 module.exports.HTTPRequestRoute = klass(Route, {
     constructor: function(request, response, path, query, fullpath){
-        path = ["/", request.method, parse(request.url).pathname.toLowerCase()].join("")
+        path = ["/", request.method, parse(request.url).pathname/*.toLowerCase()*/].join("")
         query = parse(request.url).search||""
-        fullpath = [request.secure?"https://":"http://",request.headers.host, parse(request.url).pathname.toLowerCase(), query].join("")
+        fullpath = [request.secure?"https://":"http://",request.headers.host, parse(request.url).pathname/*.toLowerCase()*/, query].join("")
 
         Route.call(this, path, { request: request, response: response })
         routes.set(this, Object.create(null))

@@ -4,8 +4,8 @@ describe("korbut.utils", function(){
 
     describe("#native()", function(){
         it ("should return true/false when a function is/isn't a native browser method/function", function(){
-            expect(_.native(Object.hasOwnProperty)).to.be.true
-            expect(_.native(function(){})).to.be.false
+            chai.expect(_.native(Object.hasOwnProperty)).to.be.true
+            chai.expect(_.native(function(){})).to.be.false
         })
     })
 
@@ -72,10 +72,10 @@ describe("korbut.utils", function(){
         })
     })
 
-    describe("#invoke", function(){
-        it("should...", function(){
-            throw Error
-        })
-    })
+    // describe("#invoke", function(){
+    //     it("should...", function(){
+    //         throw Error
+    //     })
+    // })
 
 })
