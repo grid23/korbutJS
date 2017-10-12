@@ -239,7 +239,7 @@ module.exports.Collection = klass(EventTarget, function(statics){
                         update = true
 
                         this.models.splice(idx, 1)
-                        this.dispatchEvent( new CollectionRemoveModelEvent(this, model) )
+                        this.dispatchEvent( new module.exports.CollectionRemoveModelEvent(this, model) )
                       }
                   }.call(this, models.shift())
 
