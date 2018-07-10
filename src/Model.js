@@ -175,11 +175,11 @@ module.exports.Model = klass(EventTarget, function(statics){
               , update: { value: { keys: [], timer: null } }
             })
 
-            if ( this.constructor.prototype._hooks )
-              this.setHook(this.constructor.prototype._hooks )
+            if ( this._hooks )
+              this.setHook(this._hooks )
 
-            if ( this.constructor.prototype._data )
-              this.setItem(this.constructor.prototype._data )
+            if ( this._data )
+              this.setItem(this._data )
 
             if ( arguments.length )
               this.setItem.apply(this, arguments)

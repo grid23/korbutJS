@@ -91,8 +91,8 @@ module.exports.View = klass(EventTarget, function(statics){
         constructor: function(args, handler, model, dict, template, buffer, events){
             views[this.uid] = Object.create(null)
             views[this.uid].view = this
-            views[this.uid].Template = this.constructor.prototype._Template || Template
-            views[this.uid].Model = this.constructor.prototype._Model || Model
+            views[this.uid].Template = this._Template || Template
+            views[this.uid].Model = this._Model || Model
             views[this.uid].fragment = document.createDocumentFragment()
             views[this.uid].vars = {}
 
@@ -126,7 +126,7 @@ module.exports.View = klass(EventTarget, function(statics){
               }.call(this, buffer.childNodes[0] )
             buffer = null
 
-            _.typeof(this.constructor.prototype._DOMEvents) == "object" && addEventListeners(this, this._DOMEvents)
+            _.typeof(this._DOMEvents) == "object" && addEventListeners(this, this._DOMEvents)
             _.typeof(dict.events) == "object" && addEventListeners(this, dict.events)
         }
       , Template: { enumerable: true,

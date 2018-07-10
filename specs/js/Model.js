@@ -83,7 +83,7 @@ describe("korbut.Model", function(){
 
     describe("0, null, false, undefined values in dataset", function(){
         it ("0 should never equal false", function(done){
-            var m = new mbx.Model
+            var m = new korrbut.Model
 
             m.addEventListener("add", function onadd(e){
                 m.removeEventListener("add", onadd)

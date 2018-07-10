@@ -40,7 +40,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
         constructor: function(args, handler, model, dict, expression, buffer, events){
             views[this.uid] = Object.create(null)
             views[this.uid].view = this
-            views[this.uid].Model = this.constructor.prototype._Model || Model
+            views[this.uid].Model = this._Model || Model
 
             args = _.spread(arguments)
             handler = _.typeof(args[args.length-1]) == "function" ? args.pop() : null
@@ -54,7 +54,7 @@ module.exports.ZView = klass(EventTarget, function(statics){
                  : new views[this.uid].Model
 
             views[this.uid].model = model
-            views[this.uid].template = _.typeof(this.constructor.prototype._template) == "string" ? this.constructor.prototype._template : dict.template
+            views[this.uid].template = _.typeof(this._template) == "string" ? this._template : dict.template
             buffer = new ZParser(views[this.uid].template).parse(views[this.uid].model)
             views[this.uid].fragment = buffer.tree
             views[this.uid].vars = buffer.vars
