@@ -10,6 +10,12 @@ describe("korbut.utils", function(){
             var d = korbut.Serializer.objectify(s)
             chai.expect(d.test === "visualização").to.be.true
         })
+
+        it("should work with no value", function(){
+            var test = "test"
+            var d = korbut.Serializer.objectify(test)
+            chai.expect(d.test).to.be.true
+        })
     })
 
     describe("#native()", function(){
