@@ -2,6 +2,16 @@ describe("korbut.utils", function(){
 
     var _ = korbut._
 
+    describe("serialize/un-serialize", function(){
+        it("should work with special chars", function(){
+            var test = { test: "visualização" }
+
+            var s = korbut.Serializer.serialize(test)
+            var d = korbut.Serializer.objectify(s)
+            chai.expect(d.test === "visualização").to.be.true
+        })
+    })
+
     describe("#native()", function(){
         it ("should return true/false when a function is/isn't a native browser method/function", function(){
             chai.expect(_.native(Object.hasOwnProperty)).to.be.true

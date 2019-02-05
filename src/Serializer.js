@@ -38,14 +38,14 @@ module.exports.Serializer = klass(function(statics){
                 while ( !iterator.next().done )
                   void function(pair, idx, k, v){
                       idx = pair.indexOf(del)
-                      k = pair.split(del, 1)
-                      v = pair.slice(idx+1)
+                      k = unescape(pair.split(del, 1))
+                      v = decodeURIComponent(pair.slice(idx+1))
 
                       if ( idx != -1 )
                         o[k] = v
                       else
                         o[pair] = true
-                  }( unescape(iterator.current.value.replace(rplustospace, "%20")) )
+                  }( iterator.current.value.replace(rplustospace, "%20") )
 
                 return o
             }
